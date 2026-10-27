@@ -1,0 +1,212 @@
+/* 全体レイアウト */
+.crop-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+  background-color: #000000;
+  box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ヘッダー */
+.crop-header {
+  height: 60px;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px;
+  background-color: #1a1a1a;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-sizing: border-box;
+  border-bottom: 1px solid #333333;
+}
+
+.back-button {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 32px;
+  font-weight: 300;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 8px;
+}
+
+.header-title {
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.header-right-spacer {
+  width: 32px;
+}
+
+/* ワークスペース */
+.crop-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.crop-workspace {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  height: 65vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.crop-image-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.crop-target-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* トリミング枠 */
+.crop-box {
+  position: absolute;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.65); /* 暗転マスク */
+  cursor: move;
+  box-sizing: border-box;
+  touch-action: none;
+}
+
+/* ガイドライン */
+.crop-grid-line {
+  position: absolute;
+  background-color: rgba(255, 255, 255, 0.4);
+  pointer-events: none;
+}
+
+.crop-grid-line.horizontal-1 { top: 33.33%; left: 0; width: 100%; height: 1px; }
+.crop-grid-line.horizontal-2 { top: 66.66%; left: 0; width: 100%; height: 1px; }
+.crop-grid-line.vertical-1 { left: 33.33%; top: 0; height: 100%; width: 1px; }
+.crop-grid-line.vertical-2 { left: 66.66%; top: 0; height: 100%; width: 1px; }
+
+/* 4隅の操作用角ハンドル */
+.crop-corner {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  box-sizing: border-box;
+  z-index: 5;
+}
+
+.crop-corner::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: #ffffff;
+  border-style: solid;
+}
+
+.crop-corner.top-left {
+  top: -12px;
+  left: -12px;
+  cursor: nwse-resize;
+}
+.crop-corner.top-left::after { top: 10px; left: 10px; border-width: 3px 0 0 3px; }
+
+.crop-corner.top-right {
+  top: -12px;
+  right: -12px;
+  cursor: nesw-resize;
+}
+.crop-corner.top-right::after { top: 10px; right: 10px; border-width: 3px 3px 0 0; }
+
+.crop-corner.bottom-left {
+  bottom: -12px;
+  left: -12px;
+  cursor: nesw-resize;
+}
+.crop-corner.bottom-left::after { bottom: 10px; left: 10px; border-width: 0 0 3px 3px; }
+
+.crop-corner.bottom-right {
+  bottom: -12px;
+  right: -12px;
+  cursor: nwse-resize;
+}
+.crop-corner.bottom-right::after { bottom: 10px; right: 10px; border-width: 0 3px 3px 0; }
+
+.crop-placeholder {
+  color: #888888;
+  font-size: 14px;
+}
+
+/* 下部操作バー */
+.crop-bottom-bar {
+  height: 70px;
+  width: 100%;
+  background-color: #1a1a1a;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+  box-sizing: border-box;
+  border-top: 1px solid #2c2c2e;
+}
+
+.crop-cancel-button {
+  background: none;
+  border: none;
+  color: #aaaaaa;
+  font-size: 15px;
+  cursor: pointer;
+  padding: 8px 16px;
+  transition: color 0.2s;
+}
+
+.crop-cancel-button:active {
+  color: #ffffff;
+}
+
+/* 完了ボタン（常時鮮やかな赤色を保持） */
+.crop-done-button {
+  background-color: #ff3b30 !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 20px;
+  padding: 10px 28px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(255, 59, 48, 0.4);
+  opacity: 1 !important;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.crop-done-button:hover,
+.crop-done-button:focus {
+  background-color: #ff4d42 !important;
+  color: #ffffff !important;
+}
+
+.crop-done-button:active {
+  background-color: #d72c21 !important;
+  transform: scale(0.96);
+}

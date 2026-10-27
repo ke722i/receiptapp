@@ -1,0 +1,79 @@
+/* 登録完了画面コンテナ */
+.receipt-success-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  width: 100%;
+  background-color: #f8f9fa;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+/* 中央カード */
+.success-card {
+  width: 100%;
+  max-width: 360px;
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: 32px 24px;
+  box-sizing: border-box;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* チェックアイコン円枠（差し色の赤） */
+.success-icon-wrapper {
+  width: 72px;
+  height: 72px;
+  background-color: #ffebee;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.success-icon {
+  font-size: 36px;
+  color: #e53935;
+  font-weight: bold;
+}
+
+/* タイトルと文章 */
+.success-title {
+  font-size: 20px;
+  font-weight: bold;
+  color: #333333;
+  margin: 0 0 12px;
+}
+
+.success-message {
+  font-size: 14px;
+  color: #666666;
+  line-height: 1.5;
+  margin: 0 0 28px;
+}
+
+/* ホームに戻るボタン */
+.go-home-button {
+  width: 100%;
+  padding: 14px 0;
+  background-color: #e53935;
+  color: #ffffff;
+  border: none;
+  border-radius: 25px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(229, 57, 53, 0.3);
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.go-home-button:active {
+  background-color: #d32f2f;
+  transform: scale(0.98);
+}

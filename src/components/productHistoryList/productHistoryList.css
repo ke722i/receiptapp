@@ -1,0 +1,153 @@
+/* 全体レイアウト */
+.history-list-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  background-color: #f5f5f5;
+  box-sizing: border-box;
+}
+
+/* ヘッダー */
+.history-list-header {
+  height: 60px;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px;
+  background-color: #e53935;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-sizing: border-box;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.back-button {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 32px;
+  font-weight: 300;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 8px;
+}
+
+.header-title {
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.header-right-spacer {
+  width: 32px;
+}
+
+/* メインコンテンツ */
+.history-list-main {
+  flex: 1;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 500px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.history-list-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 4px;
+}
+
+.history-count {
+  font-size: 14px;
+  font-weight: bold;
+  color: #666666;
+}
+
+.sort-select {
+  padding: 6px 10px;
+  font-size: 13px;
+  border: 1px solid #cccccc;
+  border-radius: 8px;
+  background-color: #ffffff;
+  color: #333333;
+  outline: none;
+}
+
+.full-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 履歴カード */
+.history-card {
+  background-color: #ffffff;
+  border-radius: 10px;
+  padding: 14px 16px;
+  border: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.history-card-left {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.history-date {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333333;
+}
+
+.history-shop {
+  font-size: 12px;
+  color: #777777;
+}
+
+.history-card-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.history-price-group {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.history-price {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333333;
+}
+
+.history-original-price {
+  font-size: 11px;
+  color: #999999;
+  text-decoration: line-through;
+}
+
+.history-discount {
+  font-size: 11px;
+  color: #888888;
+}
+
+.history-discount.has-discount {
+  color: #d32f2f;
+  font-weight: 600;
+}

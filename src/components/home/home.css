@@ -1,0 +1,545 @@
+/* 全体レイアウト */
+.home-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  background-color: #ffffff;
+  padding-bottom: 90px;
+  box-sizing: border-box;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* ヘッダーデザイン（赤背景） */
+.home-header {
+  height: 60px;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px;
+  background-color: #e53935;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-sizing: border-box;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* ハンバーガーボタン */
+.hamburger-button {
+  width: 32px;
+  height: 32px;
+  background: none;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  padding: 4px;
+  cursor: pointer;
+}
+
+.hamburger-line {
+  width: 100%;
+  height: 2px;
+  background-color: #ffffff;
+  border-radius: 2px;
+}
+
+/* アプリロゴ領域 */
+.header-logo-area {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-logo {
+  max-height: 38px;
+  object-fit: contain;
+}
+
+.header-logo-placeholder {
+  font-weight: bold;
+  font-size: 18px;
+  color: #ffffff;
+}
+
+.header-right-spacer {
+  width: 32px;
+}
+
+/* --- サイドバー（ドロワーメニュー） --- */
+
+/* 暗い背景オーバーレイ */
+.drawer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 200;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.drawer-overlay.is-active {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* ドロワーメニュー本体 */
+.drawer-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 280px;
+  height: 100vh;
+  background-color: #ffffff;
+  z-index: 210;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.15);
+}
+
+.drawer-menu.is-active {
+  transform: translateX(0);
+}
+
+/* ユーザー情報ヘッダー */
+.drawer-user-info {
+  background-color: #e53935;
+  color: #ffffff;
+  padding: 32px 20px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-avatar {
+  width: 44px;
+  height: 44px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.user-label {
+  font-size: 11px;
+  opacity: 0.85;
+}
+
+.user-id {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+/* ナビゲーションメニュー */
+.drawer-nav {
+  flex: 1;
+  padding: 12px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.drawer-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 24px;
+  background: none;
+  border: none;
+  font-size: 15px;
+  font-weight: 600;
+  color: #333333;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.2s;
+  width: 100%;
+}
+
+.drawer-item:active {
+  background-color: #ffebee;
+  color: #e53935;
+}
+
+.drawer-icon {
+  font-size: 18px;
+  width: 24px;
+  text-align: center;
+}
+
+.drawer-footer {
+  border-top: 1px solid #eeeeee;
+  padding: 8px 0 24px;
+}
+
+.logout-item {
+  color: #d32f2f;
+}
+
+/* --- 検索バー領域（黒半透明オーバーレイ & クリアボタン） --- */
+
+/* 検索入力中の黒色半透明背景 */
+.search-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 80;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.search-overlay.is-active {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* 検索バーコンテナ */
+.search-bar-container {
+  width: 100%;
+  position: relative;
+  z-index: 1;
+  transition: z-index 0.25s;
+}
+
+/* フォーカス時はオーバーレイより全面に浮き出させる */
+.search-bar-container.is-focused {
+  z-index: 90;
+}
+
+.search-input-wrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px 40px 12px 16px; /* 右側に✕ボタン用の隙間を設ける */
+  font-size: 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 24px;
+  background-color: #f9f9f9;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
+  -webkit-appearance: none;
+}
+
+.search-input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+}
+
+.search-input:focus {
+  border-color: #e53935;
+  background-color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 検索文字削除 (✕) ボタン */
+.search-clear-button {
+  position: absolute;
+  right: 12px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: #cccccc;
+  color: #ffffff;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 0;
+  transition: background-color 0.2s;
+}
+
+.search-clear-button:active {
+  background-color: #e53935;
+}
+
+/* --- メイン領域 --- */
+
+.home-main {
+  flex: 1;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.section-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333333;
+  margin: 0;
+  text-align: left;
+}
+
+/* --- よく見る：横スクロール対応エリア --- */
+.frequent-scroll-container {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  padding: 4px 4px 12px 4px;
+  -webkit-overflow-scrolling: touch;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.frequent-scroll-container::-webkit-scrollbar {
+  display: none;
+}
+
+.frequent-card {
+  flex: 0 0 110px; /* カード幅が縮まない設定 */
+  min-width: 110px;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 8px;
+  border: 1px solid #eeeeee;
+  border-radius: 12px;
+  background-color: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  box-sizing: border-box;
+}
+
+.card-image-placeholder {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  background-color: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #888888;
+}
+
+.card-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  text-align: center;
+}
+
+/* --- カテゴリアコーディオン --- */
+.category-accordion-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.category-group {
+  border: 1px solid #eeeeee;
+  border-radius: 12px;
+  overflow: hidden;
+  background-color: #ffffff;
+}
+
+.category-main-button {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background-color: #f9f9f9;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.category-main-button.is-open {
+  background-color: #ffebee;
+  border-bottom: 1px solid #ffcdd2;
+}
+
+.category-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333333;
+}
+
+.category-arrow {
+  font-size: 12px;
+  color: #888888;
+}
+
+.sub-category-list {
+  display: flex;
+  flex-direction: column;
+  background-color: #ffffff;
+  padding-left: 12px;
+}
+
+.sub-category-group {
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.sub-category-group:last-child {
+  border-bottom: none;
+}
+
+.sub-category-button {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: #444444;
+  cursor: pointer;
+  text-align: left;
+}
+
+.sub-category-button.is-open {
+  color: #e53935;
+}
+
+.sub-arrow {
+  font-size: 10px;
+  color: #888888;
+}
+
+.item-category-list {
+  display: flex;
+  flex-direction: column;
+  background-color: #fafafa;
+  padding-left: 16px;
+  border-top: 1px dashed #eeeeee;
+}
+
+.item-category-button {
+  width: 100%;
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid #f0f0f0;
+  text-align: left;
+  font-size: 13px;
+  color: #666666;
+  cursor: pointer;
+}
+
+.item-category-button:last-child {
+  border-bottom: none;
+}
+
+.item-category-button:active {
+  color: #e53935;
+  background-color: #ffebee;
+}
+
+/* --- カメラ丸型FABボタン --- */
+.camera-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background-color: #e53935;
+  color: #ffffff;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(229, 57, 53, 0.4);
+  cursor: pointer;
+  z-index: 100;
+  transition: transform 0.1s;
+}
+
+.camera-fab:active {
+  transform: scale(0.92);
+}
+
+.camera-icon {
+  width: 28px;
+  height: 28px;
+}
+
+/* 検索候補ポップアップリスト */
+.search-suggestions-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  margin-top: 8px;
+  padding: 0;
+  list-style: none;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  z-index: 100;
+}
+
+.search-suggestion-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  font-size: 15px;
+  color: #333333;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s;
+}
+
+.search-suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.search-suggestion-item:active {
+  background-color: #ffebee;
+  color: #e53935;
+}
+
+.suggestion-icon {
+  font-size: 14px;
+  color: #888888;
+}
+
+.suggestion-text {
+  font-weight: 600;
+}

@@ -1,0 +1,135 @@
+/* 全体の画面レイアウト */
+.register-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  width: 100%;
+  background-color: #ffffff; /* 背景色: 白 */
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* カードレイアウト */
+.register-card {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ロゴ領域 */
+.logo-section {
+  margin-bottom: 20px;
+  text-align: center;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.app-logo {
+  max-width: 140px;
+  max-height: 140px;
+  object-fit: contain;
+}
+
+.logo-placeholder {
+  width: 120px;
+  height: 120px;
+  border: 2px dashed #e0e0e0;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #888888;
+  font-size: 14px;
+  background-color: #fafafa;
+}
+
+/* タイトル */
+.register-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333333;
+  margin-bottom: 24px;
+}
+
+/* フォームの共通設定 */
+.register-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+.form-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333333;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 14px 16px;
+  font-size: 16px; /* スマホで自動拡大を防ぐ16px */
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  outline: none;
+  background-color: #f9f9f9;
+  box-sizing: border-box;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.form-group input:focus {
+  border-color: #e53935; /* 差し色: 赤 */
+  background-color: #ffffff;
+}
+
+/* 作成ボタン（赤色） */
+.submit-button {
+  width: 100%;
+  padding: 14px;
+  margin-top: 12px;
+  background-color: #e53935; /* 差し色: 赤 */
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.submit-button:active {
+  background-color: #d32f2f;
+  transform: scale(0.98);
+}
+
+/* ログイン画面へ戻るエリア */
+.back-to-login-section {
+  margin-top: 24px;
+  text-align: center;
+  width: 100%;
+}
+
+.back-to-login-button {
+  background: none;
+  border: none;
+  color: #666666;
+  font-size: 14px;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 8px;
+}
+
+.back-to-login-button:active {
+  color: #e53935;
+}
