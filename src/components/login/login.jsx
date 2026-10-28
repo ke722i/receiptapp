@@ -1,44 +1,67 @@
 import { useState } from 'react';
+import { supabase } from '../../services/supabaseClient';
 import './login.css';
 
 export default function Login({ onNavigateToRegister, onLoginSuccess }) {
   const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // IDやパスワードのチェックを行わず、そのままログイン成功として処理
-    if (onLoginSuccess) {
-      onLoginSuccess();
+    setErrorMessage('');
+    setLoading(true);
+
+    try {
+      const internalEmail = `${userId.trim().toLowerCase()}@app.internal`;
+
+      // Supabase Authentication によるログイン処理
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: internalEmail,
+        password: password,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data?.user && onLoginSuccess) {
+        onLoginSuccess(data.user);
+      }
+    } catch (error) {
+      console.error('Login Error:', error);
+      setErrorMessage('ログインに失敗しました。ユーザーIDとパスワードを確認してください。');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="login-container">
       <div className="login-card">
-        {/* ロゴ領域 */}
         <div className="logo-section">
-          {/* 
-            【画像挿入の手順】
-            1. 表示したい画像ファイルを src/assets/ に配置（例: logo.png）
-            2. import appLogo from '../../assets/logo.png';
-            3. <img src={appLogo} alt="アプリロゴ" className="app-logo" />
-          */}
           <div className="logo-placeholder">
             <span>アプリロゴ位置</span>
           </div>
         </div>
 
-        {/* ログインフォーム */}
         <form onSubmit={handleSubmit} className="login-form">
+          {errorMessage && (
+            <div className="error-message" style={{ color: 'red', marginBottom: '10px', fontSize: '14px' }}>
+              {errorMessage}
+            </div>
+          )}
+
           <div className="form-group">
-            <label htmlFor="userId">ID / メールアドレス</label>
+            <label htmlFor="userId">ユーザーID</label>
             <input
               type="text"
               id="userId"
               value={userId}
               onChange={(e) => setUserId(e.target.value)}
-              placeholder="IDまたはメールアドレスを入力"
+              placeholder="ユーザーIDを入力"
+              required
             />
           </div>
 
@@ -50,15 +73,15 @@ export default function Login({ onNavigateToRegister, onLoginSuccess }) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="パスワードを入力"
+              required
             />
           </div>
 
-          <button type="submit" className="login-button">
-            ログイン
+          <button type="submit" className="login-button" disabled={loading}>
+            {loading ? 'ログイン中...' : 'ログイン'}
           </button>
         </form>
 
-        {/* 新規登録画面への導線 */}
         <div className="register-section">
           <p className="register-text">アカウントをお持ちでない方</p>
           <button
