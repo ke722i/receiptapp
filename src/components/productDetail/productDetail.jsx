@@ -1,18 +1,30 @@
 import { useState } from 'react';
 import './productDetail.css';
 
-// 商品画像を差し込む場合は import してください
-// import milkImage from '../../assets/milk.png';
-
-export default function ProductDetail({ onBack, onViewAllHistory }) {
+// 今後各商品ごとに動的データへ差し替え可能な構造
+export default function ProductDetail({ productName = '牛乳', onBack, onViewAllHistory }) {
   const [sortOrder, setSortOrder] = useState('dateDesc'); // デフォルト：日付順（新しい順）
 
-  // ダミーの購入履歴データ（4件）
-  const historyData = [
-    { id: 1, date: '2026/10/27(金)', shop: 'イオン', price: 178, originalPrice: 208, discount: '30円引き' },
-    { id: 2, date: '2026/10/18(水)', shop: 'イトーヨーカドー', price: 198, originalPrice: null, discount: 'なし' },
-    { id: 3, date: '2026/10/05(木)', shop: 'ライフ', price: 168, originalPrice: 198, discount: '30円引き' },
-    { id: 4, date: '2026/09/25(月)', shop: 'イオン', price: 208, originalPrice: null, discount: 'なし' },
+  // 商品ごとのサンプルデータ（プレースホルダー）
+  const mockProductsData = {
+    '牛乳': [
+      { id: 1, date: '2026/10/27(金)', shop: 'イオン', price: 178, originalPrice: 208, discount: '30円引き' },
+      { id: 2, date: '2026/10/18(水)', shop: 'イトーヨーカドー', price: 198, originalPrice: null, discount: 'なし' },
+      { id: 3, date: '2026/10/05(木)', shop: 'ライフ', price: 168, originalPrice: 198, discount: '30円引き' },
+      { id: 4, date: '2026/09/25(月)', shop: 'イオン', price: 208, originalPrice: null, discount: 'なし' },
+    ],
+    '卵': [
+      { id: 1, date: '2026/10/26(木)', shop: 'ライフ', price: 218, originalPrice: null, discount: 'なし' },
+      { id: 2, date: '2026/10/15(日)', shop: '西友', price: 198, originalPrice: 238, discount: '40円引き' },
+    ],
+    'サラダ油': [
+      { id: 1, date: '2026/10/20(火)', shop: 'イオン', price: 298, originalPrice: 348, discount: '50円引き' },
+    ],
+  };
+
+  // 選択された商品の履歴データを取得（登録がない商品名の場合は仮データを自動設定）
+  const historyData = mockProductsData[productName] || [
+    { id: 1, date: '2026/10/27(金)', shop: '近所のスーパー', price: 198, originalPrice: null, discount: 'なし' }
   ];
 
   // 並び替え処理
@@ -26,6 +38,9 @@ export default function ProductDetail({ onBack, onViewAllHistory }) {
     }
     return 0;
   });
+
+  // 直近の購入（最上部の1件）
+  const recentPurchase = historyData[0];
 
   return (
     <div className="product-detail-container">
@@ -48,31 +63,36 @@ export default function ProductDetail({ onBack, onViewAllHistory }) {
         {/* 2. 上部：商品名 & 画像 */}
         <section className="product-title-card">
           <div className="product-info-wrapper">
-            <h2 className="product-name">牛乳</h2>
+            <h2 className="product-name">{productName}</h2>
             <div className="product-image-container">
-              {/* <img src={milkImage} alt="牛乳" className="product-image" /> */}
               <div className="product-image-placeholder">画像</div>
             </div>
           </div>
         </section>
 
         {/* 3. 直近の購入カード */}
-        <section className="detail-section">
-          <h3 className="section-title">直近の購入</h3>
-          <div className="recent-purchase-card">
-            <div className="recent-card-header">
-              <span className="purchase-date">10/27 (金)</span>
-              <span className="shop-name">イオン</span>
-            </div>
-            <div className="recent-card-body">
-              <div className="price-info">
-                <span className="current-price">178<span className="unit">円</span></span>
-                <span className="original-price">（値引き前: 208円）</span>
+        {recentPurchase && (
+          <section className="detail-section">
+            <h3 className="section-title">直近の購入</h3>
+            <div className="recent-purchase-card">
+              <div className="recent-card-header">
+                <span className="purchase-date">{recentPurchase.date.split('(')[0]}</span>
+                <span className="shop-name">{recentPurchase.shop}</span>
               </div>
-              <div className="discount-tag">30円引き</div>
+              <div className="recent-card-body">
+                <div className="price-info">
+                  <span className="current-price">{recentPurchase.price}<span className="unit">円</span></span>
+                  {recentPurchase.originalPrice && (
+                    <span className="original-price">（値引き前: {recentPurchase.originalPrice}円）</span>
+                  )}
+                </div>
+                {recentPurchase.discount !== 'なし' && (
+                  <div className="discount-tag">{recentPurchase.discount}</div>
+                )}
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* 4. 購入履歴セクション */}
         <section className="detail-section">
@@ -90,7 +110,7 @@ export default function ProductDetail({ onBack, onViewAllHistory }) {
             </select>
           </div>
 
-          {/* 履歴リスト（4件表示） */}
+          {/* 履歴リスト */}
           <div className="history-list">
             {sortedHistory.map((item) => (
               <div key={item.id} className="history-card">
@@ -118,7 +138,7 @@ export default function ProductDetail({ onBack, onViewAllHistory }) {
             type="button"
             className="view-all-button"
             onClick={onViewAllHistory}
-            >
+          >
             すべて見る
           </button>
         </section>

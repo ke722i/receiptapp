@@ -18,7 +18,16 @@ function App() {
   const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [selectedReceipt, setSelectedReceipt] = useState(null);
+  const [selectedProductName, setSelectedProductName] = useState('牛乳');
   const [showDeleteSuccessModal, setShowDeleteSuccessModal] = useState(false);
+
+  // 商品選択時のハンドラー（Home画面等のアイテムクリック時）
+  const handleSelectProduct = (productName) => {
+    if (productName) {
+      setSelectedProductName(productName);
+    }
+    setCurrentScreen('productDetail');
+  };
 
   // 削除完了モーダルを閉じて一覧へ遷移
   const handleCloseDeleteSuccess = () => {
@@ -48,7 +57,8 @@ function App() {
           onLogout={() => setCurrentScreen('login')}
           onNavigateToSettings={() => setCurrentScreen('settings')}
           onNavigateToHistory={() => setCurrentScreen('receiptHistoryList')}
-          onSelectProduct={() => setCurrentScreen('productDetail')}
+          onNavigateToCategory={handleSelectProduct}
+          onSelectProduct={handleSelectProduct}
           onOpenCamera={() => setIsCameraModalOpen(true)}
         />
       )}
@@ -62,12 +72,14 @@ function App() {
       )}
       {currentScreen === 'productDetail' && (
         <ProductDetail
+          productName={selectedProductName}
           onBack={() => setCurrentScreen('home')}
           onViewAllHistory={() => setCurrentScreen('productHistoryList')}
         />
       )}
       {currentScreen === 'productHistoryList' && (
         <ProductHistoryList
+          productName={selectedProductName}
           onBack={() => setCurrentScreen('productDetail')}
         />
       )}

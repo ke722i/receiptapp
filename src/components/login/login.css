@@ -141,3 +141,20 @@
 .register-button:active {
   background-color: #ffebee;
 }
+
+/* ログイン/新規登録の入力フォームの文字色と背景色を強制固定 */
+input[type="text"],
+input[type="password"],
+input[type="email"] {
+  color: #333333 !important;                     /* テキスト色を濃いグレー/黒に固定 */
+  background-color: #ffffff !important;           /* 背景色を白に固定 */
+  -webkit-text-fill-color: #333333 !important;   /* iOS Safariでの白塗りつぶし対策 */
+}
+
+/* プレースホルダー（入力前の案内文字）の色設定 */
+input[type="text"]::placeholder,
+input[type="password"]::placeholder,
+input[type="email"]::placeholder {
+  color: #888888 !important;
+  opacity: 1;
+}

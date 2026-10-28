@@ -109,3 +109,31 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+/* 全画面のすべての入力フォーム（ログイン・新規登録・検索等）の文字色を強制固定 */
+input,
+select,
+textarea {
+  color: #222222 !important;
+  background-color: #ffffff !important;
+  -webkit-text-fill-color: #222222 !important;
+  caret-color: #222222 !important; /* カーソルの色も可視化 */
+}
+
+/* プレースホルダー（入力前の薄いヒント文字） */
+input::placeholder,
+textarea::placeholder {
+  color: #888888 !important;
+  -webkit-text-fill-color: #888888 !important;
+  opacity: 1 !important;
+}
+
+/* スマホの自動補正・オートコンプリート背景（黄ばみ・黒塗り対策） */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: #222222 !important;
+  -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
+  transition: background-color 5000s ease-in-out 0s;
+}

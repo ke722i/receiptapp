@@ -1,19 +1,35 @@
 import { useState } from 'react';
 import './productHistoryList.css';
 
-export default function ProductHistoryList({ onBack }) {
+export default function ProductHistoryList({ productName = '牛乳', onBack }) {
   const [sortOrder, setSortOrder] = useState('dateDesc'); // デフォルト：日付順（新しい順）
 
-  // 既存の4件 + 追加の3件 ＝ 計7件のダミーデータ
-  const fullHistoryData = [
-    { id: 1, date: '2026/10/27(金)', shop: 'イオン', price: 178, originalPrice: 208, discount: '30円引き' },
-    { id: 2, date: '2026/10/18(水)', shop: 'イトーヨーカドー', price: 198, originalPrice: null, discount: 'なし' },
-    { id: 3, date: '2026/10/05(木)', shop: 'ライフ', price: 168, originalPrice: 198, discount: '30円引き' },
-    { id: 4, date: '2026/09/25(月)', shop: 'イオン', price: 208, originalPrice: null, discount: 'なし' },
-    // 追加の3件
-    { id: 5, date: '2026/09/12(土)', shop: 'マルエツ', price: 188, originalPrice: 208, discount: '20円引き' },
-    { id: 6, date: '2026/08/30(日)', shop: 'ライフ', price: 208, originalPrice: null, discount: 'なし' },
-    { id: 7, date: '2026/08/15(土)', shop: 'イオン', price: 158, originalPrice: 208, discount: '50円引き' },
+  // 商品ごとの全履歴サンプルデータ（プレースホルダー）
+  const mockFullHistoryData = {
+    '牛乳': [
+      { id: 1, date: '2026/10/27(金)', shop: 'イオン', price: 178, originalPrice: 208, discount: '30円引き' },
+      { id: 2, date: '2026/10/18(水)', shop: 'イトーヨーカドー', price: 198, originalPrice: null, discount: 'なし' },
+      { id: 3, date: '2026/10/05(木)', shop: 'ライフ', price: 168, originalPrice: 198, discount: '30円引き' },
+      { id: 4, date: '2026/09/25(月)', shop: 'イオン', price: 208, originalPrice: null, discount: 'なし' },
+      { id: 5, date: '2026/09/12(土)', shop: 'マルエツ', price: 188, originalPrice: 208, discount: '20円引き' },
+      { id: 6, date: '2026/08/30(日)', shop: 'ライフ', price: 208, originalPrice: null, discount: 'なし' },
+      { id: 7, date: '2026/08/15(土)', shop: 'イオン', price: 158, originalPrice: 208, discount: '50円引き' },
+    ],
+    '卵': [
+      { id: 1, date: '2026/10/26(木)', shop: 'ライフ', price: 218, originalPrice: null, discount: 'なし' },
+      { id: 2, date: '2026/10/15(日)', shop: '西友', price: 198, originalPrice: 238, discount: '40円引き' },
+      { id: 3, date: '2026/09/28(木)', shop: 'イオン', price: 228, originalPrice: null, discount: 'なし' },
+    ],
+    'サラダ油': [
+      { id: 1, date: '2026/10/20(火)', shop: 'イオン', price: 298, originalPrice: 348, discount: '50円引き' },
+      { id: 2, date: '2026/09/10(木)', shop: 'ライフ', price: 328, originalPrice: null, discount: 'なし' },
+    ]
+  };
+
+  // 選択された商品の全履歴を取得（未登録の場合はデフォルトデータを動的適用）
+  const fullHistoryData = mockFullHistoryData[productName] || [
+    { id: 1, date: '2026/10/27(金)', shop: '近所のスーパー', price: 198, originalPrice: null, discount: 'なし' },
+    { id: 2, date: '2026/09/15(火)', shop: 'ドラッグストア', price: 188, originalPrice: 208, discount: '20円引き' }
   ];
 
   // 並び替え処理
@@ -40,7 +56,7 @@ export default function ProductHistoryList({ onBack }) {
         >
           ‹
         </button>
-        <h1 className="header-title">購入履歴（牛乳）</h1>
+        <h1 className="header-title">購入履歴（{productName}）</h1>
         <div className="header-right-spacer"></div>
       </header>
 
@@ -60,7 +76,7 @@ export default function ProductHistoryList({ onBack }) {
           </select>
         </div>
 
-        {/* 履歴カード一覧（7件） */}
+        {/* 履歴カード一覧 */}
         <div className="full-history-list">
           {sortedHistory.map((item) => (
             <div key={item.id} className="history-card">
