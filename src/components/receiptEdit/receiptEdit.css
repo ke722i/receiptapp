@@ -1,0 +1,188 @@
+/* スマホ画面全体を覆う独立スクリーン */
+.receipt-edit-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  height: 100dvh; /* モバイルブラウザのアドレスバー高さを考慮 */
+  background-color: #f8fafc;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.receipt-edit-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: #f8fafc;
+}
+
+/* スマホ用ヘッダー (高さ54px、タッチエリア確保) */
+.receipt-edit-header {
+  height: 54px;
+  min-height: 54px;
+  padding: 0 16px;
+  background-color: #e53935;
+  color: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.receipt-edit-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0;
+  color: #ffffff;
+}
+
+/* スマホで押しやすい閉じるボタン */
+.receipt-edit-close {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: #ffffff;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+/* スクロールエリア（スマホでの快適なスクロール） */
+.receipt-edit-body {
+  flex: 1;
+  padding: 12px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch; /* iOSでの慣性スクロール */
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* スマホ用カードスタイリング */
+.edit-item-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 14px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.edit-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.edit-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.edit-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+}
+
+/* スマホでの入力しやすさを意識したサイズ感（16px以上でiOSの自動ズーム防止） */
+.edit-input,
+.edit-select {
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 16px; /* 16pxにすることでスマホ入力時の画面ズームを防止 */
+  background-color: #ffffff;
+  box-sizing: border-box;
+  outline: none;
+  -webkit-appearance: none;
+}
+
+.edit-input:focus,
+.edit-select:focus {
+  border-color: #2563eb;
+}
+
+/* カテゴリ選択ボタン（タップしやすいように高さ44px固定） */
+.edit-category-button {
+  width: 100%;
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  font-size: 0.9rem;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+/* スマホ画面下に固定表示するフッターアクションバー */
+.receipt-edit-footer {
+  padding: 12px 16px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom)); /* iPhoneのセーフエリア（Home Bar）対応 */
+  background-color: #ffffff;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  gap: 10px;
+}
+
+.edit-cancel-button {
+  flex: 1;
+  height: 46px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background-color: #ffffff;
+  color: #475569;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.edit-save-button {
+  flex: 2;
+  height: 46px;
+  border: none;
+  border-radius: 10px;
+  background-color: #2563eb;
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.receipt-edit-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  background-color: #f8fafc;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* モーダル表示中に親側がスクロールしないように設定 */
+}

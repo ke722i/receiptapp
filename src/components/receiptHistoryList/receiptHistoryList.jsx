@@ -1,34 +1,30 @@
+import { useState, useEffect } from 'react';
 import './receiptHistoryList.css';
+import { fetchReceiptHistory } from '../../utils/receiptDb';
 
-export default function ReceiptHistoryList({ onBack, onSelectReceiptDetail, receipts = [] }) {
-  // デモデータ（親からデータを受け取っていない場合の初期表示用）
-  const defaultReceipts = [
-    {
-      id: 1,
-      storeName: '〇〇スーパー 〇〇店',
-      purchaseDate: '2026/10/27',
-      imageSrc: null,
-      items: [
-        { id: 1, printName: 'ギュウニュウ1L', category: '牛乳', price: 218, discount: '-40円' },
-        { id: 2, printName: 'タマゴ L10P', category: '卵', price: 248, discount: 'なし' },
-        { id: 3, printName: 'ヨーグルト 400', category: 'ヨーグルト', price: 198, discount: 'なし' },
-        { id: 4, printName: 'セブントウフ', category: '豆腐', price: 58, discount: 'なし' },
-        { id: 5, printName: 'KJ オイル 600', category: '未選択', price: 298, discount: 'なし' },
-      ],
-    },
-    {
-      id: 2,
-      storeName: '△△ドラッグストア',
-      purchaseDate: '2026/10/20',
-      imageSrc: null,
-      items: [
-        { id: 1, printName: 'ティッシュペーパー5P', category: '日用品', price: 328, discount: 'なし' },
-        { id: 2, printName: 'ミネラルウォーター2L', category: '飲料', price: 98, discount: 'なし' },
-      ],
-    },
-  ];
+export default function ReceiptHistoryList({ onBack, onSelectReceiptDetail }) {
+  const [receipts, setReceipts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState('');
 
-  const displayList = receipts.length > 0 ? receipts : defaultReceipts;
+  // Supabase からレシート履歴を取得
+  useEffect(() => {
+    const loadHistory = async () => {
+      setLoading(true);
+      setErrorMessage('');
+
+      const result = await fetchReceiptHistory();
+      setLoading(false);
+
+      if (result.success) {
+        setReceipts(result.data);
+      } else {
+        setErrorMessage(result.error);
+      }
+    };
+
+    loadHistory();
+  }, []);
 
   return (
     <div className="receipt-history-container">
@@ -43,32 +39,51 @@ export default function ReceiptHistoryList({ onBack, onSelectReceiptDetail, rece
 
       {/* 2. メインコンテンツ（カード一覧） */}
       <main className="receipt-history-main">
-        {displayList.length === 0 ? (
-          <div className="no-receipts-message">登録されたレシートはありません</div>
-        ) : (
-          <div className="receipt-grid">
-            {displayList.map((receipt) => (
-              <div
-                key={receipt.id}
-                className="receipt-card"
-                onClick={() => onSelectReceiptDetail(receipt)}
-              >
-                {/* サムネイル画像 */}
-                <div className="receipt-card-image-box">
-                  {receipt.imageSrc ? (
-                    <img src={receipt.imageSrc} alt="レシート写真" className="receipt-card-image" />
-                  ) : (
-                    <div className="receipt-placeholder-icon">📄</div>
-                  )}
-                </div>
+        {loading && (
+          <div className="no-receipts-message">データを読み込み中...</div>
+        )}
 
-                {/* 店舗名・日付 */}
-                <div className="receipt-card-info">
-                  <span className="receipt-card-date">{receipt.purchaseDate}</span>
-                  <span className="receipt-card-store">{receipt.storeName}</span>
+        {errorMessage && (
+          <div className="no-receipts-message" style={{ color: '#c62828' }}>
+            {errorMessage}
+          </div>
+        )}
+
+        {!loading && !errorMessage && receipts.length === 0 && (
+          <div className="no-receipts-message">登録されたレシートはありません</div>
+        )}
+
+        {!loading && receipts.length > 0 && (
+          <div className="receipt-grid">
+            {receipts.map((receipt) => {
+              // Supabase から取得したデータのキーマッピング
+              const storeName = receipt.store_name || '店舗名未登録';
+              const purchaseDate = receipt.purchase_date || '';
+              const imageSrc = receipt.image_url || receipt.imageSrc || null;
+
+              return (
+                <div
+                  key={receipt.id}
+                  className="receipt-card"
+                  onClick={() => onSelectReceiptDetail && onSelectReceiptDetail(receipt)}
+                >
+                  {/* サムネイル画像 */}
+                  <div className="receipt-card-image-box">
+                    {imageSrc ? (
+                      <img src={imageSrc} alt="レシート写真" className="receipt-card-image" />
+                    ) : (
+                      <div className="receipt-placeholder-icon">📄</div>
+                    )}
+                  </div>
+
+                  {/* 店舗名・日付 */}
+                  <div className="receipt-card-info">
+                    <span className="receipt-card-date">{purchaseDate}</span>
+                    <span className="receipt-card-store">{storeName}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </main>

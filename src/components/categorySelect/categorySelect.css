@@ -1,0 +1,236 @@
+/* 1. オーバーレイ背景（画面全体） */
+.category-select-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+/* 2. モーダルカード（高さを画面の85%に制限し、溢れを遮断） */
+.category-modal-card {
+  width: 100%;
+  max-width: 500px;
+  height: 85vh;
+  max-height: 85vh;
+  background-color: #ffffff;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* コンテナ自体からの溢れを防止 */
+}
+
+/* 3. 固定ヘッダー */
+.category-select-header {
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #e2e8f0;
+  background-color: #ffffff;
+  flex-shrink: 0; /* スクロールしても潰れないよう固定 */
+}
+
+.category-select-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.category-select-close {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: #64748b;
+  cursor: pointer;
+}
+
+/* 4. 固定検索バー */
+.category-search-wrapper {
+  padding: 10px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  background-color: #ffffff;
+  flex-shrink: 0; /* スクロールしても潰れないよう固定 */
+}
+
+.category-search-input {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 14px;
+  box-sizing: border-box;
+  background-color: #f8fafc;
+}
+
+/* 5. ★スクロール領域（これだけで正しくスクロールします） */
+.category-modal-scroll-area {
+  flex: 1 1 auto;
+  min-height: 0; /* Flexボックスのスクロール阻害を解除する必須設定 */
+  overflow-y: auto !important; /* 縦スクロールを有効化 */
+  -webkit-overflow-scrolling: touch;
+  padding: 16px;
+  display: block; /* flexだと子要素が縮んで内容が切れるため、通常のブロックにする */
+  box-sizing: border-box;
+  overscroll-behavior: contain; /* 背面のページへスクロールが連鎖しないようにする */
+}
+
+/* --- アコーディオン各パーツ --- */
+
+.category-group {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0; /* 縮んで途切れるのを防止 */
+  margin-bottom: 12px;
+}
+
+.category-group:last-child {
+  margin-bottom: 0;
+}
+
+/* 内部のflex子要素が縮まないようにする */
+.category-group > *,
+.sub-category-list > *,
+.sub-cat-wrapper > *,
+.nested-category-content > * {
+  flex-shrink: 0;
+}
+
+.category-main-button {
+  width: 100%;
+  padding: 12px 16px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+
+.category-main-button.is-open {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom: none;
+  background-color: #f1f5f9;
+}
+
+.category-label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.category-arrow, .sub-arrow {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.sub-category-list {
+  padding: 8px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-top: none;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sub-category-button {
+  width: 100%;
+  padding: 10px 12px;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+}
+
+.sub-category-button.is-open {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  background-color: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.nested-category-content {
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-top: none;
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
+  padding: 8px;
+}
+
+.sub-cat-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.leaf-category-button {
+  width: 100%;
+  padding: 8px 10px;
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  color: #475569;
+  cursor: pointer;
+}
+
+.leaf-category-button.is-open {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  background-color: #e2e8f0;
+}
+
+.item-grid-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  padding: 8px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-top: none;
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
+}
+
+.item-grid-list.direct-items {
+  border: none;
+  background: transparent;
+  padding: 4px 0;
+}
+
+.item-select-btn {
+  padding: 8px;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: #1e293b;
+  cursor: pointer;
+}
+
+.no-result-text {
+  text-align: center;
+  color: #64748b;
+  font-size: 0.85rem;
+  padding: 20px 0;
+}
