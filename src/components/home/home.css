@@ -1,14 +1,11 @@
 /* 全体レイアウト */
 .home-container {
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  width: 100%;
-  background-color: #ffffff;
-  padding-bottom: 90px;
-  box-sizing: border-box;
-  position: relative;
-  overflow-x: hidden;
+  overflow: hidden; /* コンテナ自体は全画面固定 */
 }
 
 /* ヘッダーデザイン（赤背景） */
@@ -283,10 +280,10 @@
 
 .home-main {
   flex: 1;
+  min-height: 0; /* Flexboxでスクロールさせるための必須設定 */
+  overflow-y: auto; /* ここでホーム画面全体がスクロールします */
+  -webkit-overflow-scrolling: touch;
   padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
 }
 
 .section-container {

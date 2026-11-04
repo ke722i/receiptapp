@@ -212,6 +212,9 @@
   text-align: center;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   animation: modalPopIn 0.2s ease-out forwards;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 @keyframes modalPopIn {
@@ -244,6 +247,7 @@
   display: flex;
   gap: 12px;
   justify-content: center;
+  width: 100%;
 }
 
 .custom-modal-button {
@@ -273,4 +277,35 @@
 
 .custom-modal-button.delete-button:active {
   background-color: #d32f2f;
+}
+
+/* 完了ダイアログのOKボタン（レイアウト崩れ防止） */
+.modal-ok-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 140px;
+  height: 42px;
+  padding: 0 24px;
+  background-color: #007aff;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: bold;
+  border-radius: 21px;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0, 122, 255, 0.3);
+}
+
+.modal-ok-button:active {
+  background-color: #0062cc;
+}
+
+/* 完了チェックアイコン */
+.success-icon-check {
+  font-size: 28px;
+  color: #4caf50;
+  margin-bottom: 8px;
+  line-height: 1;
 }

@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Login from './components/login/login';
 import Register from './components/register/register';
 import Home from './components/home/home';
 import Settings from './components/settings/settings';
 import ProductDetail from './components/productDetail/productDetail';
 import ProductHistoryList from './components/productHistoryList/productHistoryList';
-import CameraModal from './components/cameraModal/cameraModal';
+import ReceiptScanner from './components/receiptScanner/receiptScanner';
 import ImageConfirm from './components/imageConfirm/imageConfirm';
 import CropImage from './components/cropImage/cropImage';
 import ReceiptConfirm from './components/receiptConfirm/receiptConfirm';
@@ -13,23 +13,83 @@ import ReceiptSuccess from './components/receiptSuccess/receiptSuccess';
 import ReceiptHistoryList from './components/receiptHistoryList/receiptHistoryList';
 import ReceiptHistoryDetail from './components/receiptHistoryDetail/receiptHistoryDetail';
 
+const STORAGE_KEY_VIEW_HISTORY = 'receipt_app_view_history';
+const STORAGE_KEY_USER_ID = 'receipt_app_user_id';
+
 function App() {
   const [currentScreen, setCurrentScreen] = useState('login');
-  const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [parsedReceiptData, setParsedReceiptData] = useState(null); // AI解析データ用
   const [selectedReceipt, setSelectedReceipt] = useState(null);
   const [selectedProductName, setSelectedProductName] = useState('牛乳');
   const [showDeleteSuccessModal, setShowDeleteSuccessModal] = useState(false);
 
-  // 商品選択時のハンドラー（Home画面等のアイテムクリック時）
+  // ログインユーザーID（localStorage から復元、初期値 'User_12345'）
+  const [userId, setUserId] = useState(() => {
+    return localStorage.getItem(STORAGE_KEY_USER_ID) || 'User_12345';
+  });
+
+  // 閲覧履歴（App レベルで管理）
+  const [viewHistory, setViewHistory] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_VIEW_HISTORY);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY_VIEW_HISTORY, JSON.stringify(viewHistory));
+    } catch (err) {
+      console.error('Failed to save view history:', err);
+    }
+  }, [viewHistory]);
+
+  // ログイン成功ハンドラー
+  const handleLoginSuccess = (userObj, rawInputUserId) => {
+    const extractedId =
+      rawInputUserId ||
+      userObj?.user_metadata?.user_id ||
+      userObj?.email?.split('@')[0] ||
+      'User_12345';
+
+    setUserId(extractedId);
+    localStorage.setItem(STORAGE_KEY_USER_ID, extractedId);
+    setCurrentScreen('home');
+  };
+
+  // 新規登録成功ハンドラー
+  const handleRegisterSuccess = (userObj, rawInputUserId) => {
+    const extractedId =
+      rawInputUserId ||
+      userObj?.user_metadata?.user_id ||
+      userObj?.email?.split('@')[0] ||
+      'User_12345';
+
+    setUserId(extractedId);
+    localStorage.setItem(STORAGE_KEY_USER_ID, extractedId);
+    setCurrentScreen('home');
+  };
+
+  // 商品選択時のハンドラー（閲覧履歴追加 ＆ 詳細画面遷移）
   const handleSelectProduct = (productName) => {
     if (productName) {
       setSelectedProductName(productName);
+      setViewHistory((prev) => {
+        const filtered = prev.filter((item) => item.name !== productName);
+        const newItem = {
+          id: Date.now().toString(),
+          name: productName,
+          icon: '🛍️',
+        };
+        return [newItem, ...filtered].slice(0, 5);
+      });
     }
     setCurrentScreen('productDetail');
   };
 
-  // 削除完了モーダルを閉じて一覧へ遷移
   const handleCloseDeleteSuccess = () => {
     setShowDeleteSuccessModal(false);
     setCurrentScreen('receiptHistoryList');
@@ -41,25 +101,27 @@ function App() {
       {currentScreen === 'login' && (
         <Login
           onNavigateToRegister={() => setCurrentScreen('register')}
-          onLoginSuccess={() => setCurrentScreen('home')}
+          onLoginSuccess={handleLoginSuccess}
         />
       )}
       {currentScreen === 'register' && (
         <Register
           onNavigateToLogin={() => setCurrentScreen('login')}
-          onRegisterSuccess={() => setCurrentScreen('home')}
+          onRegisterSuccess={handleRegisterSuccess}
         />
       )}
 
       {/* ホーム画面 */}
       {currentScreen === 'home' && (
         <Home
+          userId={userId}
+          viewHistory={viewHistory}
           onLogout={() => setCurrentScreen('login')}
           onNavigateToSettings={() => setCurrentScreen('settings')}
           onNavigateToHistory={() => setCurrentScreen('receiptHistoryList')}
           onNavigateToCategory={handleSelectProduct}
           onSelectProduct={handleSelectProduct}
-          onOpenCamera={() => setIsCameraModalOpen(true)}
+          onOpenCamera={() => setCurrentScreen('receiptScanner')} // Scanner画面へ遷移
         />
       )}
 
@@ -84,11 +146,23 @@ function App() {
         />
       )}
 
-      {/* レシート撮影・登録フロー */}
+      {/* レシートスキャン（撮影・画像選択・解析） */}
+      {currentScreen === 'receiptScanner' && (
+        <ReceiptScanner
+          onBack={() => setCurrentScreen('home')}
+          onAnalysisComplete={(data, image) => {
+            setParsedReceiptData({ ...data, _scanId: Date.now() });
+            setSelectedImage(image);
+            setCurrentScreen('receiptConfirm');
+          }}
+        />
+      )}
+
+      {/* レシート確認・保存 */}
       {currentScreen === 'imageConfirm' && (
         <ImageConfirm
           imageSrc={selectedImage}
-          onBack={() => setCurrentScreen('home')}
+          onBack={() => setCurrentScreen('receiptScanner')}
           onNavigateToCrop={() => setCurrentScreen('cropImage')}
           onAnalysisComplete={() => setCurrentScreen('receiptConfirm')}
         />
@@ -105,8 +179,10 @@ function App() {
       )}
       {currentScreen === 'receiptConfirm' && (
         <ReceiptConfirm
+          key={parsedReceiptData?.purchase_date || 'receipt-confirm-screen'}
           imageSrc={selectedImage}
-          onBack={() => setCurrentScreen('imageConfirm')}
+          parsedData={parsedReceiptData}
+          onBack={() => setCurrentScreen('receiptScanner')}
           onSaveComplete={() => setCurrentScreen('receiptSuccess')}
         />
       )}
@@ -136,18 +212,7 @@ function App() {
         />
       )}
 
-      {/* カメラモーダル */}
-      {isCameraModalOpen && (
-        <CameraModal
-          onClose={() => setIsCameraModalOpen(false)}
-          onImageSelected={(img) => {
-            setSelectedImage(img);
-            setCurrentScreen('imageConfirm');
-          }}
-        />
-      )}
-
-      {/* 画面中央の削除完了モーダル（ブラウザalertの代替） */}
+      {/* 削除完了モーダル */}
       {showDeleteSuccessModal && (
         <div className="custom-modal-overlay" onClick={handleCloseDeleteSuccess}>
           <div className="custom-modal-card" onClick={(e) => e.stopPropagation()}>

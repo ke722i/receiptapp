@@ -12,9 +12,9 @@ export default function Register({ onNavigateToLogin, onRegisterSuccess }) {
   // ユーザーID制限の設定
   const MIN_USER_ID_LENGTH = 4;
   const MAX_USER_ID_LENGTH = 16;
-  const USER_ID_REGEX = /^[a-zA-Z0-9_-]+$/; // 半角英数字、ハイフン、アンダースコアのみ許可
+  const USER_ID_REGEX = /^[a-zA-Z0-9_-]+$/;
 
-  // パスワード制限の設定（6〜16文字に変更）
+  // パスワード制限の設定
   const MIN_PASSWORD_LENGTH = 6;
   const MAX_PASSWORD_LENGTH = 16;
 
@@ -24,7 +24,7 @@ export default function Register({ onNavigateToLogin, onRegisterSuccess }) {
 
     const trimmedUserId = userId.trim();
 
-    // 1. ユーザーIDの文字数・形式バリデーション
+    // 1. バリデーション
     if (trimmedUserId.length < MIN_USER_ID_LENGTH || trimmedUserId.length > MAX_USER_ID_LENGTH) {
       setErrorMessage(`ユーザーIDは${MIN_USER_ID_LENGTH}〜${MAX_USER_ID_LENGTH}文字で入力してください。`);
       return;
@@ -35,13 +35,11 @@ export default function Register({ onNavigateToLogin, onRegisterSuccess }) {
       return;
     }
 
-    // 2. パスワードの文字数バリデーション
     if (password.length < MIN_PASSWORD_LENGTH || password.length > MAX_PASSWORD_LENGTH) {
       setErrorMessage(`パスワードは${MIN_PASSWORD_LENGTH}〜${MAX_PASSWORD_LENGTH}文字で入力してください。`);
       return;
     }
 
-    // 3. パスワードの一致確認
     if (password !== confirmPassword) {
       setErrorMessage('パスワードと確認用パスワードが一致しません。');
       return;
@@ -50,10 +48,8 @@ export default function Register({ onNavigateToLogin, onRegisterSuccess }) {
     setLoading(true);
 
     try {
-      // 内部的な識別用アドレスを生成
       const internalEmail = `${trimmedUserId.toLowerCase()}@app.internal`;
 
-      // Supabaseへのユーザー登録
       const { data, error } = await supabase.auth.signUp({
         email: internalEmail,
         password: password,
@@ -71,11 +67,10 @@ export default function Register({ onNavigateToLogin, onRegisterSuccess }) {
         throw error;
       }
 
-      // 登録成功時
       if (data?.user) {
         alert('アカウントの作成が完了しました！');
         if (onRegisterSuccess) {
-          onRegisterSuccess(data.user);
+          onRegisterSuccess(data.user, trimmedUserId);
         }
       }
     } catch (error) {
@@ -91,7 +86,7 @@ export default function Register({ onNavigateToLogin, onRegisterSuccess }) {
       <div className="register-card">
         <div className="logo-section">
           <div className="logo-placeholder">
-            <span>アプリロゴ位置</span>
+            <span>底値チェッカー</span>
           </div>
         </div>
 

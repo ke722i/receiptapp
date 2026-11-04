@@ -1,14 +1,14 @@
-import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
   server: {
-    host: true,
-    allowedHosts: true,
-    hmr: {
-      clientPort: 443, // HTTPS 通信用のポート指定
-    },
+    port: 5173,
+    // cloudflare tunnel のサブドメイン全般を許可
+    allowedHosts: ['.trycloudflare.com'],
+    
+    // または全ホストを許可したい場合はこちら:
+    // allowedHosts: true,
   },
-})
+});

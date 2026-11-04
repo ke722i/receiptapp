@@ -1,48 +1,123 @@
 import { useState } from 'react';
 import './receiptConfirm.css';
+import { saveReceiptToDatabase } from '../../utils/receiptDb';
+import ReceiptEdit from "../receiptEdit/receiptEdit";
 
-export default function ReceiptConfirm({ imageSrc, onBack, onSaveComplete }) {
-  // 画像から抽出した商品データの初期状態
-  const [storeName, setStoreName] = useState('〇〇スーパー 〇〇店');
-  const [purchaseDate, setPurchaseDate] = useState('2026/10/27');
-  
-  const [items, setItems] = useState([
-    { id: 1, printName: 'ギュウニュウ1L', category: '牛乳', price: 218, discount: '-40円' },
-    { id: 2, printName: 'タマゴ L10P', category: '卵', price: 248, discount: 'なし' },
-    { id: 3, printName: 'ヨーグルト 400', category: 'ヨーグルト', price: 198, discount: 'なし' },
-    { id: 4, printName: 'セブントウフ', category: '豆腐', price: 58, discount: 'なし' },
-    { id: 5, printName: 'KJ オイル 600', category: '未選択', price: 298, discount: 'なし' },
-  ]);
+export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveComplete }) {
+  const [storeName, setStoreName] = useState(() => parsedData?.store_name || '');
+  const [purchaseDate, setPurchaseDate] = useState(
+    () => parsedData?.purchase_date || new Date().toISOString().split('T')[0]
+  );
 
-  // 編集中のアイテムID（nullの場合は編集なし）
-  const [editingId, setEditingId] = useState(null);
-  const [editFormData, setEditFormData] = useState({ printName: '', price: 0, category: '', discount: '' });
+  // 商品リスト State
+  const [items, setItems] = useState(() => {
+    if (parsedData?.items && parsedData.items.length > 0) {
+      return parsedData.items.map((item, idx) => ({
+        id: idx + 1,
+        printName: item.item_name || item.printName || '',
+        category: item.category || '未選択',
+        price: item.price || 0,
+        isDiscount: typeof item.is_discount === 'boolean' ? item.is_discount : !!item.isDiscount,
+      }));
+    }
+    return [];
+  });
 
-  // 編集モードの開始
-  const handleEditClick = (item) => {
-    setEditingId(item.id);
-    setEditFormData({ ...item });
+  // チェックされた項目の ID 一覧
+  const [selectedIds, setSelectedIds] = useState([]);
+  // 編集モーダルの開閉状態
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const [isSaving, setIsSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  // チェックボックスのトグル（個別に切り替え）
+  const handleToggleCheck = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item = id) => item !== id) : [...prev, id]
+    );
   };
 
-  // 編集内容の保存
-  const handleSaveEdit = (id) => {
-    setItems(items.map((item) => (item.id === id ? editFormData : item)));
-    setEditingId(null);
+  // 全選択・全解除トグル
+  const handleToggleSelectAll = () => {
+    if (selectedIds.length === items.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(items.map((item) => item.id));
+    }
   };
+
+  // 編集ボタン押下時の処理
+  const handleOpenEditModal = () => {
+    if (selectedIds.length === 0) return;
+    setIsEditModalOpen(true);
+  };
+
+  // 編集画面からの保存結果を反映
+  const handleSaveEditedItems = (updatedSelectedItems) => {
+    setItems((prev) =>
+      prev.map((item) => {
+        const updated = updatedSelectedItems.find((u) => u.id === item.id);
+        return updated ? updated : item;
+      })
+    );
+    // 編集完了後は選択を解除
+    setSelectedIds([]);
+  };
+
+  // DB登録処理
+  // DB登録処理
+  const handleRegisterToDatabase = async () => {
+    setErrorMessage('');
+    setIsSaving(true);
+
+    // 1. 画像URLを含むレシート本体データ
+    const receiptData = {
+      store_name: storeName,
+      store_address: parsedData?.store_address || '',
+      store_number: parsedData?.store_number || '',
+      purchase_date: purchaseDate,
+      image_url: imageSrc || '', // ★ レシート画像URLを追加
+    };
+
+    // 2. 商品名（item_name）を含む明細データ
+    const itemsData = items.map((item) => ({
+      item_name: item.printName, // ★ 印字商品名を追加
+      category: item.category,
+      price: item.price,
+      is_discount: item.isDiscount,
+    }));
+
+    const result = await saveReceiptToDatabase(receiptData, itemsData);
+    setIsSaving(false);
+
+    if (result.success) {
+      if (onSaveComplete) onSaveComplete();
+    } else {
+      setErrorMessage(result.error);
+    }
+  };
+
+  // チェック中のアイテムのみを抽出
+  const selectedItemsToEdit = items.filter((item) => selectedIds.includes(item.id));
 
   return (
     <div className="receipt-confirm-container">
-      {/* 1. ヘッダー */}
       <header className="receipt-confirm-header">
         <button type="button" className="back-button" onClick={onBack} aria-label="戻る">
           ‹
         </button>
         <h1 className="header-title">レシート内容の確認</h1>
-        <div className="header-right-spacer"></div>
+        <div className="header-right-spacer" />
       </header>
 
       <main className="receipt-confirm-main">
-        {/* 2. 店舗情報・日付・トリミング画像表示エリア */}
+        {errorMessage && (
+          <div style={{ color: '#c62828', backgroundColor: '#ffebee', padding: '10px', borderRadius: '8px', fontSize: '13px' }}>
+            {errorMessage}
+          </div>
+        )}
+
         <section className="receipt-info-card">
           <div className="info-text-group">
             <div className="info-row">
@@ -50,6 +125,7 @@ export default function ReceiptConfirm({ imageSrc, onBack, onSaveComplete }) {
               <input
                 type="text"
                 className="info-input"
+                placeholder="店舗名を入力"
                 value={storeName}
                 onChange={(e) => setStoreName(e.target.value)}
               />
@@ -57,7 +133,7 @@ export default function ReceiptConfirm({ imageSrc, onBack, onSaveComplete }) {
             <div className="info-row">
               <span className="info-label">購入日時</span>
               <input
-                type="text"
+                type="date"
                 className="info-input"
                 value={purchaseDate}
                 onChange={(e) => setPurchaseDate(e.target.value)}
@@ -74,106 +150,90 @@ export default function ReceiptConfirm({ imageSrc, onBack, onSaveComplete }) {
           </div>
         </section>
 
-        {/* 3. 注意書きガイド */}
-        <div className="notice-banner">
-          <span>💡 データが異なっている場合は、各行の「編集」ボタンより手動で修正できます。</span>
+        {/* 編集アクションバー */}
+        <div className="flex justify-between items-center my-3 px-1">
+          <span className="text-sm font-medium text-gray-600">
+            選択中: <b>{selectedIds.length}</b> 件
+          </span>
+          <button
+            type="button"
+            className="edit-cell-button"
+            style={{
+              padding: '6px 16px',
+              backgroundColor: selectedIds.length > 0 ? '#1976d2' : '#ccc',
+              cursor: selectedIds.length > 0 ? 'pointer' : 'not-allowed',
+            }}
+            onClick={handleOpenEditModal}
+            disabled={selectedIds.length === 0}
+          >
+            選択した商品を編集
+          </button>
         </div>
 
-        {/* 4. レシート商品リスト表 */}
         <section className="table-wrapper">
           <table className="receipt-table">
             <thead>
               <tr>
+                <th style={{ width: '40px', textAlign: 'center' }}>
+                  <input
+                    type="checkbox"
+                    checked={items.length > 0 && selectedIds.length === items.length}
+                    onChange={handleToggleSelectAll}
+                  />
+                </th>
                 <th>レシート印字名</th>
                 <th>値段</th>
                 <th>カテゴリ</th>
                 <th>値引き</th>
-                <th>操作</th>
               </tr>
             </thead>
             <tbody>
-              {items.map((item) => (
-                <tr key={item.id}>
-                  {editingId === item.id ? (
-                    /* 編集モード時 */
-                    <>
-                      <td>
-                        <input
-                          type="text"
-                          className="table-input"
-                          value={editFormData.printName}
-                          onChange={(e) => setEditFormData({ ...editFormData, printName: e.target.value })}
-                        />
-                      </td>
-                      <td>
-                        <input
-                          type="number"
-                          className="table-input num"
-                          value={editFormData.price}
-                          onChange={(e) => setEditFormData({ ...editFormData, price: Number(e.target.value) })}
-                        />
-                      </td>
-                      <td>
-                        <input
-                          type="text"
-                          className="table-input"
-                          value={editFormData.category}
-                          onChange={(e) => setEditFormData({ ...editFormData, category: e.target.value })}
-                        />
-                      </td>
-                      <td>
-                        <input
-                          type="text"
-                          className="table-input"
-                          value={editFormData.discount}
-                          onChange={(e) => setEditFormData({ ...editFormData, discount: e.target.value })}
-                        />
-                      </td>
-                      <td>
-                        <button
-                          type="button"
-                          className="save-cell-button"
-                          onClick={() => handleSaveEdit(item.id)}
-                        >
-                          保存
-                        </button>
-                      </td>
-                    </>
-                  ) : (
-                    /* 通常表示時 */
-                    <>
-                      <td className="item-name-cell">{item.printName}</td>
-                      <td className="price-cell">{item.price}円</td>
-                      <td className="category-cell">{item.category}</td>
-                      <td className="discount-cell">{item.discount}</td>
-                      <td>
-                        <button
-                          type="button"
-                          className="edit-cell-button"
-                          onClick={() => handleEditClick(item)}
-                        >
-                          編集
-                        </button>
-                      </td>
-                    </>
-                  )}
+              {items.length === 0 ? (
+                <tr>
+                  <td colSpan="5" style={{ textAlign: 'center', color: '#888', padding: '16px' }}>
+                    抽出された商品がありません
+                  </td>
                 </tr>
-              ))}
+              ) : (
+                items.map((item) => (
+                  <tr key={item.id}>
+                    <td style={{ textAlign: 'center' }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(item.id)}
+                        onChange={() => handleToggleCheck(item.id)}
+                      />
+                    </td>
+                    <td className="item-name-cell">{item.printName}</td>
+                    <td className="price-cell">{item.price}円</td>
+                    <td className="category-cell">{item.category}</td>
+                    <td className="discount-cell">{item.isDiscount ? 'あり' : 'なし'}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </section>
       </main>
 
-      {/* 5. 登録完了ボタン */}
       <footer className="receipt-confirm-footer">
         <button
           type="button"
           className="submit-receipt-button"
-          onClick={onSaveComplete}
+          onClick={handleRegisterToDatabase}
+          disabled={isSaving}
         >
-          この内容で登録する
+          {isSaving ? '登録中...' : 'この内容で登録する'}
         </button>
       </footer>
+
+      {/* 新・レシート編集画面（モーダル） */}
+      <ReceiptEdit
+        isOpen={isEditModalOpen}
+        selectedItems={selectedItemsToEdit}
+        onClose={() => setIsEditModalOpen(false)}
+        onSave={handleSaveEditedItems}
+      />
     </div>
   );
 }

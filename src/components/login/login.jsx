@@ -14,7 +14,8 @@ export default function Login({ onNavigateToRegister, onLoginSuccess }) {
     setLoading(true);
 
     try {
-      const internalEmail = `${userId.trim().toLowerCase()}@app.internal`;
+      const trimmedId = userId.trim();
+      const internalEmail = `${trimmedId.toLowerCase()}@app.internal`;
 
       // Supabase Authentication によるログイン処理
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -27,7 +28,7 @@ export default function Login({ onNavigateToRegister, onLoginSuccess }) {
       }
 
       if (data?.user && onLoginSuccess) {
-        onLoginSuccess(data.user);
+        onLoginSuccess(data.user, trimmedId);
       }
     } catch (error) {
       console.error('Login Error:', error);
@@ -42,7 +43,7 @@ export default function Login({ onNavigateToRegister, onLoginSuccess }) {
       <div className="login-card">
         <div className="logo-section">
           <div className="logo-placeholder">
-            <span>アプリロゴ位置</span>
+            <span>底値チェッカー</span>
           </div>
         </div>
 
