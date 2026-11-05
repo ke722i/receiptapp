@@ -15,6 +15,7 @@ export default function CameraModal({ onClose, onImageSelected }) {
     if (file) {
       const imageUrl = URL.createObjectURL(file);
       onClose();
+      // 画像が選択されたら親コンポーネントへ渡し、直接トリミングへ遷移させる
       if (onImageSelected) onImageSelected(imageUrl);
     }
   };
@@ -31,10 +32,18 @@ export default function CameraModal({ onClose, onImageSelected }) {
         </div>
 
         <div className="action-buttons-group">
-          <button type="button" className="action-option-button primary" onClick={onClose}>
+          {/* カメラ撮影用のinputを追加して即時トリミングへ渡す場合 */}
+          <label className="action-option-button primary">
             <span className="option-icon">📷</span>
             <span>カメラで撮る</span>
-          </button>
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              style={{ display: 'none' }}
+              onChange={handleFileChange}
+            />
+          </label>
 
           <button type="button" className="action-option-button secondary" onClick={handleSelectLibrary}>
             <span className="option-icon">🖼️</span>

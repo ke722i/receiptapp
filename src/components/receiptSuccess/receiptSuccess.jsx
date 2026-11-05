@@ -12,7 +12,7 @@ export default function ReceiptSuccess({ onGoHome }) {
         <h1 className="success-title">保存が完了しました</h1>
         <p className="success-message">
           レシート情報が正常に登録されました。<br />
-          購入履歴から確認できます。
+          レシート履歴から確認できます。
         </p>
 
         {/* ホームに戻るボタン */}

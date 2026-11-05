@@ -182,7 +182,24 @@ export default function ReceiptHistoryDetail({ receipt, onBack, onDelete }) {
             <div className="custom-modal-button-group">
               <button
                 type="button"
-                className="modal-ok-button"
+                className="custom-modal-button ok-button"
+                style={{
+                  flex: '0 0 auto',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  minWidth: '140px',
+                  height: '42px',
+                  padding: '0 24px',
+                  backgroundColor: '#007aff',
+                  color: '#ffffff',
+                  fontSize: '15px',
+                  fontWeight: 'bold',
+                  border: 'none',
+                  borderRadius: '21px',
+                  whiteSpace: 'nowrap',
+                  boxShadow: '0 2px 6px rgba(0, 122, 255, 0.3)',
+                }}
                 onClick={handleSuccessOk}
               >
                 OK

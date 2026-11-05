@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import './imageConfirm.css';
+import { compressImage } from "../../utils/imageUtils";
+import { parseReceiptImage } from "../../utils/receiptParser";
 
 export default function ImageConfirm({ imageSrc, onBack, onNavigateToCrop, onAnalysisComplete }) {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -16,17 +18,32 @@ export default function ImageConfirm({ imageSrc, onBack, onNavigateToCrop, onAna
     if (onBack) onBack();
   };
 
-  // 「分析する」クリック時の処理（分析中画面を表示後、レシート確認画面へ遷移）
-  const handleStartAnalysis = () => {
+  // 「分析する」クリック時の実際のAI解析フロー
+  const handleStartAnalysis = async () => {
+    if (!imageSrc) return;
     setIsAnalyzing(true);
 
-    // デモ用：2.5秒後に分析が完了してレシート確認画面へ遷移
-    setTimeout(() => {
+    try {
+      // 1. 画像の軽量化・リサイズ処理を自動実行
+      const compressedBase64 = await compressImage(imageSrc, 1280, 1280, 0.85);
+
+      // 2. Gemini API で高速かつ正確に解析（店舗名正規化・JSON化も内部で適用済み）
+      const parseResult = await parseReceiptImage(compressedBase64);
+
       setIsAnalyzing(false);
-      if (onAnalysisComplete) {
-        onAnalysisComplete();
+
+      if (parseResult.success && onAnalysisComplete) {
+        // 解析結果と圧縮済み画像を渡して次の画面へ遷移
+        onAnalysisComplete({
+          parsedData: parseResult.data,
+          compressedImage: compressedBase64,
+        });
       }
-    }, 2500);
+    } catch (error) {
+      console.error('レシート解析中にエラーが発生しました:', error);
+      setIsAnalyzing(false);
+      alert('レシートの解析に失敗しました。もう一度お試しください。');
+    }
   };
 
   // 分析キャンセル処理
@@ -38,16 +55,13 @@ export default function ImageConfirm({ imageSrc, onBack, onNavigateToCrop, onAna
   if (isAnalyzing) {
     return (
       <div className="loading-container">
-        {/* ヘッダーなし・白背景 */}
         <main className="loading-main">
-          {/* 中央の回転アニメーションとテキスト */}
           <div className="loading-spinner-wrapper">
             <div className="loading-spinner"></div>
             <p className="loading-text">分析中...</p>
           </div>
         </main>
 
-        {/* 下部の注意書き & キャンセルボタン */}
         <footer className="loading-footer">
           <div className="loading-notice-box">
             <p className="notice-title">⚠️ ご確認ください</p>

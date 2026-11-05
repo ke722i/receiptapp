@@ -6,6 +6,10 @@
   display: flex;
   flex-direction: column;
   overflow: hidden; /* コンテナ自体は全画面固定 */
+  /* グローバルCSS（ダークモード等）に左右されないよう明示指定 */
+  background-color: #ffffff;
+  color: #333333;
+  color-scheme: light;
 }
 
 /* ヘッダーデザイン（赤背景） */
@@ -215,6 +219,7 @@
   position: relative;
   z-index: 1;
   transition: z-index 0.25s;
+  margin-bottom: 24px; /* 検索バーと「閲覧履歴」の間隔 */
 }
 
 /* フォーカス時はオーバーレイより全面に浮き出させる */
@@ -290,6 +295,11 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+/* セクション同士（閲覧履歴 → カテゴリ）の間隔 */
+.section-container + .section-container {
+  margin-top: 20px;
 }
 
 .section-title {

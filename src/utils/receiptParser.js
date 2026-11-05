@@ -1,6 +1,7 @@
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI, Type } from '@google/genai';
 import { CATEGORY_TREE } from '../constants/categoryData';
 import { matchCategoryFromTree } from './categoryUtils';
+import { normalizeStoreName } from './storeNameNormalizer';
 
 // APIエラー（503高負荷等）発生時に使用するテスト用ダミーデータ
 const DUMMY_PARSED_DATA = {
@@ -38,46 +39,17 @@ export const parseReceiptImage = async (base64Image) => {
     // 許容するカテゴリ名のリストを文字列化
     const availableCategories = getCategoryNameList().join(', ');
 
-    const promptText = `
-添付されたレシート画像を解析し、正確なJSONフォーマットのみで出力してください。
-Markdown装飾（\`\`\`json 等）や説明文は一切含めないでください。
-
-【カテゴリ指定ルール】
-category フィールドには、必ず以下の【許可されたカテゴリリスト】の中から最も適切なものを1つ選んで設定してください。リストにない独自のカテゴリ名は使用禁止です。
-
-【許可されたカテゴリリスト】
-${availableCategories}
+    // 1. プロンプト文を極限まで短縮（推論ステップを削って爆速化）
+    const promptText = `レシート画像から情報を抽出してください。
 
 【抽出ルール】
-1. store_name: 店舗名（文字列。読み取れない場合は null）。
-2. store_address: 店舗住所（読み取れない場合は null）。
-3. store_number: 店舗の電話番号（読み取れない場合は null）。
-4. purchase_date: 購入日付 (YYYY-MM-DD 形式。読み取れない場合は null)。
-5. items: 購入商品の配列。各要素には以下を含めること:
-   - item_name: 商品名（「単100」などの単価表記は除外し、純粋な商品名のみ抽出）
-   - category: 商品のカテゴリ名（例: 食品, 飲料, 日用品, 生鮮食品, 乳製品, お菓子 等）。
-   - price: 商品の「単品価格（単価）」を数値（整数）で抽出。
-     ※【超重要】複数購入（例: 「単100」「@100」「3点 300」等）で合計金額と単価の両方が印字されている場合、合計金額（300）ではなく、必ず1点あたりの単品価格（100）を取得してください。
-   - is_discount: 対象商品が値引き・割引されているかどうか (true / false)。
+- category: 以下のリストから最も適切なものを1つ選択（リスト外の独自名は絶対に使用禁止）
+  [許可されたカテゴリ: ${availableCategories}]
+- item_name: 「単100」等の単価表記を除いた純粋な商品名
+- price: 複数購入（例: @100、3点 300）の場合、合計額ではなく必ず「1点あたりの単品価格」を数値で取得
+- is_discount: 対象商品が値引き・割引されているか(boolean)`;
 
-【出力JSONフォーマット】
-{
-  "store_name": "〇〇スーパー 渋谷店",
-  "store_address": "東京都渋谷区...",
-  "store_number": "03-1234-5678",
-  "purchase_date": "2026-10-29",
-  "items": [
-    {
-      "item_name": "牛乳 1L",
-      "category": "乳製品",
-      "price": 218,
-      "is_discount": false
-    }
-  ]
-}
-`;
-
-    // gemini-2.5-flash または gemini-1.5-flash を指定
+    // 2. responseSchema でJSON構造とデータ型を厳格に指定（思考時間をゼロへ）
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: [
@@ -91,12 +63,38 @@ ${availableCategories}
       ],
       config: {
         responseMimeType: 'application/json',
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            store_name: { type: Type.STRING, nullable: true },
+            store_address: { type: Type.STRING, nullable: true },
+            store_number: { type: Type.STRING, nullable: true },
+            purchase_date: { type: Type.STRING, nullable: true },
+            items: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  item_name: { type: Type.STRING },
+                  category: { type: Type.STRING },
+                  price: { type: Type.INTEGER },
+                  is_discount: { type: Type.BOOLEAN },
+                },
+                required: ['item_name', 'category', 'price', 'is_discount'],
+              },
+            },
+          },
+          required: ['items'],
+        },
       },
     });
 
-    const responseText = response.text;
-    const jsonString = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
-    const parsedData = JSON.parse(jsonString);
+    const parsedData = JSON.parse(response.text);
+
+    // ★ 店舗名の表記揺れを辞書で高速正規化（例: 「アプロ」「AppRo」→「食品館アプロ」）
+    if (parsedData && parsedData.store_name) {
+      parsedData.store_name = normalizeStoreName(parsedData.store_name);
+    }
 
     // AI抽出後のカテゴリ補正
     if (parsedData && Array.isArray(parsedData.items)) {

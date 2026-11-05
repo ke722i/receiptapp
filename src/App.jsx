@@ -22,7 +22,6 @@ function App() {
   const [parsedReceiptData, setParsedReceiptData] = useState(null); // AI解析データ用
   const [selectedReceipt, setSelectedReceipt] = useState(null);
   const [selectedProductName, setSelectedProductName] = useState('牛乳');
-  const [showDeleteSuccessModal, setShowDeleteSuccessModal] = useState(false);
 
   // ログインユーザーID（localStorage から復元、初期値 'User_12345'）
   const [userId, setUserId] = useState(() => {
@@ -90,11 +89,6 @@ function App() {
     setCurrentScreen('productDetail');
   };
 
-  const handleCloseDeleteSuccess = () => {
-    setShowDeleteSuccessModal(false);
-    setCurrentScreen('receiptHistoryList');
-  };
-
   return (
     <div className="app">
       {/* ログイン・新規登録 */}
@@ -146,37 +140,45 @@ function App() {
         />
       )}
 
-      {/* レシートスキャン（撮影・画像選択・解析） */}
+      {/* レシートスキャン（画像選択・カメラ撮影） */}
       {currentScreen === 'receiptScanner' && (
         <ReceiptScanner
           onBack={() => setCurrentScreen('home')}
-          onAnalysisComplete={(data, image) => {
-            setParsedReceiptData({ ...data, _scanId: Date.now() });
+          // 画像が選択/撮影されたら直接 CropImage（トリミング画面）へ遷移！
+          onImageSelected={(image) => {
             setSelectedImage(image);
+            setCurrentScreen('cropImage');
+          }}
+        />
+      )}
+
+      {/* STEP 1: トリミング画面（撮影・選択後に自動表示） */}
+      {currentScreen === 'cropImage' && (
+        <CropImage
+          imageSrc={selectedImage}
+          onBack={() => setCurrentScreen('receiptScanner')}
+          onCropComplete={(croppedImage) => {
+            setSelectedImage(croppedImage); // 切り抜いた安全な画像で更新
+            setCurrentScreen('imageConfirm'); // 画像確認・分析画面へ進む
+          }}
+        />
+      )}
+
+      {/* STEP 2: 画像確認・Gemini AI 分析実行画面 */}
+      {currentScreen === 'imageConfirm' && (
+        <ImageConfirm
+          imageSrc={selectedImage}
+          onBack={() => setCurrentScreen('cropImage')} // 戻る時はトリミングへ
+          onNavigateToCrop={() => setCurrentScreen('cropImage')} // 再調整したい場合
+          onAnalysisComplete={({ parsedData, compressedImage }) => {
+            setParsedReceiptData({ ...parsedData, _scanId: Date.now() });
+            if (compressedImage) setSelectedImage(compressedImage);
             setCurrentScreen('receiptConfirm');
           }}
         />
       )}
 
-      {/* レシート確認・保存 */}
-      {currentScreen === 'imageConfirm' && (
-        <ImageConfirm
-          imageSrc={selectedImage}
-          onBack={() => setCurrentScreen('receiptScanner')}
-          onNavigateToCrop={() => setCurrentScreen('cropImage')}
-          onAnalysisComplete={() => setCurrentScreen('receiptConfirm')}
-        />
-      )}
-      {currentScreen === 'cropImage' && (
-        <CropImage
-          imageSrc={selectedImage}
-          onBack={() => setCurrentScreen('imageConfirm')}
-          onCropComplete={(cropped) => {
-            setSelectedImage(cropped);
-            setCurrentScreen('imageConfirm');
-          }}
-        />
-      )}
+      {/* STEP 3: レシート解析結果の確認・データ保存 */}
       {currentScreen === 'receiptConfirm' && (
         <ReceiptConfirm
           key={parsedReceiptData?.purchase_date || 'receipt-confirm-screen'}
@@ -206,30 +208,7 @@ function App() {
         <ReceiptHistoryDetail
           receipt={selectedReceipt}
           onBack={() => setCurrentScreen('receiptHistoryList')}
-          onDelete={() => {
-            setShowDeleteSuccessModal(true);
-          }}
         />
-      )}
-
-      {/* 削除完了モーダル */}
-      {showDeleteSuccessModal && (
-        <div className="custom-modal-overlay" onClick={handleCloseDeleteSuccess}>
-          <div className="custom-modal-card" onClick={(e) => e.stopPropagation()}>
-            <div className="custom-modal-icon">✓</div>
-            <h2 className="custom-modal-title">削除完了</h2>
-            <p className="custom-modal-message">
-              レシートデータを正常に削除しました。
-            </p>
-            <button
-              type="button"
-              className="custom-modal-button primary-button"
-              onClick={handleCloseDeleteSuccess}
-            >
-              OK
-            </button>
-          </div>
-        </div>
       )}
     </div>
   );
