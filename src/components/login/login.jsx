@@ -43,7 +43,7 @@ export default function Login({ onNavigateToRegister, onLoginSuccess }) {
     <div className="login-container">
       <div className="login-card">
         <div className="logo-section">
-          <img src={appLogo} alt="底値チェッカー" className="app-logo" />
+          <img src={appLogo} alt="レシート即！メモ" className="app-logo" />
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">

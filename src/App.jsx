@@ -12,6 +12,7 @@ import ReceiptConfirm from './components/receiptConfirm/receiptConfirm';
 import ReceiptSuccess from './components/receiptSuccess/receiptSuccess';
 import ReceiptHistoryList from './components/receiptHistoryList/receiptHistoryList';
 import ReceiptHistoryDetail from './components/receiptHistoryDetail/receiptHistoryDetail';
+import StoreList from './components/storeList/storeList';
 import { fetchReceiptById } from './utils/receiptDb';
 import { productKey } from './utils/categoryUtils';
 
@@ -21,6 +22,8 @@ const STORAGE_KEY_USER_ID = 'receipt_app_user_id';
 function App() {
   const [currentScreen, setCurrentScreen] = useState('login');
   const [selectedImage, setSelectedImage] = useState(null);
+  // トリミング画面の「キャンセル」で戻る画面（撮影直後は撮影画面、画像確認からは画像確認）
+  const [cropReturnScreen, setCropReturnScreen] = useState('receiptScanner');
   const [parsedReceiptData, setParsedReceiptData] = useState(null); // AI解析データ用
   const [selectedReceipt, setSelectedReceipt] = useState(null);
   // レシート詳細から「戻る」で帰る画面（レシート一覧 / 商品詳細 / 購入履歴一覧）
@@ -136,6 +139,7 @@ function App() {
           onLogout={() => setCurrentScreen('login')}
           onNavigateToSettings={() => setCurrentScreen('settings')}
           onNavigateToHistory={() => setCurrentScreen('receiptHistoryList')}
+          onNavigateToStores={() => setCurrentScreen('storeList')}
           onNavigateToCategory={handleSelectProduct}
           onSelectProduct={handleSelectProduct}
           onOpenCamera={() => setCurrentScreen('receiptScanner')} // Scanner画面へ遷移
@@ -172,6 +176,7 @@ function App() {
           // 画像が選択/撮影されたら直接 CropImage（トリミング画面）へ遷移！
           onImageSelected={(image) => {
             setSelectedImage(image);
+            setCropReturnScreen('receiptScanner'); // 撮影直後のトリミングでキャンセル → 撮影画面へ
             setCurrentScreen('cropImage');
           }}
         />
@@ -181,7 +186,7 @@ function App() {
       {currentScreen === 'cropImage' && (
         <CropImage
           imageSrc={selectedImage}
-          onBack={() => setCurrentScreen('receiptScanner')}
+          onCancel={() => setCurrentScreen(cropReturnScreen)}
           onCropComplete={(croppedImage) => {
             setSelectedImage(croppedImage); // 切り抜いた安全な画像で更新
             setCurrentScreen('imageConfirm'); // 画像確認・分析画面へ進む
@@ -193,8 +198,12 @@ function App() {
       {currentScreen === 'imageConfirm' && (
         <ImageConfirm
           imageSrc={selectedImage}
-          onBack={() => setCurrentScreen('cropImage')} // 戻る時はトリミングへ
-          onNavigateToCrop={() => setCurrentScreen('cropImage')} // 再調整したい場合
+          onCancel={() => setCurrentScreen('receiptScanner')} // キャンセル → 撮影画面へ
+          onNavigateToCrop={() => {
+            // 再調整したい場合。トリミングでキャンセルしたらこの画面に戻る
+            setCropReturnScreen('imageConfirm');
+            setCurrentScreen('cropImage');
+          }}
           onAnalysisComplete={({ parsedData, compressedImage }) => {
             setParsedReceiptData({ ...parsedData, _scanId: Date.now() });
             if (compressedImage) setSelectedImage(compressedImage);
@@ -226,6 +235,17 @@ function App() {
           onSelectReceiptDetail={(receipt) => {
             setSelectedReceipt(receipt);
             setReceiptDetailBackScreen('receiptHistoryList');
+            setCurrentScreen('receiptHistoryDetail');
+          }}
+        />
+      )}
+      {/* 店舗別（同じチェーンをまとめて表示） */}
+      {currentScreen === 'storeList' && (
+        <StoreList
+          onBack={() => setCurrentScreen('home')}
+          onSelectReceiptDetail={(receipt) => {
+            setSelectedReceipt(receipt);
+            setReceiptDetailBackScreen('storeList');
             setCurrentScreen('receiptHistoryDetail');
           }}
         />

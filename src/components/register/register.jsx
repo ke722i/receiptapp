@@ -86,7 +86,7 @@ export default function Register({ onNavigateToLogin, onRegisterSuccess }) {
     <div className="register-container">
       <div className="register-card">
         <div className="logo-section">
-          <img src={appLogo} alt="底値チェッカー" className="app-logo" />
+          <img src={appLogo} alt="レシート即！メモ" className="app-logo" />
         </div>
 
         <h2 className="register-title">新規アカウント登録</h2>

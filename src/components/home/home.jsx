@@ -22,6 +22,7 @@ export default function Home({
   onNavigateToCategory,
   onOpenCamera,
   onNavigateToHistory,
+  onNavigateToStores,
   onNavigateToSettings,
   onSelectProduct,
   viewHistory = [],
@@ -130,7 +131,7 @@ export default function Home({
         </button>
 
         <div className="header-logo-area">
-          <div className="header-logo-placeholder">底値チェッカー</div>
+          <div className="header-logo-placeholder">レシート即！メモ</div>
         </div>
 
         <div className="header-right-spacer"></div>
@@ -157,7 +158,10 @@ export default function Home({
             <span className="drawer-icon">📷</span><span>レシート撮影</span>
           </button>
           <button type="button" className="drawer-item" onClick={() => handleMenuClick(onNavigateToHistory)}>
-            <span className="drawer-icon">📄</span><span>レシート履歴</span>
+            <span className="drawer-icon">📄</span><span>レシート一覧</span>
+          </button>
+          <button type="button" className="drawer-item" onClick={() => handleMenuClick(onNavigateToStores)}>
+            <span className="drawer-icon">🏪</span><span>店舗別一覧</span>
           </button>
           <button type="button" className="drawer-item" onClick={() => handleMenuClick(onNavigateToSettings)}>
             <span className="drawer-icon">⚙️</span><span>設定</span>

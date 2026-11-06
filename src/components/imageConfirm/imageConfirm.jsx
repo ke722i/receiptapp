@@ -3,20 +3,8 @@ import './imageConfirm.css';
 import { compressImage } from "../../utils/imageUtils";
 import { parseReceiptImage } from "../../utils/receiptParser";
 
-export default function ImageConfirm({ imageSrc, onBack, onNavigateToCrop, onAnalysisComplete }) {
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
+export default function ImageConfirm({ imageSrc, onCancel, onNavigateToCrop, onAnalysisComplete }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false); // 分析中ローディング状態
-
-  // 戻るボタンタップ時の処理
-  const handleBackClick = () => {
-    setShowConfirmModal(true);
-  };
-
-  // ポップアップで「戻る」を確定した時の処理
-  const handleConfirmBack = () => {
-    setShowConfirmModal(false);
-    if (onBack) onBack();
-  };
 
   // 「分析する」クリック時の実際のAI解析フロー
   const handleStartAnalysis = async () => {
@@ -32,7 +20,12 @@ export default function ImageConfirm({ imageSrc, onBack, onNavigateToCrop, onAna
 
       setIsAnalyzing(false);
 
-      if (parseResult.success && onAnalysisComplete) {
+      if (!parseResult.success) {
+        alert(parseResult.error);
+        return;
+      }
+
+      if (onAnalysisComplete) {
         // 解析結果と圧縮済み画像を渡して次の画面へ遷移
         onAnalysisComplete({
           parsedData: parseResult.data,
@@ -87,16 +80,7 @@ export default function ImageConfirm({ imageSrc, onBack, onNavigateToCrop, onAna
     <div className="image-confirm-container">
       {/* 1. ヘッダー */}
       <header className="image-confirm-header">
-        <button
-          type="button"
-          className="back-button"
-          onClick={handleBackClick}
-          aria-label="戻る"
-        >
-          ‹
-        </button>
         <h1 className="header-title">画像確認</h1>
-        <div className="header-right-spacer"></div>
       </header>
 
       {/* メインエリア */}
@@ -119,8 +103,15 @@ export default function ImageConfirm({ imageSrc, onBack, onNavigateToCrop, onAna
         </div>
       </main>
 
-      {/* 右下の分析実行ボタン */}
+      {/* 下部ボタン操作バー（トリミング画面と同じ配置: 左キャンセル / 右 実行） */}
       <div className="bottom-action-bar">
+        <button
+          type="button"
+          className="confirm-cancel-button"
+          onClick={onCancel}
+        >
+          キャンセル
+        </button>
         <button
           type="button"
           className="analyze-button"
@@ -130,34 +121,6 @@ export default function ImageConfirm({ imageSrc, onBack, onNavigateToCrop, onAna
           <span className="analyze-icon">➔</span>
         </button>
       </div>
-
-      {/* 画面中央の警告ポップアップモーダル */}
-      {showConfirmModal && (
-        <div className="alert-modal-overlay" onClick={() => setShowConfirmModal(false)}>
-          <div className="alert-modal-card" onClick={(e) => e.stopPropagation()}>
-            <h2 className="alert-title">確認</h2>
-            <p className="alert-message">
-              保存できていません<br />戻りますか？
-            </p>
-            <div className="alert-button-group">
-              <button
-                type="button"
-                className="alert-button cancel-button"
-                onClick={() => setShowConfirmModal(false)}
-              >
-                キャンセル
-              </button>
-              <button
-                type="button"
-                className="alert-button confirm-button"
-                onClick={handleConfirmBack}
-              >
-                戻る
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

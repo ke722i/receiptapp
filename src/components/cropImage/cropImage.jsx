@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import './cropImage.css';
 
-export default function CropImage({ imageSrc, onBack, onCropComplete }) {
+export default function CropImage({ imageSrc, onCancel, onCropComplete }) {
   // トリミング枠の初期表示位置（%）
   const [cropBox, setCropBox] = useState({ top: 10, left: 10, width: 80, height: 80 });
   
@@ -160,16 +160,7 @@ export default function CropImage({ imageSrc, onBack, onCropComplete }) {
     <div className="crop-container">
       {/* 1. ヘッダー */}
       <header className="crop-header">
-        <button
-          type="button"
-          className="back-button"
-          onClick={onBack}
-          aria-label="戻る"
-        >
-          ‹
-        </button>
         <h1 className="header-title">トリミング</h1>
-        <div className="header-right-spacer"></div>
       </header>
 
       {/* 2. 注意書きバナー */}
@@ -269,7 +260,7 @@ export default function CropImage({ imageSrc, onBack, onCropComplete }) {
         <button
           type="button"
           className="crop-cancel-button"
-          onClick={onBack}
+          onClick={onCancel}
         >
           キャンセル
         </button>

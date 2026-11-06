@@ -75,29 +75,3 @@ export const getProducts = (main, category, sub) =>
       (p) => p.product
     )
   );
-
-// ---------- 自動判定（AI 解析が失敗したときの補助） ----------
-
-/**
- * レシートの商品名から、いちばん長く一致した商品の 大分類＋中分類 を返す
- *  ※ 文字列の一致だけでは商品名までは決めきれないため、商品名・小分類は返さない
- * @returns {{ main: string, category: string } | null}
- */
-export const matchCategoryPathFromTree = (itemName) => {
-  if (!itemName) return null;
-  let best = null;
-  let bestLength = 0;
-  PRODUCT_PATHS.forEach((p) => {
-    if (p.product.length > bestLength && itemName.includes(p.product)) {
-      bestLength = p.product.length;
-      best = { main: p.main, category: p.category };
-    }
-  });
-  return best;
-};
-
-/**
- * （互換用）中分類名だけを返す。見つからない場合は "その他"
- */
-export const matchCategoryFromTree = (itemName) =>
-  matchCategoryPathFromTree(itemName)?.category || 'その他';

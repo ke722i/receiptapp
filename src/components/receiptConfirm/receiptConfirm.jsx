@@ -34,11 +34,18 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
 
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  // 未保存のまま戻ろうとしたときの確認ポップアップ
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
+
+  const handleConfirmLeave = () => {
+    setShowLeaveModal(false);
+    if (onBack) onBack();
+  };
 
   // チェックボックスのトグル（個別に切り替え）
   const handleToggleCheck = (id) => {
     setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((item = id) => item !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]
     );
   };
 
@@ -112,7 +119,12 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
   return (
     <div className="receipt-confirm-container">
       <header className="receipt-confirm-header">
-        <button type="button" className="back-button" onClick={onBack} aria-label="戻る">
+        <button
+          type="button"
+          className="back-button"
+          onClick={() => setShowLeaveModal(true)}
+          aria-label="戻る"
+        >
           ‹
         </button>
         <h1 className="header-title">レシート内容の確認</h1>
@@ -252,6 +264,34 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
         onClose={() => setIsEditModalOpen(false)}
         onSave={handleSaveEditedItems}
       />
+
+      {/* 未保存のまま戻るときの確認ポップアップ */}
+      {showLeaveModal && (
+        <div className="leave-modal-overlay" onClick={() => setShowLeaveModal(false)}>
+          <div className="leave-modal-card" onClick={(e) => e.stopPropagation()}>
+            <h2 className="leave-modal-title">確認</h2>
+            <p className="leave-modal-message">
+              保存できていません<br />戻りますか？
+            </p>
+            <div className="leave-modal-button-group">
+              <button
+                type="button"
+                className="leave-modal-button leave-modal-cancel"
+                onClick={() => setShowLeaveModal(false)}
+              >
+                キャンセル
+              </button>
+              <button
+                type="button"
+                className="leave-modal-button leave-modal-confirm"
+                onClick={handleConfirmLeave}
+              >
+                戻る
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
