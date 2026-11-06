@@ -3,14 +3,30 @@
 最終更新: 2026-11-07
 
 ## やったこと
-- レシート解析のタイムアウトを修正した（`supabase/functions/parse-receipt/handler.ts`）。
-  - モデルの既定値を `gemini-3.6-flash` に変更した。
-  - Gemini の待ち時間を 60 秒から 120 秒に延ばした。
-  - 作業は `fujita` ブランチ（学校のPCでの修正 64ca695 の上）に載せた。
-- 固定URLのサイトで動作を確認した（`main` をもとにした版。`GEMINI_MODEL` を読まない版でデプロイしたもの）。
+### レシート解析のタイムアウト修正（`supabase/functions/parse-receipt/handler.ts`）
+- モデルの既定値を `gemini-3.6-flash` に変更した。
+- Gemini の待ち時間を 60 秒から 120 秒に延ばした。
+- 作業は `fujita` ブランチ（学校のPCでの修正 64ca695 の上）に載せて、push 済み。
+- Supabase のシークレット `GEMINI_MODEL` の確認、`fujita` の版のデプロイ、固定URLでの動作確認は、ユーザーから「できた」と連絡を受けた。
+- 固定URLでの結果（`main` をもとにした版でデプロイしたとき）。
   - 10 件のレシート: 正しく 10 件、約 30 秒。
   - 25 件のレシート: 25 件、11 秒。
 - Gemini の API キーを新しく作り直した（チャットに貼ってしまったため）。
+
+### 画面の見た目の変更（コミット ed27245、`fujita` に push 済み）
+- 商品の表（レシート内容の確認・履歴の詳細）
+  - 見出しを固定し、暗めのグレー（`#616161`）に変更。罫線は横線のみ。
+  - 値引きは「あり」を緑の太字、「なし」をグレーの「－」で表示。
+  - 小分類（商品名）は濃いグレーの太字。クラス名は `product-label`（CSS で色を変えられる）。
+- 購入日の表示を、全画面で「YYYY年MM月DD日」にそろえた（曜日は表示しない）。
+  - 共通の関数は `src/utils/purchaseDate.js` の `formatPurchaseDate`。
+  - 確認画面の入力欄は、本物の日付入力欄を透明にして、文字の表示を重ねている。
+- レシート画像を押すと拡大表示する（`src/components/receiptImagePreview/`）。
+  - 確認画面と履歴の詳細で共通。サムネイルから広がる動き。外側のタップか Esc で閉じる。✕ボタンはなし。
+- 「選択した商品を編集」ボタンを、白背景に赤の枠のボタンに変更。選択件数の表示は、1 件以上のとき「選択中:」を黒の太字、件数を赤の太字にした。
+- 商品の編集画面のヘッダーを、他の画面と同じ形（左に戻る、中央にタイトル）にそろえた。
+
+### そのほか
 - CLAUDE.md に「作業の引き継ぎ」のルールを追加した。
 
 ## 分かったこと
@@ -20,25 +36,30 @@
   - `gemini-3.6-flash`: 15.4 秒、10 件で一致。
 - `gemini-2.5-flash` は 2026-12-01 に停止予定。
 - 解析時間は商品数に比例していない（10 件で約 30 秒、25 件で 11 秒）。
+- 公開先は Cloudflare Pages（`https://resoku.pages.dev`）。`fujita` ブランチのプレビューは `https://fujita.resoku.pages.dev`。
 
 ## 途中のこと
+- `fujita` から `main` への pull request は、マージされていない（作成したかも未確認）。`main` のコードは、まだ `gemini-2.5-flash` のまま。
 - 以前のタイムアウトの原因は確定していない。学校のPCで `gemini-3.8-flash` に変えた版がデプロイされていて、それが遅かった可能性がある（3.8 の速度は未測定）。現在は解消している。
-- `fujita` の版はまだデプロイしていない。Supabase のシークレットに `GEMINI_MODEL` が設定されているかも未確認。
 - 25 件のレシートの内容（商品名と金額）が正しいかは未確認。
 - 古い Gemini キーを AI Studio で削除したかは未確認。
+- 今回の見た目の変更は localhost で確認したが、公開サイトでは未確認。
+- 拡大表示の動き（サムネイルから広がる）は、実際の画面で未確認。
 
 ## 次にやること
-1. Supabase の Edge Functions → Secrets で `GEMINI_MODEL` を確認する。あれば削除するか `gemini-3.6-flash` にする。
-2. `fujita` を GitHub に push し、`fujita` の状態で `npm.cmd run deploy-functions` を実行して、もう一度動作を確認する。
+1. `fujita` から `main` への pull request をマージする（GitHub で作る。`gh` はこのPCに入っていない）。
+2. マージ後、`https://resoku.pages.dev` で、見た目の変更とレシート解析を確認する。
 3. 古い Gemini キーが残っていれば、AI Studio で削除する。
 4. 25 件のレシートの解析結果を、実物と見比べる。
 
 ## 注意点
-- 作業は `fujita` ブランチで行う。`main` には学校のPCでの修正が入っていない。
+- 作業は `fujita` ブランチで行う。`main` には、学校のPCでの修正と今回の変更が入っていない。
+- このPCは git の名前が未設定。コミットは `git -c user.name=kei -c user.email=... commit` の形で行っている。
 - シークレット `GEMINI_MODEL` を設定すると、コードの既定値より優先される。
 - API キーはチャットに貼らない。`GEMINI_API_KEY` は Supabase のシークレットで更新する（`.env` には入れない）。
-- Edge Function を変更したら `npm.cmd run deploy-functions` でデプロイする。先に `npx.cmd supabase login` が必要。
+- Edge Function を変更したら `npm.cmd run deploy-functions` でデプロイする。先に `npx.cmd supabase login` が必要。push やマージでは、Edge Function は更新されない。
 - `npm run dev` では解析に失敗するとダミーデータが出る。確認は固定URLのサイトで行うと確実。
 - タイムアウトした解析も、1 日 30 回の枠を 1 回消費する。
 - Gemini の待ち時間は 150 秒未満にする（Edge Function は 150 秒応答がないと 504 になる）。
 - 思考の量を減らす設定は試していない。今の速度で足りているので見送った。
+- 画面の確認は、ふだんは localhost（`npm.cmd run dev`）で行う。
