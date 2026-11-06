@@ -20,6 +20,16 @@ const toIso = (year, month, day) => {
   return `${String(y).padStart(4, '0')}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 };
 
+/**
+ * 'YYYY-MM-DD' → 'YYYY年MM月DD日'（画面に出す購入日はすべてこの形にそろえる）
+ *  形が違う値・空の値は、そのまま（空なら空文字）返す。
+ */
+export const formatPurchaseDate = (dateStr) => {
+  if (!dateStr) return '';
+  const match = String(dateStr).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return match ? `${match[1]}年${match[2]}月${match[3]}日` : String(dateStr);
+};
+
 export const normalizePurchaseDate = (raw) => {
   if (!raw) return null;
   const text = String(raw).normalize('NFKC').trim();

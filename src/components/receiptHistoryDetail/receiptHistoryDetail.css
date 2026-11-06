@@ -144,6 +144,27 @@
   vertical-align: middle;
 }
 
+/* 詳細画面の見出し行。確認画面（receiptConfirm.css）と同じ見た目にする */
+/* collapse のままだと、スクロール中に見出しの罫線が消える */
+.receipt-detail-main .receipt-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.receipt-detail-main .receipt-table th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background-color: #616161;
+  color: #ffffff;
+  border-bottom-color: #616161;
+}
+
+/* 横線の色は見出しの背景と同じ */
+.receipt-detail-main .receipt-table td {
+  border-bottom: 1px solid #616161;
+}
+
 .item-name-cell {
   font-weight: bold;
   color: #333333;
@@ -158,9 +179,25 @@
   color: #666666;
 }
 
+/* 小分類（商品名）。色は使わず、濃さと太さで目立たせる */
+.product-label {
+  color: #333333;
+  font-size: 11px;
+  font-weight: bold;
+}
+
 .discount-cell {
+  white-space: nowrap;
+}
+
+/* 値引きありだけが目に入るように、なしは控えめにする */
+.discount-yes {
   color: #388e3c;
   font-weight: bold;
+}
+
+.discount-none {
+  color: #757575;
 }
 
 /* 枠線・背景なしの目立たない削除リンク領域 */

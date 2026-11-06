@@ -23,39 +23,40 @@
   background-color: #f8fafc;
 }
 
-/* スマホ用ヘッダー (高さ54px、タッチエリア確保) */
+/* ヘッダー。他の画面（レシート内容の確認など）と同じ大きさ・並び */
 .receipt-edit-header {
-  height: 54px;
-  min-height: 54px;
+  height: 60px;
+  min-height: 60px;
+  width: 100%;
   padding: 0 16px;
   background-color: #e53935;
   color: #ffffff;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  box-sizing: border-box;
 }
 
 .receipt-edit-title {
-  font-size: 1rem;
-  font-weight: 700;
+  font-size: 18px;
+  font-weight: bold;
   margin: 0;
   color: #ffffff;
 }
 
-/* スマホで押しやすい閉じるボタン */
-.receipt-edit-close {
+.receipt-edit-back {
   background: none;
   border: none;
-  font-size: 1.25rem;
   color: #ffffff;
-  width: 44px;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  font-size: 32px;
+  font-weight: 300;
+  line-height: 1;
+  padding: 0 8px;
   cursor: pointer;
-  border-radius: 50%;
+}
+
+.receipt-edit-header-spacer {
+  width: 32px;
 }
 
 /* スクロールエリア（スマホでの快適なスクロール） */

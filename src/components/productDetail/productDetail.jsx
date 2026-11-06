@@ -102,7 +102,7 @@ export default function ProductDetail({ product, onBack, onViewAllHistory, onSel
             <h3 className="section-title">最安値の購入</h3>
             <div className="recent-purchase-card">
               <div className="recent-card-header">
-                <span className="purchase-date">{cheapestPurchase.date.split('(')[0]}</span>
+                <span className="purchase-date">{cheapestPurchase.date}</span>
                 <span className="history-shop">{cheapestPurchase.shop}</span>
               </div>
               <div className="recent-card-body">

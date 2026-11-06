@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import './receiptHistoryDetail.css';
 import { deleteReceiptFromDatabase } from '../../utils/receiptDb';
+import { formatPurchaseDate } from '../../utils/purchaseDate';
+import ReceiptImagePreview from '../receiptImagePreview/receiptImagePreview';
 
 export default function ReceiptHistoryDetail({ receipt, onBack, onDelete }) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -70,17 +72,11 @@ export default function ReceiptHistoryDetail({ receipt, onBack, onDelete }) {
             </div>
             <div className="info-row">
               <span className="info-label">購入日時</span>
-              <span className="info-value">{purchaseDate}</span>
+              <span className="info-value">{formatPurchaseDate(purchaseDate)}</span>
             </div>
           </div>
 
-          <div className="receipt-image-preview">
-            {imageSrc ? (
-              <img src={imageSrc} alt="レシート写真" className="thumbnail-image" />
-            ) : (
-              <div className="no-image-text">No Image</div>
-            )}
-          </div>
+          <ReceiptImagePreview src={imageSrc} alt="レシート写真" />
         </section>
 
         {/* 3. 商品リスト表 */}
@@ -115,13 +111,11 @@ export default function ReceiptHistoryDetail({ receipt, onBack, onDelete }) {
                         )}
                         {category}
                         {item.product_name && (
-                          <div style={{ fontSize: '11px', color: '#e53935', fontWeight: 'bold' }}>
-                            {item.product_name}
-                          </div>
+                          <div className="product-label">{item.product_name}</div>
                         )}
                       </td>
                       <td className="discount-cell">
-                        {isDiscount ? 'あり' : 'なし'}
+                        {isDiscount ? <span className="discount-yes">あり</span> : <span className="discount-none">－</span>}
                       </td>
                     </tr>
                   );

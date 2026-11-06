@@ -1,0 +1,38 @@
+/* サムネイルをボタンにしても、見た目が変わらないようにする */
+.receipt-image-open {
+  padding: 0;
+  cursor: zoom-in;
+  font: inherit;
+}
+
+/* 画像を大きく表示するポップアップ */
+.image-viewer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.image-viewer-frame {
+  width: 100%;
+  max-width: 360px;
+}
+
+.image-viewer-scroll {
+  width: 100%;
+  max-height: 70vh;
+  overflow-y: auto;
+  border-radius: 8px;
+  background-color: #ffffff;
+}
+
+.image-viewer-image {
+  display: block;
+  width: 100%;
+  height: auto;
+}

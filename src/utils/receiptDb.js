@@ -1,4 +1,5 @@
 import { supabase } from '../services/supabaseClient';
+import { formatPurchaseDate } from './purchaseDate';
 
 /**
  * レシート本体と明細を Supabase DB に一括保存するユーティリティ
@@ -94,18 +95,6 @@ export const fetchReceiptHistory = async () => {
   }
 };
 
-const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'];
-
-// 'YYYY-MM-DD' → 'YYYY/MM/DD(曜)'
-const formatDateWithWeekday = (dateStr) => {
-  if (!dateStr) return '';
-  const [y, m, d] = dateStr.split('-').map(Number);
-  if (!y || !m || !d) return dateStr;
-  const weekday = WEEKDAYS[new Date(y, m - 1, d).getDay()];
-  const mm = String(m).padStart(2, '0');
-  const dd = String(d).padStart(2, '0');
-  return `${y}/${mm}/${dd}(${weekday})`;
-};
 
 /**
  * 指定した商品（4階層のパス）の、自分のレシートの購入履歴を取得する
@@ -155,7 +144,7 @@ export const fetchProductPriceHistory = async (path) => {
         id: row.id,
         receiptId: row.receipt_id,
         dateValue: row.receipts?.purchase_date || '',
-        date: formatDateWithWeekday(row.receipts?.purchase_date),
+        date: formatPurchaseDate(row.receipts?.purchase_date),
         shop: row.receipts?.store_name || '店舗名未登録',
         itemName: row.item_name || '',
         price: Number(row.price) || 0,

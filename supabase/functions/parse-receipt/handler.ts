@@ -1,8 +1,14 @@
 import { PROMPT_TEXT, RESPONSE_SCHEMA, resolveItems } from './catalog.js';
 
-const GEMINI_URL =
-  'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
-const GEMINI_TIMEOUT_MS = 60_000;
+// モデルは古くなると新しいユーザーに提供されなくなる（gemini-2.5-flash がそうだった）。
+// 変えたいときは Supabase のシークレット GEMINI_MODEL を設定すれば、コードを直さずに切り替えられる。
+const DEFAULT_GEMINI_MODEL = 'gemini-3.6-flash';
+const geminiUrl = () =>
+  `https://generativelanguage.googleapis.com/v1beta/models/${
+    Deno.env.get('GEMINI_MODEL') || DEFAULT_GEMINI_MODEL
+  }:generateContent`;
+// 商品数の多いレシートに備えて長めにする。Edge Function の上限（150 秒）は超えないこと
+const GEMINI_TIMEOUT_MS = 120_000;
 
 // 圧縮後のレシート画像は 1MB 前後。大きすぎる送信は Gemini に渡す前に断る
 const MAX_IMAGE_BASE64_LENGTH = 6_000_000;
@@ -44,7 +50,7 @@ const consumeQuota = async (authorization: string, apikey: string) => {
 };
 
 const callGemini = async (apiKey: string, base64Image: string) => {
-  const res = await fetch(GEMINI_URL, {
+  const res = await fetch(geminiUrl(), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
     signal: AbortSignal.timeout(GEMINI_TIMEOUT_MS),
@@ -65,10 +71,25 @@ const callGemini = async (apiKey: string, base64Image: string) => {
     }),
   });
 
-  if (!res.ok) throw new Error(`Gemini API error: ${res.status}`);
+  if (!res.ok) {
+    // 原因調べ用に、Google が返したエラー文だけをログに残す（キーが含まれていたら伏せ、300文字まで）
+    // JSON なら error.message、そうでなければ本文の先頭をそのまま使う
+    const raw = await res.text().catch(() => '');
+    let detail = raw;
+    try {
+      detail = String(JSON.parse(raw)?.error?.message ?? raw);
+    } catch { /* JSON でない応答は、そのまま使う */ }
+    detail = detail.split(apiKey).join('***').replace(/\s+/g, ' ').trim().slice(0, 300);
+    throw new Error(`Gemini API error: ${res.status} ${detail || '(説明なし)'}`);
+  }
 
   const data = await res.json();
-  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  // 考えるタイプのモデルは、要素が複数に分かれることがある。考えた過程（thought）を除いて text をつなぐ
+  const parts: { text?: unknown; thought?: unknown }[] = data?.candidates?.[0]?.content?.parts ?? [];
+  const text = parts
+    .filter((p) => typeof p.text === 'string' && !p.thought)
+    .map((p) => p.text)
+    .join('');
   if (!text) throw new Error('Gemini API returned no text');
   return JSON.parse(text);
 };

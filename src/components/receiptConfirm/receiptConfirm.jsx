@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import './receiptConfirm.css';
 import { saveReceiptToDatabase } from '../../utils/receiptDb';
+import { formatPurchaseDate } from '../../utils/purchaseDate';
 import ReceiptEdit from "../receiptEdit/receiptEdit";
+import ReceiptImagePreview from "../receiptImagePreview/receiptImagePreview";
 
 export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveComplete }) {
   const [storeName, setStoreName] = useState(() => parsedData?.store_name || '');
@@ -152,37 +154,42 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
             </div>
             <div className="info-row">
               <span className="info-label">購入日時</span>
-              <input
-                type="date"
-                className="info-input"
-                value={purchaseDate}
-                onChange={(e) => setPurchaseDate(e.target.value)}
-              />
+              {/* 日付入力欄の表示形式はブラウザの言語で決まるため、「YYYY年MM月DD日」の文字を見せ、
+                  本物の入力欄は透明にして上に重ねる（タップすると日付選択が開く） */}
+              <div className="date-field">
+                <span className="info-input date-display">
+                  {formatPurchaseDate(purchaseDate) || '日付を選択'}
+                </span>
+                <input
+                  type="date"
+                  className="date-native"
+                  value={purchaseDate}
+                  onChange={(e) => setPurchaseDate(e.target.value)}
+                  onClick={(e) => e.target.showPicker?.()}
+                  aria-label="購入日時"
+                />
+              </div>
             </div>
           </div>
 
-          <div className="receipt-image-preview">
-            {imageSrc ? (
-              <img src={imageSrc} alt="トリミング画像" className="thumbnail-image" />
-            ) : (
-              <div className="no-image-text">No Image</div>
-            )}
-          </div>
+          <ReceiptImagePreview src={imageSrc} alt="トリミング画像" />
         </section>
 
         {/* 編集アクションバー */}
-        <div className="flex justify-between items-center my-3 px-1">
+        <div className="selection-bar">
           <span className="text-sm font-medium text-gray-600">
-            選択中: <b>{selectedIds.length}</b> 件
+            {selectedIds.length > 0 ? (
+              <>
+                <span className="selection-label">選択中:</span>{' '}
+                <span className="selection-count">{selectedIds.length} 件</span>
+              </>
+            ) : (
+              <>選択中: <b>{selectedIds.length}</b> 件</>
+            )}
           </span>
           <button
             type="button"
             className="edit-cell-button"
-            style={{
-              padding: '6px 16px',
-              backgroundColor: selectedIds.length > 0 ? '#1976d2' : '#ccc',
-              cursor: selectedIds.length > 0 ? 'pointer' : 'not-allowed',
-            }}
             onClick={handleOpenEditModal}
             disabled={selectedIds.length === 0}
           >
@@ -232,12 +239,12 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
                       )}
                       {item.category}
                       {item.productName && (
-                        <div style={{ fontSize: '11px', color: '#e53935', fontWeight: 'bold' }}>
-                          {item.productName}
-                        </div>
+                        <div className="product-label">{item.productName}</div>
                       )}
                     </td>
-                    <td className="discount-cell">{item.isDiscount ? 'あり' : 'なし'}</td>
+                    <td className="discount-cell">
+                      {item.isDiscount ? <span className="discount-yes">あり</span> : <span className="discount-none">－</span>}
+                    </td>
                   </tr>
                 ))
               )}
