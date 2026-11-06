@@ -2,12 +2,13 @@ import { PROMPT_TEXT, RESPONSE_SCHEMA, resolveItems } from './catalog.js';
 
 // モデルは古くなると新しいユーザーに提供されなくなる（gemini-2.5-flash がそうだった）。
 // 変えたいときは Supabase のシークレット GEMINI_MODEL を設定すれば、コードを直さずに切り替えられる。
-const DEFAULT_GEMINI_MODEL = 'gemini-3.8-flash';
+const DEFAULT_GEMINI_MODEL = 'gemini-3.6-flash';
 const geminiUrl = () =>
   `https://generativelanguage.googleapis.com/v1beta/models/${
     Deno.env.get('GEMINI_MODEL') || DEFAULT_GEMINI_MODEL
   }:generateContent`;
-const GEMINI_TIMEOUT_MS = 60_000;
+// 商品数の多いレシートに備えて長めにする。Edge Function の上限（150 秒）は超えないこと
+const GEMINI_TIMEOUT_MS = 120_000;
 
 // 圧縮後のレシート画像は 1MB 前後。大きすぎる送信は Gemini に渡す前に断る
 const MAX_IMAGE_BASE64_LENGTH = 6_000_000;

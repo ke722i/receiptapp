@@ -1,7 +1,11 @@
-# プロジェクト概要
+# 1. プロジェクト概要
 レシートを撮影して商品ごとの購入価格を比較するWebアプリ（React + Vite + Supabase、レシート解析は Gemini API）。
 
-# カテゴリの仕組み
+# 2. 注意事項
+- .env は絶対に読まない・表示しない（APIキーが入っている）。
+- 一部ファイル（categoryData.js の readings 部分など）は生成物。直接大きく編集せず、元のExcelから作り直す。
+
+# 3. カテゴリの仕組み
 - 4階層: 大分類 > 中分類 > 小分類 > 商品名。元データはExcelで、categoryData.js はそこから生成したもの。
 - 同じ名前の商品が別の場所にあっても混ざらないよう、商品は名前ではなく経路 {main, category, sub, product} で区別する（productKey）。
 - DBの receipt_items: main_category(大) / category(中) / sub_category(小) / product_name(商品名) / item_name(レシート印字名)。
@@ -9,17 +13,21 @@
 - 商品を表に当てはめられなくても、中分類まで当てはまるならそこまで保存する。
 - 値引きは「あり／なし」の表示だけ。比較は自分のレシートのみ。
 
-# 注意
-- .env は絶対に読まない・表示しない（APIキーが入っている）。
-- 一部ファイル（categoryData.js の readings 部分など）は生成物。直接大きく編集せず、元のExcelから作り直す。
-
-# レシート解析（Edge Function）
+# 4. レシート解析（Edge Function）
 - Gemini の呼び出しは Edge Function（supabase/functions/parse-receipt）で行う。API キーとプロンプトをブラウザ側のコードや VITE_ の環境変数に戻さない。
 - GEMINI_API_KEY は Supabase のシークレットに置く。ブラウザからは画像だけを送り、プロンプトは受け取らない（Gemini を別の用途に使われないため）。
 - 解析は 1 ユーザー 1 日 30 回まで。上限は supabase/migrations の consume_receipt_parse_quota の v_limit にあり、この関数がログイン確認も兼ねる。
 - supabase/functions/_shared/categoryData.js は src/constants/categoryData.js のコピー。直接編集しない。
 - 関数を変更したら npm run deploy-functions でデプロイする（ユーザーの Supabase ログインが必要）。
 - テスト用ダミーデータは開発中（npm run dev）だけ。本番の解析失敗はエラーを表示する。
+
+# 5. 店舗名
+- store_name は「チェーン名 支店名」の形で保存する（例: 「ディオ 和泉店」）。正規化は storeNameNormalizer.js の normalizeStoreName。
+- チェーン別の集計は、DB に列を足さず、読み出すときに getChainName(store_name) でチェーン名を割り出して行う（店舗別画面 storeList）。
+- 以前に保存したデータはチェーン名だけだが、そのまま同じチェーンとして集計される。
+- 新しいチェーンは storeNameNormalizer.js の STORE_RULES に追加する。辞書にないチェーンは、最初の空白までをチェーン名とみなす。
+
+# 6. 作業手順
 
 ## カテゴリ表の更新手順
 「カテゴリ表を更新して」と頼まれたら、次を行う。
@@ -37,12 +45,6 @@
 - categoryData.js 以外の src のファイルは変更しない
 - Excel は、ユーザーが同じ場所に上書きして更新する
 
-# 店舗名
-- store_name は「チェーン名 支店名」の形で保存する（例: 「ディオ 和泉店」）。正規化は storeNameNormalizer.js の normalizeStoreName。
-- チェーン別の集計は、DB に列を足さず、読み出すときに getChainName(store_name) でチェーン名を割り出して行う（店舗別画面 storeList）。
-- 以前に保存したデータはチェーン名だけだが、そのまま同じチェーンとして集計される。
-- 新しいチェーンは storeNameNormalizer.js の STORE_RULES に追加する。辞書にないチェーンは、最初の空白までをチェーン名とみなす。
-
 ## 店名の追加手順
 「店名を追加して」と頼まれたら、次を行う。
 1. src/utils/storeNameNormalizer.js の STORE_RULES に { keywords: [...], normalized: '統一名' } を1行追加する
@@ -54,7 +56,7 @@
 4. 追加した店名と、keywords に使った表記を報告する
 - storeNameNormalizer.js 以外のファイルは変更しない
 
-## モデルの使い分け
+# 7. モデルの使い分け
 - 通常は Sonnet 5.5 Medium で作業する。
 - 次のような作業では、Opus 5.5 Medium のほうが適していると判断したら、
   コードを変更する前に作業を止め、ユーザーに次の3点を伝えて、モデルの変更を求める。
@@ -67,3 +69,8 @@
   連絡を受けたら、止めていた作業から再開する。
 - 軽い修正や文言の変更、すでに手順が決まっている作業（カテゴリ表の更新など）では、
   モデルの変更を求めず、そのまま進める。
+
+# 8. 作業の引き継ぎ
+「引き継ぎして」と頼まれたら、ここまでの作業の状況（やったこと、途中のこと、次にやること、注意点）を
+プロジェクトの PROGRESS.md に書く。すでにあれば最新に更新する。
+作業を始めるときに PROGRESS.md があれば、先に読んで、続きから進める。
