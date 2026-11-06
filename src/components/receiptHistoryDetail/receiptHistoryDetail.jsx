@@ -109,7 +109,17 @@ export default function ReceiptHistoryDetail({ receipt, onBack, onDelete }) {
                     <tr key={item.id || index}>
                       <td className="item-name-cell">{printName}</td>
                       <td className="price-cell">{price}円</td>
-                      <td className="category-cell">{category}</td>
+                      <td className="category-cell">
+                        {item.main_category && (
+                          <div style={{ fontSize: '10px', color: '#999999' }}>{item.main_category}</div>
+                        )}
+                        {category}
+                        {item.product_name && (
+                          <div style={{ fontSize: '11px', color: '#e53935', fontWeight: 'bold' }}>
+                            {item.product_name}
+                          </div>
+                        )}
+                      </td>
                       <td className="discount-cell">
                         {isDiscount ? 'あり' : 'なし'}
                       </td>

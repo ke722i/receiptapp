@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../../services/supabaseClient';
 import './login.css';
+import appLogo from '../../assets/logo.png';
 
 export default function Login({ onNavigateToRegister, onLoginSuccess }) {
   const [userId, setUserId] = useState('');
@@ -42,9 +43,7 @@ export default function Login({ onNavigateToRegister, onLoginSuccess }) {
     <div className="login-container">
       <div className="login-card">
         <div className="logo-section">
-          <div className="logo-placeholder">
-            <span>底値チェッカー</span>
-          </div>
+          <img src={appLogo} alt="底値チェッカー" className="app-logo" />
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">

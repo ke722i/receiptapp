@@ -12,6 +12,8 @@ import ReceiptConfirm from './components/receiptConfirm/receiptConfirm';
 import ReceiptSuccess from './components/receiptSuccess/receiptSuccess';
 import ReceiptHistoryList from './components/receiptHistoryList/receiptHistoryList';
 import ReceiptHistoryDetail from './components/receiptHistoryDetail/receiptHistoryDetail';
+import { fetchReceiptById } from './utils/receiptDb';
+import { productKey } from './utils/categoryUtils';
 
 const STORAGE_KEY_VIEW_HISTORY = 'receipt_app_view_history';
 const STORAGE_KEY_USER_ID = 'receipt_app_user_id';
@@ -21,7 +23,10 @@ function App() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [parsedReceiptData, setParsedReceiptData] = useState(null); // AI解析データ用
   const [selectedReceipt, setSelectedReceipt] = useState(null);
-  const [selectedProductName, setSelectedProductName] = useState('牛乳');
+  // レシート詳細から「戻る」で帰る画面（レシート一覧 / 商品詳細 / 購入履歴一覧）
+  const [receiptDetailBackScreen, setReceiptDetailBackScreen] = useState('receiptHistoryList');
+  // 選択中の商品（{ main, category, sub, product }。同名の商品を場所で区別する）
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   // ログインユーザーID（localStorage から復元、初期値 'User_12345'）
   const [userId, setUserId] = useState(() => {
@@ -73,20 +78,38 @@ function App() {
   };
 
   // 商品選択時のハンドラー（閲覧履歴追加 ＆ 詳細画面遷移）
-  const handleSelectProduct = (productName) => {
-    if (productName) {
-      setSelectedProductName(productName);
-      setViewHistory((prev) => {
-        const filtered = prev.filter((item) => item.name !== productName);
-        const newItem = {
-          id: Date.now().toString(),
-          name: productName,
-          icon: '🛍️',
-        };
-        return [newItem, ...filtered].slice(0, 5);
-      });
-    }
+  //  path: { main, category, sub, product }
+  const handleSelectProduct = (path) => {
+    if (!path || !path.product) return;
+    setSelectedProduct(path);
+    const key = productKey(path);
+    setViewHistory((prev) => {
+      // 以前の履歴（path を持たない）は名前で比較
+      const filtered = prev.filter((item) =>
+        item.path ? productKey(item.path) !== key : item.name !== path.product
+      );
+      const newItem = {
+        id: Date.now().toString(),
+        name: path.product,
+        icon: '🛍️',
+        path,
+      };
+      return [newItem, ...filtered].slice(0, 5);
+    });
     setCurrentScreen('productDetail');
+  };
+
+  // 商品詳細・購入履歴から、そのレシートの詳細画面へ移動
+  const handleOpenReceiptFromProduct = async (receiptId, backScreen) => {
+    if (!receiptId) return;
+    const result = await fetchReceiptById(receiptId);
+    if (!result.success) {
+      alert(result.error || 'レシートの取得に失敗しました。');
+      return;
+    }
+    setSelectedReceipt(result.data);
+    setReceiptDetailBackScreen(backScreen);
+    setCurrentScreen('receiptHistoryDetail');
   };
 
   return (
@@ -128,15 +151,17 @@ function App() {
       )}
       {currentScreen === 'productDetail' && (
         <ProductDetail
-          productName={selectedProductName}
+          product={selectedProduct}
           onBack={() => setCurrentScreen('home')}
           onViewAllHistory={() => setCurrentScreen('productHistoryList')}
+          onSelectReceipt={(id) => handleOpenReceiptFromProduct(id, 'productDetail')}
         />
       )}
       {currentScreen === 'productHistoryList' && (
         <ProductHistoryList
-          productName={selectedProductName}
+          product={selectedProduct}
           onBack={() => setCurrentScreen('productDetail')}
+          onSelectReceipt={(id) => handleOpenReceiptFromProduct(id, 'productHistoryList')}
         />
       )}
 
@@ -200,6 +225,7 @@ function App() {
           onBack={() => setCurrentScreen('home')}
           onSelectReceiptDetail={(receipt) => {
             setSelectedReceipt(receipt);
+            setReceiptDetailBackScreen('receiptHistoryList');
             setCurrentScreen('receiptHistoryDetail');
           }}
         />
@@ -207,7 +233,7 @@ function App() {
       {currentScreen === 'receiptHistoryDetail' && (
         <ReceiptHistoryDetail
           receipt={selectedReceipt}
-          onBack={() => setCurrentScreen('receiptHistoryList')}
+          onBack={() => setCurrentScreen(receiptDetailBackScreen)}
         />
       )}
     </div>

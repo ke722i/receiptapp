@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../../services/supabaseClient';
 import './register.css';
+import appLogo from '../../assets/logo.png';
 
 export default function Register({ onNavigateToLogin, onRegisterSuccess }) {
   const [userId, setUserId] = useState('');
@@ -85,9 +86,7 @@ export default function Register({ onNavigateToLogin, onRegisterSuccess }) {
     <div className="register-container">
       <div className="register-card">
         <div className="logo-section">
-          <div className="logo-placeholder">
-            <span>底値チェッカー</span>
-          </div>
+          <img src={appLogo} alt="底値チェッカー" className="app-logo" />
         </div>
 
         <h2 className="register-title">新規アカウント登録</h2>

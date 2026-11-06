@@ -15,7 +15,11 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
       return parsedData.items.map((item, idx) => ({
         id: idx + 1,
         printName: item.item_name || item.printName || '',
-        category: item.category || '未選択',
+        // 4階層カテゴリ（商品が決まらない場合は subCategory / productName が空）
+        mainCategory: item.main_category || '', // 大分類
+        category: item.category || '未選択', // 中分類
+        subCategory: item.sub_category || '', // 小分類
+        productName: item.product_name || '', // 商品名（極小分類）
         price: item.price || 0,
         isDiscount: typeof item.is_discount === 'boolean' ? item.is_discount : !!item.isDiscount,
       }));
@@ -58,7 +62,8 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
     setItems((prev) =>
       prev.map((item) => {
         const updated = updatedSelectedItems.find((u) => u.id === item.id);
-        return updated ? updated : item;
+        // 編集画面は大・中・小・商品名をまとめて整合させて返すので、そのまま上書き
+        return updated ? { ...item, ...updated } : item;
       })
     );
     // 編集完了後は選択を解除
@@ -83,7 +88,10 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
     // 2. 商品名（item_name）を含む明細データ
     const itemsData = items.map((item) => ({
       item_name: item.printName, // ★ 印字商品名を追加
-      category: item.category,
+      main_category: item.mainCategory || null, // 大分類
+      category: item.category, // 中分類
+      sub_category: item.subCategory || null, // 小分類
+      product_name: item.productName || null, // 商品名（該当なしは null）
       price: item.price,
       is_discount: item.isDiscount,
     }));
@@ -206,7 +214,17 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
                     </td>
                     <td className="item-name-cell">{item.printName}</td>
                     <td className="price-cell">{item.price}円</td>
-                    <td className="category-cell">{item.category}</td>
+                    <td className="category-cell">
+                      {item.mainCategory && (
+                        <div style={{ fontSize: '10px', color: '#999999' }}>{item.mainCategory}</div>
+                      )}
+                      {item.category}
+                      {item.productName && (
+                        <div style={{ fontSize: '11px', color: '#e53935', fontWeight: 'bold' }}>
+                          {item.productName}
+                        </div>
+                      )}
+                    </td>
                     <td className="discount-cell">{item.isDiscount ? 'あり' : 'なし'}</td>
                   </tr>
                 ))
