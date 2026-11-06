@@ -1,0 +1,182 @@
+/* レシート一覧（receiptHistoryList）と同じ配色・サイズ */
+.store-list-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+  background-color: #f8f9fa;
+  box-sizing: border-box;
+}
+
+.store-list-header {
+  height: 60px;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px;
+  background-color: #e53935;
+  color: #ffffff;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-sizing: border-box;
+}
+
+.store-list-header .back-button {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 32px;
+  font-weight: 300;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 8px;
+}
+
+.store-list-header .header-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.store-list-header .header-right-spacer {
+  width: 32px;
+}
+
+.store-list-main {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.no-stores-message {
+  text-align: center;
+  color: #888888;
+  margin-top: 40px;
+  font-size: 14px;
+}
+
+.store-chain-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* チェーンのカード（レシートカードと同じ白・角丸・枠線・影） */
+.store-chain-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.store-chain-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 12px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background-color 0.1s;
+}
+
+.store-chain-header:active {
+  background-color: #f5f5f5;
+}
+
+.store-chain-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.store-chain-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.store-chain-name {
+  font-size: 13px;
+  font-weight: bold;
+  color: #333333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.store-chain-meta {
+  font-size: 11px;
+  color: #888888;
+}
+
+.store-chain-arrow {
+  font-size: 24px;
+  color: #888888;
+  line-height: 1;
+  transition: transform 0.2s;
+}
+
+.store-chain-arrow.is-open {
+  transform: rotate(90deg);
+}
+
+/* 開いたときのレシート一覧 */
+.store-receipt-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid #e0e0e0;
+}
+
+.store-receipt-list li + li {
+  border-top: 1px solid #f0f0f0;
+}
+
+.store-receipt-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.store-receipt-row:active {
+  background-color: #f5f5f5;
+}
+
+.store-receipt-date {
+  font-size: 11px;
+  color: #888888;
+  flex-shrink: 0;
+}
+
+.store-receipt-store {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: bold;
+  color: #333333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.store-receipt-count {
+  font-size: 11px;
+  color: #888888;
+  flex-shrink: 0;
+}

@@ -5,14 +5,24 @@ import {
   INITIAL_SEARCH_HISTORY,
 } from '../../constants/categoryData';
 import { buildItemReadingMap, filterSearchSuggestions } from '../../utils/searchUtils';
+import { findProductPaths, formatPath, productKey } from '../../utils/categoryUtils';
 
 const STORAGE_KEY_SEARCH_HISTORY = 'receipt_app_search_history';
+
+// 履歴の1件を商品のパス { main, category, sub, product } にそろえる
+//  （以前は商品名の文字列で保存していたので、文字列なら表から探して変換する）
+const toProductPath = (entry) => {
+  if (!entry) return null;
+  if (typeof entry === 'string') return findProductPaths(entry)[0] || null;
+  return entry.product ? entry : null;
+};
 
 export default function Home({
   onLogout,
   onNavigateToCategory,
   onOpenCamera,
   onNavigateToHistory,
+  onNavigateToStores,
   onNavigateToSettings,
   onSelectProduct,
   viewHistory = [],
@@ -27,9 +37,10 @@ export default function Home({
   const [searchHistory, setSearchHistory] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_SEARCH_HISTORY);
-      return saved ? JSON.parse(saved) : (INITIAL_SEARCH_HISTORY || ['牛乳', '食パン', '醤油']);
+      const list = saved ? JSON.parse(saved) : (INITIAL_SEARCH_HISTORY || []);
+      return list.map(toProductPath).filter(Boolean);
     } catch {
-      return INITIAL_SEARCH_HISTORY || ['牛乳', '食パン', '醤油'];
+      return [];
     }
   });
 
@@ -41,6 +52,23 @@ export default function Home({
     () => filterSearchSuggestions(searchQuery, itemReadingMap),
     [searchQuery, itemReadingMap]
   );
+
+  // 候補（商品名）を表の場所ごとに展開する。
+  // 同じ名前の商品が複数の場所にある場合（例: 常温の「そば」と冷凍の「そば」）は別々の候補になる。
+  const pathSuggestions = useMemo(() => {
+    const seen = new Set();
+    const list = [];
+    suggestions.forEach((name) => {
+      findProductPaths(name).forEach((path) => {
+        const key = productKey(path);
+        if (!seen.has(key)) {
+          seen.add(key);
+          list.push(path);
+        }
+      });
+    });
+    return list.slice(0, 10);
+  }, [suggestions]);
 
   // 検索キーワード履歴の永続化
   useEffect(() => {
@@ -69,18 +97,21 @@ export default function Home({
   };
 
   // 商品タップ時のハンドラー（検索履歴追加 ＆ 親の画面遷移ハンドラー呼出）
-  const handleSelectProductItem = (productName) => {
+  //  path: { main, category, sub, product }（商品は名前ではなく場所で区別する）
+  const handleSelectProductItem = (path) => {
+    if (!path || !path.product) return;
     setSearchQuery('');
     setIsSearchFocused(false);
 
-    // 検索タグ履歴更新（最新5件）
-    setSearchHistory((prev) => [productName, ...prev.filter((item) => item !== productName)].slice(0, 5));
+    // 検索タグ履歴更新（最新5件・同じ場所の商品は重複させない）
+    const key = productKey(path);
+    setSearchHistory((prev) => [path, ...prev.filter((item) => productKey(item) !== key)].slice(0, 5));
 
     // 親コンポーネント（App.jsx）で閲覧履歴更新と画面遷移を実行
     if (onSelectProduct) {
-      onSelectProduct(productName);
+      onSelectProduct(path);
     } else if (onNavigateToCategory) {
-      onNavigateToCategory(productName);
+      onNavigateToCategory(path);
     }
   };
 
@@ -100,7 +131,7 @@ export default function Home({
         </button>
 
         <div className="header-logo-area">
-          <div className="header-logo-placeholder">底値チェッカー</div>
+          <div className="header-logo-placeholder">レシート即！メモ</div>
         </div>
 
         <div className="header-right-spacer"></div>
@@ -127,7 +158,10 @@ export default function Home({
             <span className="drawer-icon">📷</span><span>レシート撮影</span>
           </button>
           <button type="button" className="drawer-item" onClick={() => handleMenuClick(onNavigateToHistory)}>
-            <span className="drawer-icon">📄</span><span>レシート履歴</span>
+            <span className="drawer-icon">📄</span><span>レシート一覧</span>
+          </button>
+          <button type="button" className="drawer-item" onClick={() => handleMenuClick(onNavigateToStores)}>
+            <span className="drawer-icon">🏪</span><span>店舗別一覧</span>
           </button>
           <button type="button" className="drawer-item" onClick={() => handleMenuClick(onNavigateToSettings)}>
             <span className="drawer-icon">⚙️</span><span>設定</span>
@@ -177,19 +211,22 @@ export default function Home({
           {isSearchFocused && (
             <div className="search-suggestions-dropdown">
               {searchQuery.trim().length > 0 ? (
-                suggestions.length > 0 ? (
+                pathSuggestions.length > 0 ? (
                   <ul className="search-suggestions-list">
-                    {suggestions.map((item, index) => (
+                    {pathSuggestions.map((path) => (
                       <li
-                        key={index}
+                        key={productKey(path)}
                         className="search-suggestion-item"
                         onMouseDown={(e) => {
                           e.preventDefault();
-                          handleSelectProductItem(item);
+                          handleSelectProductItem(path);
                         }}
                       >
                         <span className="suggestion-icon">🔍</span>
-                        <span className="suggestion-text">{item}</span>
+                        <span className="suggestion-body">
+                          <span className="suggestion-text">{path.product}</span>
+                          <span className="suggestion-path">{formatPath(path)}</span>
+                        </span>
                       </li>
                     ))}
                   </ul>
@@ -201,17 +238,18 @@ export default function Home({
                   <div className="search-history-header">最近検索した商品</div>
                   {searchHistory.length > 0 ? (
                     <div className="search-history-tags">
-                      {searchHistory.map((item, idx) => (
+                      {searchHistory.map((path) => (
                         <button
-                          key={idx}
+                          key={productKey(path)}
                           type="button"
                           className="search-history-tag"
+                          title={formatPath(path, { withProduct: true })}
                           onMouseDown={(e) => {
                             e.preventDefault();
-                            handleSelectProductItem(item);
+                            handleSelectProductItem(path);
                           }}
                         >
-                          🕒 {item}
+                          🕒 {path.product}
                         </button>
                       ))}
                     </div>
@@ -234,7 +272,7 @@ export default function Home({
                   key={item.id}
                   type="button"
                   className="frequent-card"
-                  onClick={() => handleSelectProductItem(item.name)}
+                  onClick={() => handleSelectProductItem(toProductPath(item.path || item.name))}
                 >
                   <div className="card-image-placeholder">{item.icon || '🛍️'}</div>
                   <span className="card-name">{item.name}</span>
@@ -302,7 +340,14 @@ export default function Home({
                                         key={itemName}
                                         type="button"
                                         className="item-category-button"
-                                        onClick={() => handleSelectProductItem(itemName)}
+                                        onClick={() =>
+                                          handleSelectProductItem({
+                                            main: topCat.name,
+                                            category: mainCat.name,
+                                            sub: subCat.name,
+                                            product: itemName,
+                                          })
+                                        }
                                       >
                                         {itemName}
                                       </button>
@@ -321,7 +366,14 @@ export default function Home({
                                 key={itemName}
                                 type="button"
                                 className="item-category-button"
-                                onClick={() => handleSelectProductItem(itemName)}
+                                onClick={() =>
+                                  handleSelectProductItem({
+                                    main: topCat.name,
+                                    category: mainCat.name,
+                                    sub: null,
+                                    product: itemName,
+                                  })
+                                }
                               >
                                 {itemName}
                               </button>

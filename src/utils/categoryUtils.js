@@ -1,34 +1,77 @@
 import { CATEGORY_TREE } from '../constants/categoryData';
 
-/**
- * 商品名から CATEGORY_TREE 内の該当カテゴリ名を自動検索する関数
- * @param {string} itemName - レシートの商品名（例: "牛乳 1L", "高級食パン" など）
- * @returns {string} - マッチしたカテゴリ名（例: "乳製品・卵", "パン類"）。見つからない場合は "その他"
+/*
+ * カテゴリは 4 階層: 大分類(main) > 中分類(category) > 小分類(sub) > 商品名(product)
+ * 同じ名前の中分類・商品が別の場所にあるため（例: 常温/冷凍 の「麺類」）、
+ * 商品は名前ではなく「パス」 { main, category, sub, product } で区別する。
  */
-export const matchCategoryFromTree = (itemName) => {
-  if (!itemName) return 'その他';
 
-  for (const mainCategory of CATEGORY_TREE) {
-    for (const category of mainCategory.categories) {
-      // 1. 中カテゴリ直下に items 配列がある場合（例: 冷蔵・冷凍カテゴリ）
-      if (category.items && Array.isArray(category.items)) {
-        if (category.items.some((item) => itemName.includes(item))) {
-          return category.name;
-        }
-      }
+// ---------- 表から一覧を作る（起動時に1度だけ） ----------
 
-      // 2. subCategories（小カテゴリ）配下に items 配列がある場合（例: 常温・日用品カテゴリ）
-      if (category.subCategories && Array.isArray(category.subCategories)) {
-        for (const sub of category.subCategories) {
-          if (sub.items && Array.isArray(sub.items)) {
-            if (sub.items.some((item) => itemName.includes(item))) {
-              return category.name; // 中カテゴリ名（例: '調味料', 'パン類', '紙製品'）を返す
-            }
-          }
-        }
-      }
-    }
-  }
+// 全商品のパス一覧（表の並び順）
+export const PRODUCT_PATHS = (() => {
+  const list = [];
+  CATEGORY_TREE.forEach((top) => {
+    top.categories.forEach((mid) => {
+      (mid.subCategories || []).forEach((sub) => {
+        (sub.items || []).forEach((product) => {
+          list.push({ main: top.name, category: mid.name, sub: sub.name, product });
+        });
+      });
+      // 小分類が無い古い形式の表にも対応
+      (mid.items || []).forEach((product) => {
+        list.push({ main: top.name, category: mid.name, sub: null, product });
+      });
+    });
+  });
+  return list;
+})();
 
-  return 'その他';
+// ---------- パスの基本操作 ----------
+
+/** パスを一意な文字列に（比較・React の key・履歴の重複判定に使う） */
+export const productKey = (path) =>
+  path ? [path.main, path.category, path.sub, path.product].map((v) => v || '').join('>') : '';
+
+/** 表示用の文字列（例: "常温 > 麺類 > 乾麺"）。withProduct で商品名まで付ける */
+export const formatPath = (path, { withProduct = false } = {}) => {
+  if (!path) return '';
+  const parts = [path.main, path.category, path.sub];
+  if (withProduct) parts.push(path.product);
+  return parts.filter(Boolean).join(' > ');
 };
+
+/** 商品名から、その商品のパスをすべて返す（同名が複数の場所にあれば複数） */
+export const findProductPaths = (productName) =>
+  PRODUCT_PATHS.filter((p) => p.product === productName);
+
+/** 表に実在する商品のパスかどうか */
+export const isValidProductPath = (path) =>
+  !!path && PRODUCT_PATHS.some((p) => productKey(p) === productKey(path));
+
+// ---------- 編集画面のプルダウン用 ----------
+
+const uniq = (arr) => Array.from(new Set(arr));
+
+/** 大分類の一覧 */
+export const getMainCategories = () => CATEGORY_TREE.map((top) => top.name);
+
+/** 大分類に属する中分類の一覧 */
+export const getMidCategories = (main) => {
+  const top = CATEGORY_TREE.find((t) => t.name === main);
+  return top ? uniq(top.categories.map((m) => m.name)) : [];
+};
+
+/** 大分類＋中分類に属する小分類の一覧 */
+export const getSubCategories = (main, category) =>
+  uniq(
+    PRODUCT_PATHS.filter((p) => p.main === main && p.category === category && p.sub).map((p) => p.sub)
+  );
+
+/** 大分類＋中分類＋小分類に属する商品名の一覧 */
+export const getProducts = (main, category, sub) =>
+  uniq(
+    PRODUCT_PATHS.filter((p) => p.main === main && p.category === category && p.sub === sub).map(
+      (p) => p.product
+    )
+  );

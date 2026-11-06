@@ -15,7 +15,7 @@
   height: 60px;
   width: 100%;
   display: flex;
-  justify-content: space-between;
+  justify-content: center; /* 戻るボタンを無くしたのでタイトルを中央に */
   align-items: center;
   padding: 0 16px;
   background-color: #e53935;
@@ -109,12 +109,34 @@
   border-color: #e53935;
 }
 
-/* 下部アクションエリア */
+/* 下部アクションエリア（トリミング画面の下部バーと同じ作り） */
 .bottom-action-bar {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
+  height: 70px;
+  width: 100%;
+  background-color: #1a1a1a;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+  box-sizing: border-box;
+  border-top: 1px solid #2c2c2e;
+  position: relative;
   z-index: 20;
+}
+
+/* キャンセルボタン（トリミング画面の .crop-cancel-button と同じ見た目） */
+.confirm-cancel-button {
+  background: none;
+  border: none;
+  color: #aaaaaa;
+  font-size: 15px;
+  cursor: pointer;
+  padding: 8px 16px;
+  transition: color 0.2s;
+}
+
+.confirm-cancel-button:active {
+  color: #ffffff;
 }
 
 .analyze-button {

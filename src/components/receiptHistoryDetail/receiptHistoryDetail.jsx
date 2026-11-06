@@ -109,7 +109,17 @@ export default function ReceiptHistoryDetail({ receipt, onBack, onDelete }) {
                     <tr key={item.id || index}>
                       <td className="item-name-cell">{printName}</td>
                       <td className="price-cell">{price}円</td>
-                      <td className="category-cell">{category}</td>
+                      <td className="category-cell">
+                        {item.main_category && (
+                          <div style={{ fontSize: '10px', color: '#999999' }}>{item.main_category}</div>
+                        )}
+                        {category}
+                        {item.product_name && (
+                          <div style={{ fontSize: '11px', color: '#e53935', fontWeight: 'bold' }}>
+                            {item.product_name}
+                          </div>
+                        )}
+                      </td>
                       <td className="discount-cell">
                         {isDiscount ? 'あり' : 'なし'}
                       </td>
@@ -182,7 +192,24 @@ export default function ReceiptHistoryDetail({ receipt, onBack, onDelete }) {
             <div className="custom-modal-button-group">
               <button
                 type="button"
-                className="modal-ok-button"
+                className="custom-modal-button ok-button"
+                style={{
+                  flex: '0 0 auto',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  minWidth: '140px',
+                  height: '42px',
+                  padding: '0 24px',
+                  backgroundColor: '#007aff',
+                  color: '#ffffff',
+                  fontSize: '15px',
+                  fontWeight: 'bold',
+                  border: 'none',
+                  borderRadius: '21px',
+                  whiteSpace: 'nowrap',
+                  boxShadow: '0 2px 6px rgba(0, 122, 255, 0.3)',
+                }}
                 onClick={handleSuccessOk}
               >
                 OK

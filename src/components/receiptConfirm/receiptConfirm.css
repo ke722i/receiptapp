@@ -246,3 +246,74 @@
 .submit-receipt-button:active {
   background-color: #d32f2f;
 }
+
+/* 未保存のまま戻るときの確認ポップアップ */
+.leave-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.leave-modal-card {
+  width: 100%;
+  max-width: 300px;
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: 20px;
+  box-sizing: border-box;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.leave-modal-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333333;
+  margin: 0 0 12px;
+}
+
+.leave-modal-message {
+  font-size: 14px;
+  color: #555555;
+  margin: 0 0 20px;
+  line-height: 1.5;
+}
+
+.leave-modal-button-group {
+  display: flex;
+  gap: 10px;
+}
+
+.leave-modal-button {
+  flex: 1;
+  padding: 12px 0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+}
+
+.leave-modal-cancel {
+  background-color: #f0f0f0;
+  color: #666666;
+}
+
+.leave-modal-cancel:active {
+  background-color: #e0e0e0;
+}
+
+.leave-modal-confirm {
+  background-color: #e53935;
+  color: #ffffff;
+}
+
+.leave-modal-confirm:active {
+  background-color: #d32f2f;
+}

@@ -1,0 +1,4 @@
+project_id = "receipt-app"
+
+[functions.parse-receipt]
+verify_jwt = true
