@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import './storeList.css';
 import { fetchReceiptHistory } from '../../utils/receiptDb';
 import { getChainName } from '../../utils/storeNameNormalizer';
+import { formatPurchaseDate } from '../../utils/purchaseDate';
 
 /**
  * 店舗別の一覧
@@ -113,7 +114,7 @@ export default function StoreList({ onBack, onSelectReceiptDetail }) {
                               className="store-receipt-row"
                               onClick={() => onSelectReceiptDetail && onSelectReceiptDetail(receipt)}
                             >
-                              <span className="store-receipt-date">{receipt.purchase_date || ''}</span>
+                              <span className="store-receipt-date">{formatPurchaseDate(receipt.purchase_date)}</span>
                               <span className="store-receipt-store">
                                 {receipt.store_name || '店舗名未登録'}
                               </span>

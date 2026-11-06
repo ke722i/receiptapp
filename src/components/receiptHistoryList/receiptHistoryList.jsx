@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import './receiptHistoryList.css';
 import { fetchReceiptHistory } from '../../utils/receiptDb';
+import { formatPurchaseDate } from '../../utils/purchaseDate';
 
 export default function ReceiptHistoryList({ onBack, onSelectReceiptDetail }) {
   const [receipts, setReceipts] = useState([]);
@@ -78,7 +79,7 @@ export default function ReceiptHistoryList({ onBack, onSelectReceiptDetail }) {
 
                   {/* 店舗名・日付 */}
                   <div className="receipt-card-info">
-                    <span className="receipt-card-date">{purchaseDate}</span>
+                    <span className="receipt-card-date">{formatPurchaseDate(purchaseDate)}</span>
                     <span className="receipt-card-store">{storeName}</span>
                   </div>
                 </div>

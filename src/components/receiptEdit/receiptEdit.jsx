@@ -55,12 +55,13 @@ export default function ReceiptEdit({ isOpen, selectedItems, onClose, onSave }) 
   return (
     <div className="receipt-edit-overlay">
       <div className="receipt-edit-container">
-        {/* スマホ用ヘッダー */}
+        {/* ヘッダー（他の画面と同じ形：左に戻る、中央にタイトル） */}
         <header className="receipt-edit-header">
-          <h2 className="receipt-edit-title">商品の編集 ({editItems.length}件)</h2>
-          <button type="button" className="receipt-edit-close" onClick={onClose} aria-label="閉じる">
-            ✕
+          <button type="button" className="receipt-edit-back" onClick={onClose} aria-label="戻る">
+            ‹
           </button>
+          <h2 className="receipt-edit-title">商品の編集 ({editItems.length}件)</h2>
+          <div className="receipt-edit-header-spacer" />
         </header>
 
         {/* 編集領域（慣性スクロール機能付き） */}
