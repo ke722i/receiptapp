@@ -104,6 +104,21 @@ export default function Home({
   //  指を離した時点（touchend）で選ぶ。指が動いた（スクロール）ときは選ばない。
   //  touchend で選んだあとの、続けて来る mousedown / click は、preventDefault で止める（二重に選ばない）
   const touchStartPoint = useRef(null);
+  const searchBarRef = useRef(null);
+
+  // 検索欄の外側を押したら、候補を閉じる。
+  //  以前は、画面全体を覆う透明な層を置いていたが、iPhone では、キーボードが開いて画面がずれたとき、
+  //  その層が候補のタップを受けてしまい、候補を選べなかった。層は置かず、画面全体の押下を見て閉じる。
+  useEffect(() => {
+    if (!isSearchFocused) return undefined;
+    const closeIfOutside = (e) => {
+      if (searchBarRef.current && !searchBarRef.current.contains(e.target)) {
+        setIsSearchFocused(false);
+      }
+    };
+    document.addEventListener('pointerdown', closeIfOutside);
+    return () => document.removeEventListener('pointerdown', closeIfOutside);
+  }, [isSearchFocused]);
   const tapProps = (path) => ({
     onMouseDown: (e) => e.preventDefault(), // 入力欄からフォーカスを外さない
     onClick: () => handleSelectProductItem(path), // パソコンのクリック
@@ -200,16 +215,10 @@ export default function Home({
         </div>
       </aside>
 
-      {/* 検索時背景オーバーレイ */}
-      <div
-        className={`search-overlay ${isSearchFocused ? 'is-active' : ''}`}
-        onClick={() => setIsSearchFocused(false)}
-      />
-
       {/* メインエリア */}
       <main className="home-main">
         {/* 検索バー */}
-        <div className={`search-bar-container ${isSearchFocused ? 'is-focused' : ''}`}>
+        <div ref={searchBarRef} className={`search-bar-container ${isSearchFocused ? 'is-focused' : ''}`}>
           <div className="search-input-wrapper">
             <input
               type="search"
