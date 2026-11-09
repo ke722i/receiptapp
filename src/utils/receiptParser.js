@@ -11,7 +11,7 @@ const DUMMY_PARSED_DATA = {
   store_number: '06-0000-0000',
   purchase_date: new Date().toISOString().split('T')[0],
   items: [
-    { item_name: 'エクセラ甘さひかえめ', main_category: '常温', category: '飲料', sub_category: 'コーヒー(ペットボトル・缶)', product_name: 'ペットボトルコーヒー', price: 118, is_discount: false },
+    { item_name: 'エクセラ甘さひかえめ500ml', main_category: '常温', category: '飲料', sub_category: 'コーヒー(ペットボトル・缶)', product_name: 'ペットボトルコーヒー', price: 118, is_discount: false, volume: '500ml' },
     { item_name: '大人の紅茶ストレートティー', main_category: '常温', category: '飲料', sub_category: 'お茶・紅茶(ペットボトル・缶)', product_name: '紅茶', price: 98, is_discount: false },
     { item_name: '具だくさん中華春雨', main_category: '常温', category: '料理の素・つゆ・スープ類', sub_category: '即席スープ・味噌汁', product_name: '春雨スープ', price: 109, is_discount: false },
     { item_name: '米国産豚ロース超うす', main_category: null, category: '未選択', sub_category: null, product_name: null, price: 349, is_discount: true },

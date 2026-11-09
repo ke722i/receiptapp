@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../services/supabaseClient';
 import { deleteAllReceiptsFromDatabase } from '../../utils/receiptDb';
+import { fetchSharePrices, updateSharePrices } from '../../utils/myStoreDb';
+import { TERMS, PRIVACY, SHARING_SUMMARY } from '../../constants/legal';
+import LegalModal from '../legalModal/legalModal';
 import './settings.css';
 
 export default function Settings({
@@ -10,6 +13,37 @@ export default function Settings({
 }) {
   const [retentionPeriod, setRetentionPeriod] = useState('90');
   const [userInfo, setUserInfo] = useState({ displayName: '読み込み中...' });
+  // 価格データの匿名提供（オプトイン。初期はオフ）
+  const [sharePrices, setSharePrices] = useState(false);
+  const [shareLoading, setShareLoading] = useState(true);
+  const [shareSaving, setShareSaving] = useState(false);
+  const [shareError, setShareError] = useState('');
+  const [legalDoc, setLegalDoc] = useState(null); // 表示中の利用規約 / プライバシーポリシー
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchSharePrices().then((result) => {
+      if (cancelled) return;
+      if (result.success) setSharePrices(result.data);
+      else setShareError(result.error);
+      setShareLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleToggleShare = async (next) => {
+    setShareError('');
+    setShareSaving(true);
+    setSharePrices(next);
+    const result = await updateSharePrices(next);
+    setShareSaving(false);
+    if (!result.success) {
+      setSharePrices(!next); // 保存できなければ元に戻す
+      setShareError(result.error);
+    }
+  };
 
   // ログインユーザー情報を Supabase から取得して整形
   useEffect(() => {
@@ -84,7 +118,45 @@ export default function Settings({
           </div>
         </section>
 
-        {/* 2. データ設定 */}
+        {/* 2. 価格データの共有（オプトイン） */}
+        <section className="settings-section">
+          <h2 className="section-header">価格データの共有</h2>
+          <div className="settings-card">
+            <div className="settings-row">
+              <label htmlFor="share-prices" className="row-label">
+                価格データを匿名で提供する
+              </label>
+              <input
+                id="share-prices"
+                type="checkbox"
+                className="checkbox-input"
+                checked={sharePrices}
+                disabled={shareLoading || shareSaving}
+                onChange={(e) => handleToggleShare(e.target.checked)}
+              />
+            </div>
+            <div className="settings-note">
+              <p>
+                オンにすると、あなたのレシートの{SHARING_SUMMARY.shared.join('・')}が、
+                他のユーザーの「マイ店舗の価格比較」に匿名で表示されます。
+              </p>
+              <p>
+                {SHARING_SUMMARY.notShared.join('・')}は表示されません。いつでもオフにできます。
+              </p>
+              {shareError && <p className="settings-error">{shareError}</p>}
+            </div>
+            <div className="settings-links">
+              <button type="button" className="link-button" onClick={() => setLegalDoc(TERMS)}>
+                利用規約
+              </button>
+              <button type="button" className="link-button" onClick={() => setLegalDoc(PRIVACY)}>
+                プライバシーポリシー
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* 3. データ設定 */}
         <section className="settings-section">
           <h2 className="section-header">データ設定</h2>
           <div className="settings-card">
@@ -108,7 +180,7 @@ export default function Settings({
           </div>
         </section>
 
-        {/* 3. データ・アカウント管理 */}
+        {/* 4. データ・アカウント管理 */}
         <section className="settings-section">
           <h2 className="section-header danger-header">データ・アカウント管理</h2>
           <div className="settings-card">
@@ -130,6 +202,8 @@ export default function Settings({
           </div>
         </section>
       </main>
+
+      {legalDoc && <LegalModal doc={legalDoc} onClose={() => setLegalDoc(null)} />}
     </div>
   );
 }

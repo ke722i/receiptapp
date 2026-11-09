@@ -2,9 +2,19 @@ import { useState, useEffect } from 'react';
 import './productDetail.css';
 import { fetchProductPriceHistory } from '../../utils/receiptDb';
 import { formatPath } from '../../utils/categoryUtils';
+import MyStorePrices from '../myStorePrices/myStorePrices';
+
+// 印字名に容量を添える（例: "明治おいしい牛乳 ・ 900ml"）
+const withVolume = (itemName, volume) => [itemName, volume].filter(Boolean).join(' ・ ');
 
 // product: { main, category, sub, product }（同じ名前の商品を場所で区別する）
-export default function ProductDetail({ product, onBack, onViewAllHistory, onSelectReceipt }) {
+export default function ProductDetail({
+  product,
+  onBack,
+  onViewAllHistory,
+  onSelectReceipt,
+  onNavigateToMyStores,
+}) {
   const productName = product?.product || '';
   const [sortOrder, setSortOrder] = useState('dateDesc'); // デフォルト：日付順（新しい順）
   const [historyData, setHistoryData] = useState([]);
@@ -108,9 +118,9 @@ export default function ProductDetail({ product, onBack, onViewAllHistory, onSel
               <div className="recent-card-body">
                 <div className="price-info">
                   <span className="current-price">{cheapestPurchase.price}<span className="unit">円</span></span>
-                  {cheapestPurchase.itemName && (
+                  {(cheapestPurchase.itemName || cheapestPurchase.volume) && (
                     <span className="original-price" style={{ textDecoration: 'none' }}>
-                      {cheapestPurchase.itemName}
+                      {withVolume(cheapestPurchase.itemName, cheapestPurchase.volume)}
                     </span>
                   )}
                 </div>
@@ -131,7 +141,12 @@ export default function ProductDetail({ product, onBack, onViewAllHistory, onSel
           </section>
         )}
 
-        {/* 4. 購入履歴セクション */}
+        {/* 4. マイ店舗の価格比較（自分＋価格データを提供している他のユーザー） */}
+        {product?.product && (
+          <MyStorePrices product={product} onManageStores={onNavigateToMyStores} />
+        )}
+
+        {/* 5. 購入履歴セクション */}
         {!loading && historyData.length > 0 && (
           <section className="detail-section">
             <div className="history-header-row">
@@ -169,8 +184,8 @@ export default function ProductDetail({ product, onBack, onViewAllHistory, onSel
                       <span className="history-date">{item.date}</span>
                       <span className="history-shop">{item.shop}</span>
                     </div>
-                    {item.itemName && (
-                      <span className="history-item-name">{item.itemName}</span>
+                    {(item.itemName || item.volume) && (
+                      <span className="history-item-name">{withVolume(item.itemName, item.volume)}</span>
                     )}
                   </div>
                   <div className="history-card-right">

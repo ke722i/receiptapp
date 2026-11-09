@@ -1,0 +1,79 @@
+/* 確認のポップアップ（receiptConfirm の leave-modal と同じ見た目） */
+.confirm-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.confirm-dialog-card {
+  width: 100%;
+  max-width: 300px;
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: 20px;
+  box-sizing: border-box;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.confirm-dialog-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333333;
+  margin: 0 0 12px;
+}
+
+.confirm-dialog-message {
+  font-size: 14px;
+  color: #555555;
+  margin: 0 0 20px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.confirm-dialog-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.confirm-dialog-button {
+  flex: 1;
+  padding: 12px 0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+}
+
+.confirm-dialog-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.confirm-dialog-cancel {
+  background-color: #f0f0f0;
+  color: #666666;
+}
+
+.confirm-dialog-cancel:active {
+  background-color: #e0e0e0;
+}
+
+.confirm-dialog-ok,
+.confirm-dialog-danger {
+  background-color: #e53935;
+  color: #ffffff;
+}
+
+.confirm-dialog-ok:active,
+.confirm-dialog-danger:active {
+  background-color: #d32f2f;
+}

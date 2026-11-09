@@ -8,6 +8,7 @@ import {
   getProducts,
   applyCategoryChange,
 } from '../../utils/categoryUtils';
+import { MAX_VOLUME_LENGTH, normalizeVolume } from '../../utils/volume';
 
 export default function ReceiptEdit({ isOpen, selectedItems, onClose, onSave }) {
   const [editItems, setEditItems] = useState(selectedItems || []);
@@ -36,7 +37,8 @@ export default function ReceiptEdit({ isOpen, selectedItems, onClose, onSave }) 
   };
 
   const handleSave = () => {
-    onSave(editItems);
+    // 容量は全角を半角に・空白を詰めてそろえる（空欄は '' = 不明）
+    onSave(editItems.map((item) => ({ ...item, volume: normalizeVolume(item.volume) || '' })));
     onClose();
   };
 
@@ -102,6 +104,19 @@ export default function ReceiptEdit({ isOpen, selectedItems, onClose, onSave }) 
                       <option value="true">あり</option>
                     </select>
                   </div>
+                </div>
+
+                {/* 容量（レシートに印字されていれば自動で入る。無ければ任意で入力、空欄は「不明」） */}
+                <div className="edit-form-group">
+                  <label className="edit-label">容量（任意）</label>
+                  <input
+                    type="text"
+                    className="edit-input"
+                    value={item.volume || ''}
+                    maxLength={MAX_VOLUME_LENGTH}
+                    placeholder="例: 900ml、1L、10個（わからなければ空欄）"
+                    onChange={(e) => handleChange(index, 'volume', e.target.value)}
+                  />
                 </div>
 
                 {/* カテゴリ（大 → 中 → 小 → 商品名） */}

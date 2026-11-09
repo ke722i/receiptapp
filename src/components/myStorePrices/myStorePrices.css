@@ -1,0 +1,214 @@
+/* 商品詳細の「マイ店舗の価格比較」（商品詳細の履歴カードと同じ配色・サイズ） */
+.msp-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.msp-manage {
+  background: none;
+  border: none;
+  color: #e53935;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+/* 期間のボタン */
+.msp-periods {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.msp-period {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border: 1px solid #cccccc;
+  border-radius: 16px;
+  background-color: #ffffff;
+  color: #333333;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.msp-period.is-active {
+  border-color: #e53935;
+  background-color: #e53935;
+  color: #ffffff;
+  font-weight: bold;
+}
+
+.msp-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  font-size: 11px;
+  color: #888888;
+}
+
+.msp-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 自分 / 他のユーザー の見分け */
+.msp-badge {
+  display: inline-block;
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.msp-badge-mine {
+  background-color: #e53935;
+  color: #ffffff;
+}
+
+.msp-badge-others {
+  background-color: #eeeeee;
+  color: #616161;
+}
+
+.msp-message {
+  font-size: 13px;
+  color: #888888;
+  text-align: center;
+  padding: 8px 0;
+}
+
+.msp-error {
+  color: #c62828;
+}
+
+.msp-card {
+  background-color: #ffffff;
+  border-radius: 10px;
+  border: 1px solid #e0e0e0;
+  overflow: hidden;
+}
+
+.msp-empty {
+  padding: 16px;
+  text-align: center;
+  font-size: 13px;
+  color: #666666;
+}
+
+.msp-empty p {
+  margin: 0 0 10px;
+}
+
+.msp-register {
+  padding: 8px 16px;
+  border: 1px solid #e53935;
+  border-radius: 20px;
+  background-color: #ffffff;
+  color: #e53935;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.msp-store-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.msp-store-name {
+  font-size: 14px;
+  font-weight: bold;
+  color: #333333;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.msp-min {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: #666666;
+}
+
+.msp-min b {
+  font-size: 16px;
+  color: #e53935;
+}
+
+.msp-no-data {
+  padding: 12px 16px;
+  font-size: 12px;
+  color: #999999;
+}
+
+.msp-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.msp-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+}
+
+.msp-item + .msp-item {
+  border-top: 1px solid #f5f5f5;
+}
+
+.msp-detail {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.msp-date {
+  font-size: 12px;
+  color: #333333;
+}
+
+.msp-volume {
+  font-size: 11px;
+  color: #888888;
+}
+
+.msp-discount {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: #d32f2f;
+}
+
+.msp-price {
+  flex-shrink: 0;
+  font-size: 16px;
+  font-weight: bold;
+  color: #333333;
+}
+
+.msp-toggle {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-top: 1px solid #f0f0f0;
+  background-color: #fafafa;
+  color: #333333;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+}

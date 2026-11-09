@@ -348,3 +348,10 @@
   margin-bottom: 8px;
   line-height: 1;
 }
+/* 容量（印字名の下に小さく） */
+.item-volume {
+  font-size: 11px;
+  font-weight: normal;
+  color: #888888;
+  margin-top: 2px;
+}

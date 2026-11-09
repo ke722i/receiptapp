@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { supabase } from '../../services/supabaseClient';
 import './register.css';
 import appLogo from '../../assets/logo.png';
+import { TERMS, PRIVACY, LEGAL_VERSION } from '../../constants/legal';
+import LegalModal from '../legalModal/legalModal';
 
 export default function Register({ onNavigateToLogin, onRegisterSuccess }) {
   const [userId, setUserId] = useState('');
@@ -9,6 +11,11 @@ export default function Register({ onNavigateToLogin, onRegisterSuccess }) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  // 利用規約・プライバシーポリシーへの同意（両方そろうまでアカウントを作れない）
+  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [agreePrivacy, setAgreePrivacy] = useState(false);
+  const [legalDoc, setLegalDoc] = useState(null);
+  const agreed = agreeTerms && agreePrivacy;
 
   // ユーザーID制限の設定
   const MIN_USER_ID_LENGTH = 4;
@@ -46,6 +53,11 @@ export default function Register({ onNavigateToLogin, onRegisterSuccess }) {
       return;
     }
 
+    if (!agreed) {
+      setErrorMessage('利用規約とプライバシーポリシーに同意してください。');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -57,6 +69,10 @@ export default function Register({ onNavigateToLogin, onRegisterSuccess }) {
         options: {
           data: {
             user_id: trimmedUserId,
+            // 同意した規約の版と日時（規約を変えたときに、どの版に同意したか分かるように）
+            terms_version: LEGAL_VERSION,
+            privacy_version: LEGAL_VERSION,
+            agreed_at: new Date().toISOString(),
           },
         },
       });
@@ -142,10 +158,47 @@ export default function Register({ onNavigateToLogin, onRegisterSuccess }) {
             />
           </div>
 
-          <button type="submit" className="submit-button" disabled={loading}>
+          {/* 利用規約・プライバシーポリシーへの同意 */}
+          <div className="agreement-group">
+            <label className="agreement-row">
+              <input
+                type="checkbox"
+                className="agreement-checkbox"
+                checked={agreeTerms}
+                onChange={(e) => setAgreeTerms(e.target.checked)}
+              />
+              <span>
+                <button type="button" className="agreement-link" onClick={() => setLegalDoc(TERMS)}>
+                  利用規約
+                </button>
+                に同意する
+              </span>
+            </label>
+            <label className="agreement-row">
+              <input
+                type="checkbox"
+                className="agreement-checkbox"
+                checked={agreePrivacy}
+                onChange={(e) => setAgreePrivacy(e.target.checked)}
+              />
+              <span>
+                <button type="button" className="agreement-link" onClick={() => setLegalDoc(PRIVACY)}>
+                  プライバシーポリシー
+                </button>
+                に同意する
+              </span>
+            </label>
+            <p className="agreement-note">
+              価格データの匿名提供は、初期設定ではオフです（設定画面でいつでも変更できます）。
+            </p>
+          </div>
+
+          <button type="submit" className="submit-button" disabled={loading || !agreed}>
             {loading ? '作成中...' : 'アカウント作成'}
           </button>
         </form>
+
+        {legalDoc && <LegalModal doc={legalDoc} onClose={() => setLegalDoc(null)} />}
 
         <div className="back-to-login-section">
           <button

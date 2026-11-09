@@ -106,8 +106,10 @@ export default function ProductHistoryList({ product, onBack, onSelectReceipt })
                       <span className="history-date">{item.date}</span>
                       <span className="history-shop">{item.shop}</span>
                     </div>
-                    {item.itemName && (
-                      <span className="history-item-name">{item.itemName}</span>
+                    {(item.itemName || item.volume) && (
+                      <span className="history-item-name">
+                        {[item.itemName, item.volume].filter(Boolean).join(' ・ ')}
+                      </span>
                     )}
                   </div>
                   <div className="history-card-right">
