@@ -97,13 +97,26 @@ export default function Home({
     setSearchQuery('');
   };
 
-  // 商品タップ時のハンドラー（検索履歴追加 ＆ 親の画面遷移ハンドラー呼出）
-  //  path: { main, category, sub, product }（商品は名前ではなく場所で区別する）
   // 検索候補・検索履歴のタップ。
-  //  スマホ（iPhone）では、キーボードが開いたまま画面がずれて、click が届かないことがあるため、
-  //  指を離した時点（touchend）で選ぶ。指が動いた（スクロール）ときは選ばない。
-  //  touchend で選んだあとの、続けて来る mousedown / click は、preventDefault で止める（二重に選ばない）
-  const touchStartPoint = useRef(null);
+  //  iPhone では、候補を押すと、キーボードが閉じて画面がずれ、指を離す前にタップが取り消されて、
+  //  click も touchend も届かないことがある。そのため、指が触れた瞬間（pointerdown）に選ぶ。
+  //  選んで画面が移ったあとに、続けて来る click が、移った先の画面の部品を押してしまわないよう、
+  //  その click は止める（パソコンのマウスでも同じ動き）。
+  const tapProps = (path) => ({
+    onMouseDown: (e) => e.preventDefault(), // 入力欄からフォーカスを外さない
+    onPointerDown: (e) => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      e.preventDefault();
+      const stopClick = (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+      };
+      document.addEventListener('click', stopClick, true);
+      setTimeout(() => document.removeEventListener('click', stopClick, true), 700);
+      handleSelectProductItem(path);
+    },
+    onClick: () => handleSelectProductItem(path), // pointerdown が使えない環境の、予備
+  });
   const searchBarRef = useRef(null);
 
   // 検索欄の外側を押したら、候補を閉じる。
@@ -119,23 +132,9 @@ export default function Home({
     document.addEventListener('pointerdown', closeIfOutside);
     return () => document.removeEventListener('pointerdown', closeIfOutside);
   }, [isSearchFocused]);
-  const tapProps = (path) => ({
-    onMouseDown: (e) => e.preventDefault(), // 入力欄からフォーカスを外さない
-    onClick: () => handleSelectProductItem(path), // パソコンのクリック
-    onTouchStart: (e) => {
-      const t = e.touches[0];
-      touchStartPoint.current = { x: t.clientX, y: t.clientY };
-    },
-    onTouchEnd: (e) => {
-      const start = touchStartPoint.current;
-      const t = e.changedTouches[0];
-      touchStartPoint.current = null;
-      if (!start || Math.abs(t.clientX - start.x) > 10 || Math.abs(t.clientY - start.y) > 10) return;
-      e.preventDefault();
-      handleSelectProductItem(path);
-    },
-  });
 
+  // 商品タップ時のハンドラー（検索履歴追加 ＆ 親の画面遷移ハンドラー呼出）
+  //  path: { main, category, sub, product }（商品は名前ではなく場所で区別する）
   const handleSelectProductItem = (path) => {
     if (!path || !path.product) return;
     setSearchQuery('');
