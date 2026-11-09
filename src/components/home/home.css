@@ -530,8 +530,10 @@
   left: 0;
   right: 0;
   margin-top: 8px;
-  max-height: 65vh;
+  /* 4 行（1 行 68px）まで見せて、それより多いときは、スクロールする。キーボードで隠れすぎないよう、画面の高さでも抑える */
+  max-height: min(272px, 45dvh);
   overflow-y: auto;
+  overscroll-behavior: contain; /* 一覧の端まで来ても、後ろの画面は動かさない */
   -webkit-overflow-scrolling: touch;
   background-color: #ffffff;
   border-radius: 12px;
@@ -549,6 +551,8 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  min-height: 68px; /* 1 行の高さをそろえる（一覧は、4 行ぶんの高さまで） */
+  box-sizing: border-box;
   padding: 10px 8px 10px 16px;
   font-size: 15px;
   color: #333333;
