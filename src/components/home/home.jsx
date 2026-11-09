@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import './home.css';
 import {
   CATEGORY_TREE,
@@ -99,6 +99,28 @@ export default function Home({
 
   // 商品タップ時のハンドラー（検索履歴追加 ＆ 親の画面遷移ハンドラー呼出）
   //  path: { main, category, sub, product }（商品は名前ではなく場所で区別する）
+  // 検索候補・検索履歴のタップ。
+  //  スマホ（iPhone）では、キーボードが開いたまま画面がずれて、click が届かないことがあるため、
+  //  指を離した時点（touchend）で選ぶ。指が動いた（スクロール）ときは選ばない。
+  //  touchend で選んだあとの、続けて来る mousedown / click は、preventDefault で止める（二重に選ばない）
+  const touchStartPoint = useRef(null);
+  const tapProps = (path) => ({
+    onMouseDown: (e) => e.preventDefault(), // 入力欄からフォーカスを外さない
+    onClick: () => handleSelectProductItem(path), // パソコンのクリック
+    onTouchStart: (e) => {
+      const t = e.touches[0];
+      touchStartPoint.current = { x: t.clientX, y: t.clientY };
+    },
+    onTouchEnd: (e) => {
+      const start = touchStartPoint.current;
+      const t = e.changedTouches[0];
+      touchStartPoint.current = null;
+      if (!start || Math.abs(t.clientX - start.x) > 10 || Math.abs(t.clientY - start.y) > 10) return;
+      e.preventDefault();
+      handleSelectProductItem(path);
+    },
+  });
+
   const handleSelectProductItem = (path) => {
     if (!path || !path.product) return;
     setSearchQuery('');
@@ -221,8 +243,7 @@ export default function Home({
                       <li
                         key={productKey(path)}
                         className="search-suggestion-item"
-                        onMouseDown={(e) => e.preventDefault()} // 入力欄からフォーカスを外さない
-                        onClick={() => handleSelectProductItem(path)} // スマホのタップでも動くよう、選択は click で行う
+                        {...tapProps(path)}
                       >
                         <span className="suggestion-icon">🔍</span>
                         <span className="suggestion-body">
@@ -246,8 +267,7 @@ export default function Home({
                           type="button"
                           className="search-history-tag"
                           title={formatPath(path, { withProduct: true })}
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={() => handleSelectProductItem(path)}
+                          {...tapProps(path)}
                         >
                           🕒 {path.product}
                         </button>
