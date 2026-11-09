@@ -49,29 +49,73 @@ export const findProductPaths = (productName) =>
 export const isValidProductPath = (path) =>
   !!path && PRODUCT_PATHS.some((p) => productKey(p) === productKey(path));
 
-// ---------- 編集画面のプルダウン用 ----------
+// ---------- 「その他」 ----------
+/*
+ * 「その他」は表（Excel）には入れず、編集画面のプルダウンの末尾にコードで足す。
+ *  （表に入れると、検索の候補や価格比較に「その他」が大量に混ざるため）
+ *  ・その他を選んだ階層より下は「選択不要」で、空（null）で保存する
+ *  ・大分類がその他のときは、中分類も「その他」にする（中分類の空は「未選択」の意味になるため）
+ *  ・AI が当てはめられなかった明細は「未選択」のまま。「その他」は人が選んだものだけ
+ */
+export const OTHER = 'その他';
 
 const uniq = (arr) => Array.from(new Set(arr));
 
-/** 大分類の一覧 */
-export const getMainCategories = () => CATEGORY_TREE.map((top) => top.name);
+// 選択肢があれば末尾に「その他」を付ける（選択肢が無い階層には付けない）
+const withOther = (list) => (list.length > 0 ? uniq([...list, OTHER]) : []);
 
-/** 大分類に属する中分類の一覧 */
+// ---------- 編集画面のプルダウン用（どれも末尾に「その他」が付く） ----------
+
+/** 大分類の一覧 */
+export const getMainCategories = () => withOther(CATEGORY_TREE.map((top) => top.name));
+
+/** 大分類に属する中分類の一覧（大分類がその他・未選択なら空） */
 export const getMidCategories = (main) => {
   const top = CATEGORY_TREE.find((t) => t.name === main);
-  return top ? uniq(top.categories.map((m) => m.name)) : [];
+  return top ? withOther(uniq(top.categories.map((m) => m.name))) : [];
 };
 
-/** 大分類＋中分類に属する小分類の一覧 */
+/** 大分類＋中分類に属する小分類の一覧（中分類がその他・未選択なら空） */
 export const getSubCategories = (main, category) =>
-  uniq(
-    PRODUCT_PATHS.filter((p) => p.main === main && p.category === category && p.sub).map((p) => p.sub)
-  );
-
-/** 大分類＋中分類＋小分類に属する商品名の一覧 */
-export const getProducts = (main, category, sub) =>
-  uniq(
-    PRODUCT_PATHS.filter((p) => p.main === main && p.category === category && p.sub === sub).map(
-      (p) => p.product
+  withOther(
+    uniq(
+      PRODUCT_PATHS.filter((p) => p.main === main && p.category === category && p.sub).map((p) => p.sub)
     )
   );
+
+/** 大分類＋中分類＋小分類に属する商品名の一覧（小分類がその他・未選択なら空） */
+export const getProducts = (main, category, sub) =>
+  withOther(
+    uniq(
+      PRODUCT_PATHS.filter((p) => p.main === main && p.category === category && p.sub === sub).map(
+        (p) => p.product
+      )
+    )
+  );
+
+/**
+ * 編集画面で 1 つの階層を選び直したときの、明細のカテゴリの新しい値。
+ *  上の階層を変えたら、それより下は選び直しになるので空に戻す。
+ * @param {{ mainCategory, category, subCategory, productName }} item
+ * @param {'main' | 'category' | 'sub' | 'product'} level
+ * @param {string} value 選んだ値（'' は「選択してください」）
+ */
+export const applyCategoryChange = (item, level, value) => {
+  if (level === 'main') {
+    return {
+      ...item,
+      mainCategory: value,
+      // 大分類がその他なら中分類もその他（選択不要）。それ以外は選び直し
+      category: value === OTHER ? OTHER : '未選択',
+      subCategory: '',
+      productName: '',
+    };
+  }
+  if (level === 'category') {
+    return { ...item, category: value || '未選択', subCategory: '', productName: '' };
+  }
+  if (level === 'sub') {
+    return { ...item, subCategory: value, productName: '' };
+  }
+  return { ...item, productName: value };
+};

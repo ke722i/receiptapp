@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import './receiptHistoryDetail.css';
 import { deleteReceiptFromDatabase } from '../../utils/receiptDb';
+import { OTHER } from '../../utils/categoryUtils';
 import { formatPurchaseDate } from '../../utils/purchaseDate';
 import ReceiptImagePreview from '../receiptImagePreview/receiptImagePreview';
 
@@ -106,7 +107,8 @@ export default function ReceiptHistoryDetail({ receipt, onBack, onDelete }) {
                       <td className="item-name-cell">{printName}</td>
                       <td className="price-cell">{price}円</td>
                       <td className="category-cell">
-                        {item.main_category && (
+                        {/* 大分類がその他なら中分類もその他なので、大分類の表示は省く */}
+                        {item.main_category && item.main_category !== OTHER && (
                           <div style={{ fontSize: '10px', color: '#999999' }}>{item.main_category}</div>
                         )}
                         {category}

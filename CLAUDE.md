@@ -11,6 +11,10 @@
 - DBの receipt_items: main_category(大) / category(中) / sub_category(小) / product_name(商品名) / item_name(レシート印字名)。
 - AIには M/P コードで答えさせ、コードから名前に戻している（supabase/functions/parse-receipt/catalog.js）。
 - 商品を表に当てはめられなくても、中分類まで当てはまるならそこまで保存する。
+- 「その他」は Excel（表）に入れず、編集画面のプルダウンの末尾にコードで足す（categoryUtils.js の OTHER）。
+  表に入れると、検索の候補や価格比較に「その他」が混ざるため。
+  - その他を選んだ階層より下は選択不要で、空（null）で保存する。大分類がその他なら中分類も「その他」にする。
+  - 「未選択」は AI が当てはめられなかった・まだ決めていないもの、「その他」は人が選んだもの。AI の結果を「その他」にしない。
 - 値引きは「あり／なし」の表示だけ。比較は自分のレシートのみ。
 
 # 4. レシート解析（Edge Function）
