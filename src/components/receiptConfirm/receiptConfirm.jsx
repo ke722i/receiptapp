@@ -3,11 +3,18 @@ import './receiptConfirm.css';
 import { saveReceiptToDatabase } from '../../utils/receiptDb';
 import { formatPurchaseDate } from '../../utils/purchaseDate';
 import { OTHER } from '../../utils/categoryUtils';
+import { splitStoreName, joinStoreName } from '../../utils/storeNameNormalizer';
 import ReceiptEdit from "../receiptEdit/receiptEdit";
 import ReceiptImagePreview from "../receiptImagePreview/receiptImagePreview";
+import StoreNameFields from "../storeNameFields/storeNameFields";
+import { useKnownStores } from "../storeNameFields/useKnownStores";
 
 export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveComplete }) {
-  const [storeName, setStoreName] = useState(() => parsedData?.store_name || '');
+  // 店名（チェーン）と店舗名（支店）は別の入力欄。AI が読み取った「ディオ 和泉店」は、2 つに分けて入れる
+  const [storeChain, setStoreChain] = useState(() => splitStoreName(parsedData?.store_name).chain);
+  const [storeBranch, setStoreBranch] = useState(() => splitStoreName(parsedData?.store_name).branch);
+  // 初めて入力された名前かどうかの判定に使う（辞書と、これまでのレシートの店舗名）
+  const [knownStores] = useKnownStores();
   const [purchaseDate, setPurchaseDate] = useState(
     () => parsedData?.purchase_date || new Date().toISOString().split('T')[0]
   );
@@ -85,11 +92,18 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
   // DB登録処理
   const handleRegisterToDatabase = async () => {
     setErrorMessage('');
+
+    // 店舗名だけ入れて、店名が空だと、店舗別の集計がずれるので止める
+    if (!storeChain.trim() && storeBranch.trim()) {
+      setErrorMessage('店名を入力してください。');
+      return;
+    }
+
     setIsSaving(true);
 
-    // 1. 画像URLを含むレシート本体データ
+    // 1. 画像URLを含むレシート本体データ（店名と店舗名は、「ディオ 和泉店」の 1 つにつなぐ）
     const receiptData = {
-      store_name: storeName,
+      store_name: joinStoreName(storeChain, storeBranch),
       store_address: parsedData?.store_address || '',
       store_number: parsedData?.store_number || '',
       purchase_date: purchaseDate,
@@ -145,16 +159,13 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
 
         <section className="receipt-info-card">
           <div className="info-text-group">
-            <div className="info-row">
-              <span className="info-label">店舗名</span>
-              <input
-                type="text"
-                className="info-input"
-                placeholder="店舗名を入力"
-                value={storeName}
-                onChange={(e) => setStoreName(e.target.value)}
-              />
-            </div>
+            <StoreNameFields
+              chain={storeChain}
+              branch={storeBranch}
+              onChainChange={setStoreChain}
+              onBranchChange={setStoreBranch}
+              known={knownStores}
+            />
             <div className="info-row">
               <span className="info-label">購入日時</span>
               {/* 日付入力欄の表示形式はブラウザの言語で決まるため、「YYYY年MM月DD日」の文字を見せ、

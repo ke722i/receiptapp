@@ -166,3 +166,53 @@ export const getChainName = (storeName) => {
 
   return name.split(/\s+/)[0];
 };
+
+// ---------- 店名（チェーン）と店舗名（支店）を別の入力欄にするための関数 ----------
+//  保存は今までどおり 1 つの文字列「チェーン名 支店名」（例: 「ディオ 和泉店」）。
+//  画面では、店名（チェーン）と店舗名（支店）を別の入力欄にして、保存するときに 1 つにつなぐ。
+
+/** 辞書にある店名（チェーン名）の一覧。入力欄の候補に使う */
+export const DICTIONARY_CHAIN_NAMES = STORE_RULES.map((rule) => rule.normalized);
+
+/**
+ * 店名の入力欄に書かれた文字を、保存する形（チェーン名）にそろえる
+ *  ・辞書の表記（例: 「AEON」「ファミマ」）にぴったり一致すれば、統一名（「イオン」「ファミリーマート」）にする
+ *  ・辞書に無い店名は、そのまま。チェーン名は「最初の空白まで」で集計するので、空白は取り除く
+ */
+export const canonicalChainName = (text) => {
+  const compact = String(text || '').normalize('NFKC').replace(/\s+/g, '');
+  if (!compact) return '';
+
+  const found = findChain(compact);
+  // 辞書の語のあとに、まだ文字が続くとき（例: 「イオンモール」）は、別の店名として、そのまま使う
+  if (found && normalizeForMatch(found.chars.slice(found.end).join('')) === '') {
+    return found.rule.normalized;
+  }
+  return compact;
+};
+
+/** 店舗名（支店）の入力欄に書かれた文字を整える（全角を半角に、空白をそろえる） */
+export const cleanBranchName = (text) =>
+  String(text || '').normalize('NFKC').replace(/\s+/g, ' ').trim();
+
+/** 店名と店舗名をつないで、保存する 1 つの文字列にする（例: 「ディオ」「和泉店」→「ディオ 和泉店」） */
+export const joinStoreName = (chain, branch) =>
+  [canonicalChainName(chain), cleanBranchName(branch)].filter(Boolean).join(' ');
+
+/**
+ * 保存されている店舗名を、店名（チェーン）と店舗名（支店）に分ける
+ *  例: 「ディオ 和泉店」→ { chain: 'ディオ', branch: '和泉店' }、「ディオ和泉店」→ 同じ、「ニトリ 大阪店」→ { chain: 'ニトリ', branch: '大阪店' }
+ */
+export const splitStoreName = (storeName) => {
+  const name = String(storeName || '').trim();
+  if (!name || name === UNREGISTERED) return { chain: '', branch: '' };
+
+  const found = findChain(name);
+  if (found) {
+    const normalized = normalizeStoreName(name); // 「統一名 支店名」の形
+    return { chain: found.rule.normalized, branch: normalized.slice(found.rule.normalized.length).trim() };
+  }
+
+  const [chain, ...rest] = name.split(/\s+/);
+  return { chain, branch: rest.join(' ') };
+};

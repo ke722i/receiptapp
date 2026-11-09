@@ -22,12 +22,17 @@ export const groupPricesByStore = (myStores, rows) => {
     const storeRows = rows
       .filter((row) => row.storeName === store.store_name)
       .sort((a, b) => a.price - b.price || Number(b.isMine) - Number(a.isMine));
+    const mineRows = storeRows.filter((row) => row.isMine);
+    const othersRows = storeRows.filter((row) => !row.isMine);
     return {
       storeName: store.store_name,
       rows: storeRows,
+      // 画面では、自分のレシートと他のユーザーのレシートを、別のカードに分けて出す
+      mineRows,
+      othersRows,
       minPrice: storeRows.length ? storeRows[0].price : null,
-      mineCount: storeRows.filter((row) => row.isMine).length,
-      othersCount: storeRows.filter((row) => !row.isMine).length,
+      mineCount: mineRows.length,
+      othersCount: othersRows.length,
     };
   });
 
