@@ -168,6 +168,7 @@
   min-width: 0;
   font-size: 12px;
   color: #888888;
+  text-align: left;
 }
 
 .msp-card-count {
@@ -188,47 +189,13 @@
   padding: 0;
 }
 
+/* 行の見た目は、購入履歴と同じ部品（PurchaseRow、purchaseRow.css）。ここでは、行の外側の余白と区切り線だけ */
 .msp-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   padding: 10px 16px;
 }
 
 .msp-item + .msp-item {
   border-top: 1px solid #f5f5f5;
-}
-
-.msp-detail {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.msp-date {
-  font-size: 12px;
-  color: #333333;
-}
-
-.msp-volume {
-  font-size: 11px;
-  color: #888888;
-}
-
-.msp-discount {
-  flex-shrink: 0;
-  font-size: 11px;
-  font-weight: 600;
-  color: #d32f2f;
-}
-
-.msp-price {
-  flex-shrink: 0;
-  font-size: 16px;
-  font-weight: bold;
-  color: #333333;
 }
 
 .msp-toggle {

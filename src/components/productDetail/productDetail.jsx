@@ -3,6 +3,10 @@ import './productDetail.css';
 import { fetchProductPriceHistory } from '../../utils/receiptDb';
 import { formatPath } from '../../utils/categoryUtils';
 import MyStorePrices from '../myStorePrices/myStorePrices';
+import PurchaseRow from '../purchaseRow/purchaseRow';
+import { cheapestByItemName } from '../../utils/itemNameGroup';
+
+const OTHER_PREVIEW = 1; // 「他の商品の最安値」を最初に見せる件数（残りは「すべて表示」）
 
 // 印字名に容量を添える（例: "明治おいしい牛乳 ・ 900ml"）
 const withVolume = (itemName, volume) => [itemName, volume].filter(Boolean).join(' ・ ');
@@ -20,6 +24,7 @@ export default function ProductDetail({
   const [historyData, setHistoryData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
+  const [showAllOthers, setShowAllOthers] = useState(false); // 「他の商品の最安値」をすべて表示中か
 
   // 自分のレシートから、この商品の購入履歴を取得
   useEffect(() => {
@@ -50,12 +55,11 @@ export default function ProductDetail({
     return b.dateValue.localeCompare(a.dateValue); // dateDesc
   });
 
-  // 最安値の購入（価格が最も安い1件。同額の場合は購入日が新しいほうを採用。
-  // historyData は日付降順で返るので、より安い場合だけ入れ替えれば同額は新しい日付が残る）
-  const cheapestPurchase = historyData.reduce(
-    (min, item) => (min === null || item.price < min.price ? item : min),
-    null
-  );
+  // 同じカテゴリの商品でも、印字名が別の商品（例: ちいかわグミ／他メーカーのグミ）は、別々に最安値を出す
+  const cheapestList = cheapestByItemName(historyData);
+  const topItem = cheapestList[0]; // いちばん安い商品は、大きいカードで
+  const otherItems = cheapestList.slice(1); // 2 番目以降は、コンパクトな行（赤枠）で
+  const visibleOthers = showAllOthers ? otherItems : otherItems.slice(0, OTHER_PREVIEW);
 
   // 履歴は最大4件までを表示（全件は「すべて見る」へ）
   const previewHistory = sortedHistory.slice(0, 4);
@@ -106,47 +110,77 @@ export default function ProductDetail({
           </div>
         )}
 
-        {/* 3. 最安値の購入カード */}
-        {!loading && cheapestPurchase && (
+        {/* 3. 最安値の購入。いちばん安い商品は大きいカード、印字名が別の商品（2 番目以降）はコンパクトな行 */}
+        {!loading && topItem && (
           <section className="detail-section">
             <h3 className="section-title">最安値の購入</h3>
-            <div className="recent-purchase-card">
-              <div className="recent-card-header">
-                <span className="purchase-date">{cheapestPurchase.date}</span>
-                <span className="history-shop">{cheapestPurchase.shop}</span>
-              </div>
+            {/* カード全体を押すと、そのレシートが開く（ほかのカードと同じ） */}
+            <div
+              className={`recent-purchase-card ${onSelectReceipt ? 'is-clickable' : ''}`}
+              {...(onSelectReceipt
+                ? {
+                    role: 'button',
+                    tabIndex: 0,
+                    onClick: () => onSelectReceipt(topItem.cheapest.receiptId),
+                    onKeyDown: (e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onSelectReceipt(topItem.cheapest.receiptId);
+                      }
+                    },
+                  }
+                : {})}
+            >
               <div className="recent-card-body">
-                <div className="price-info">
-                  <span className="current-price">{cheapestPurchase.price}<span className="unit">円</span></span>
-                  {(cheapestPurchase.itemName || cheapestPurchase.volume) && (
-                    <span className="original-price" style={{ textDecoration: 'none' }}>
-                      {withVolume(cheapestPurchase.itemName, cheapestPurchase.volume)}
-                    </span>
-                  )}
+                {/* 左: 商品名（左詰め）／ 右: 価格（右詰め） */}
+                <span className="recent-item-name">
+                  {withVolume(topItem.cheapest.itemName, topItem.cheapest.volume) || '印字名なし'}
+                </span>
+                <div className="recent-price-side">
+                  <span className="current-price">{topItem.cheapest.price}<span className="unit">円</span></span>
                 </div>
-                <div className="recent-card-actions">
-                  {cheapestPurchase.isDiscount && (
-                    <div className="discount-tag">値引きあり</div>
-                  )}
-                  <button
-                    type="button"
-                    className="receipt-link-button"
-                    onClick={() => onSelectReceipt && onSelectReceipt(cheapestPurchase.receiptId)}
-                  >
-                    レシートを見る ›
-                  </button>
-                </div>
+              </div>
+              <div className="recent-card-header">
+                <span className="purchase-date">{topItem.cheapest.date}</span>
+                <span className="history-shop">{topItem.cheapest.shop}</span>
+                {/* 値引きの有無（購入履歴の行と同じ表示） */}
+                <span className={`recent-card-count purchase-row-discount ${topItem.cheapest.isDiscount ? 'has-discount' : ''}`}>
+                  {topItem.cheapest.isDiscount ? '値引きあり' : '値引きなし'}
+                </span>
               </div>
             </div>
+
+            {otherItems.length > 0 && (
+              <>
+                <div className="others-list">
+                  {visibleOthers.map(({ key, cheapest, count }) => (
+                    <PurchaseRow
+                      key={key || 'no-name'}
+                      card
+                      primary={withVolume(cheapest.itemName, cheapest.volume) || '印字名なし'}
+                      muted={!cheapest.itemName && !cheapest.volume}
+                      sub={`${cheapest.date}  ${cheapest.shop} ・ 購入 ${count}件`}
+                      price={cheapest.price}
+                      isDiscount={cheapest.isDiscount}
+                      onClick={onSelectReceipt ? () => onSelectReceipt(cheapest.receiptId) : undefined}
+                    />
+                  ))}
+                </div>
+                {otherItems.length > OTHER_PREVIEW && (
+                  <button
+                    type="button"
+                    className="view-all-button"
+                    onClick={() => setShowAllOthers((v) => !v)}
+                  >
+                    {showAllOthers ? '閉じる' : `他の商品をすべて表示（${otherItems.length}件）`}
+                  </button>
+                )}
+              </>
+            )}
           </section>
         )}
 
-        {/* 4. マイ店舗の価格比較（自分＋価格データを提供している他のユーザー） */}
-        {product?.product && (
-          <MyStorePrices product={product} onManageStores={onNavigateToMyStores} />
-        )}
-
-        {/* 5. 購入履歴セクション */}
+        {/* 4. 購入履歴セクション */}
         {!loading && historyData.length > 0 && (
           <section className="detail-section">
             <div className="history-header-row">
@@ -166,37 +200,16 @@ export default function ProductDetail({
             {/* 履歴リスト */}
             <div className="history-list">
               {previewHistory.map((item) => (
-                <div
+                <PurchaseRow
                   key={item.id}
-                  className="history-card clickable"
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => onSelectReceipt && onSelectReceipt(item.receiptId)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      onSelectReceipt && onSelectReceipt(item.receiptId);
-                    }
-                  }}
-                >
-                  <div className="history-card-left">
-                    <div className="history-title-row">
-                      <span className="history-date">{item.date}</span>
-                      <span className="history-shop">{item.shop}</span>
-                    </div>
-                    {(item.itemName || item.volume) && (
-                      <span className="history-item-name">{withVolume(item.itemName, item.volume)}</span>
-                    )}
-                  </div>
-                  <div className="history-card-right">
-                    <div className="history-price-group">
-                      <span className="history-price">{item.price}円</span>
-                    </div>
-                    <span className={`history-discount ${item.isDiscount ? 'has-discount' : ''}`}>
-                      {item.isDiscount ? '値引きあり' : '値引きなし'}
-                    </span>
-                  </div>
-                </div>
+                  card
+                  primary={withVolume(item.itemName, item.volume) || '印字名なし'}
+                  muted={!item.itemName && !item.volume}
+                  sub={`${item.date}  ${item.shop}`}
+                  price={item.price}
+                  isDiscount={item.isDiscount}
+                  onClick={onSelectReceipt ? () => onSelectReceipt(item.receiptId) : undefined}
+                />
               ))}
             </div>
 
@@ -211,6 +224,16 @@ export default function ProductDetail({
               </button>
             )}
           </section>
+        )}
+        {/* 5. マイ店舗の価格比較（自分＋価格データを提供している他のユーザー） */}
+        {product?.product && (
+          <MyStorePrices
+            product={product}
+            ownHistory={historyData}
+            ownLoading={loading}
+            onManageStores={onNavigateToMyStores}
+            onSelectReceipt={onSelectReceipt}
+          />
         )}
       </main>
     </div>

@@ -1,7 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import './myStorePrices.css';
+import PurchaseRow from '../purchaseRow/purchaseRow';
 import { fetchMyStores, fetchMyStorePrices } from '../../utils/myStoreDb';
-import { PERIOD_OPTIONS, DEFAULT_PERIOD_DAYS, groupPricesByStore } from '../../utils/myStoreCompare';
+import {
+  PERIOD_OPTIONS,
+  DEFAULT_PERIOD_DAYS,
+  groupPricesByStore,
+  pickOwnRows,
+} from '../../utils/myStoreCompare';
 import { formatPurchaseDate } from '../../utils/purchaseDate';
 
 const PREVIEW_ROWS = 5; // カードごとに最初に見せる件数（残りは「すべて表示」）
@@ -9,9 +15,11 @@ const PREVIEW_ROWS = 5; // カードごとに最初に見せる件数（残り�
 /**
  * 1 つの店舗の中の、「自分」または「他のユーザー」のカード
  *  自分のレシートと他のユーザーのレシートは、別のカードに分ける。
- *  自分のカードには購入日が出る。他のユーザーのカードには出ない（匿名のため）。
+ *  行の見せ方は、購入履歴と同じ部品（PurchaseRow）。
+ *  ・自分のカード: 購入日・印字名（商品名）・容量・価格。押すと、そのレシートが開く
+ *  ・他のユーザーのカード: 容量・価格だけ（購入日・印字名は匿名のため出さない）
  */
-function SourceCard({ mine, rows, expanded, onToggle }) {
+function SourceCard({ mine, rows, expanded, onToggle, onSelectReceipt }) {
   const visibleRows = expanded ? rows : rows.slice(0, PREVIEW_ROWS);
 
   return (
@@ -31,14 +39,22 @@ function SourceCard({ mine, rows, expanded, onToggle }) {
           <ul className="msp-list">
             {visibleRows.map((row, index) => (
               <li key={`${index}-${row.price}`} className="msp-item">
-                <span className="msp-detail">
-                  {mine && row.purchaseDate && (
-                    <span className="msp-date">{formatPurchaseDate(row.purchaseDate)}</span>
-                  )}
-                  <span className="msp-volume">{row.volume || '容量不明'}</span>
-                </span>
-                {row.isDiscount && <span className="msp-discount">値引きあり</span>}
-                <span className="msp-price">{row.price}円</span>
+                {mine ? (
+                  <PurchaseRow
+                    primary={[row.itemName, row.volume || '容量不明'].filter(Boolean).join(' ・ ')}
+                    sub={formatPurchaseDate(row.purchaseDate)}
+                    price={row.price}
+                    isDiscount={row.isDiscount}
+                    onClick={onSelectReceipt && row.receiptId ? () => onSelectReceipt(row.receiptId) : undefined}
+                  />
+                ) : (
+                  <PurchaseRow
+                    primary={row.volume || '容量不明'}
+                    muted={!row.volume}
+                    price={row.price}
+                    isDiscount={row.isDiscount}
+                  />
+                )}
               </li>
             ))}
           </ul>
@@ -56,12 +72,22 @@ function SourceCard({ mine, rows, expanded, onToggle }) {
 /**
  * 商品詳細の「マイ店舗の価格比較」
  *  登録したマイ店舗での、この商品の価格。店舗ごとに、「自分」と「他のユーザー」を別のカードで出す。
+ *  自分の行は、商品詳細が読み込んだ購入履歴（ownHistory）から。他のユーザーの行は、DB の関数から（匿名）。
  * @param {{ main, category, sub, product }} product
+ * @param {object[]} ownHistory 自分の購入履歴（fetchProductPriceHistory の結果）
+ * @param {boolean} ownLoading ownHistory を読み込み中か
+ * @param {(receiptId) => void} onSelectReceipt 自分の行を押したとき
  */
-export default function MyStorePrices({ product, onManageStores }) {
+export default function MyStorePrices({
+  product,
+  ownHistory = [],
+  ownLoading = false,
+  onManageStores,
+  onSelectReceipt,
+}) {
   const [days, setDays] = useState(DEFAULT_PERIOD_DAYS);
   const [myStores, setMyStores] = useState([]);
-  const [rows, setRows] = useState([]);
+  const [othersRows, setOthersRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [expanded, setExpanded] = useState({}); // 'ディオ 和泉店|mine' → すべて表示中か
@@ -76,10 +102,11 @@ export default function MyStorePrices({ product, onManageStores }) {
       if (!stores.success || !prices.success) {
         setErrorMessage((!stores.success ? stores.error : prices.error) || '読み込みに失敗しました。');
         setMyStores([]);
-        setRows([]);
+        setOthersRows([]);
       } else {
         setMyStores(stores.data);
-        setRows(prices.data);
+        // 自分の行は、購入履歴から作る（印字名があるため）。DB の関数が返す「自分の行」は使わない
+        setOthersRows(prices.data.filter((row) => !row.isMine));
       }
       setLoading(false);
     };
@@ -89,8 +116,13 @@ export default function MyStorePrices({ product, onManageStores }) {
     };
   }, [product, days]);
 
-  const groups = groupPricesByStore(myStores, rows);
+  const groups = useMemo(() => {
+    const ownRows = pickOwnRows(ownHistory, myStores, days);
+    return groupPricesByStore(myStores, [...ownRows, ...othersRows]);
+  }, [ownHistory, myStores, othersRows, days]);
+
   const toggle = (key) => setExpanded((prev) => ({ ...prev, [key]: !prev[key] }));
+  const isLoading = loading || ownLoading;
 
   return (
     <section className="detail-section msp-section">
@@ -116,10 +148,10 @@ export default function MyStorePrices({ product, onManageStores }) {
         ))}
       </div>
 
-      {loading && <div className="msp-message">データを読み込み中...</div>}
-      {!loading && errorMessage && <div className="msp-message msp-error">{errorMessage}</div>}
+      {isLoading && <div className="msp-message">データを読み込み中...</div>}
+      {!isLoading && errorMessage && <div className="msp-message msp-error">{errorMessage}</div>}
 
-      {!loading && !errorMessage && myStores.length === 0 && (
+      {!isLoading && !errorMessage && myStores.length === 0 && (
         <div className="msp-empty">
           <p>マイ店舗が登録されていません。</p>
           <button type="button" className="msp-register" onClick={onManageStores}>
@@ -128,7 +160,7 @@ export default function MyStorePrices({ product, onManageStores }) {
         </div>
       )}
 
-      {!loading &&
+      {!isLoading &&
         !errorMessage &&
         groups.map((group) => (
           <div key={group.storeName} className="msp-store">
@@ -147,6 +179,7 @@ export default function MyStorePrices({ product, onManageStores }) {
               rows={group.mineRows}
               expanded={Boolean(expanded[`${group.storeName}|mine`])}
               onToggle={() => toggle(`${group.storeName}|mine`)}
+              onSelectReceipt={onSelectReceipt}
             />
             <SourceCard
               rows={group.othersRows}

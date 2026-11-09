@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import './productHistoryList.css';
 import { fetchProductPriceHistory } from '../../utils/receiptDb';
+import PurchaseRow from '../purchaseRow/purchaseRow';
 
 // product: { main, category, sub, product }（同じ名前の商品を場所で区別する）
 export default function ProductHistoryList({ product, onBack, onSelectReceipt }) {
@@ -88,39 +89,16 @@ export default function ProductHistoryList({ product, onBack, onSelectReceipt })
             {/* 履歴カード一覧 */}
             <div className="full-history-list">
               {sortedHistory.map((item) => (
-                <div
+                <PurchaseRow
                   key={item.id}
-                  className="history-card clickable"
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => onSelectReceipt && onSelectReceipt(item.receiptId)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      onSelectReceipt && onSelectReceipt(item.receiptId);
-                    }
-                  }}
-                >
-                  <div className="history-card-left">
-                    <div className="history-title-row">
-                      <span className="history-date">{item.date}</span>
-                      <span className="history-shop">{item.shop}</span>
-                    </div>
-                    {(item.itemName || item.volume) && (
-                      <span className="history-item-name">
-                        {[item.itemName, item.volume].filter(Boolean).join(' ・ ')}
-                      </span>
-                    )}
-                  </div>
-                  <div className="history-card-right">
-                    <div className="history-price-group">
-                      <span className="history-price">{item.price}円</span>
-                    </div>
-                    <span className={`history-discount ${item.isDiscount ? 'has-discount' : ''}`}>
-                      {item.isDiscount ? '値引きあり' : '値引きなし'}
-                    </span>
-                  </div>
-                </div>
+                  card
+                  primary={[item.itemName, item.volume].filter(Boolean).join(' ・ ') || '印字名なし'}
+                  muted={!item.itemName && !item.volume}
+                  sub={`${item.date}  ${item.shop}`}
+                  price={item.price}
+                  isDiscount={item.isDiscount}
+                  onClick={onSelectReceipt ? () => onSelectReceipt(item.receiptId) : undefined}
+                />
               ))}
             </div>
           </>

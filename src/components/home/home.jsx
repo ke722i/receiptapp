@@ -221,10 +221,8 @@ export default function Home({
                       <li
                         key={productKey(path)}
                         className="search-suggestion-item"
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          handleSelectProductItem(path);
-                        }}
+                        onMouseDown={(e) => e.preventDefault()} // 入力欄からフォーカスを外さない
+                        onClick={() => handleSelectProductItem(path)} // スマホのタップでも動くよう、選択は click で行う
                       >
                         <span className="suggestion-icon">🔍</span>
                         <span className="suggestion-body">
@@ -248,10 +246,8 @@ export default function Home({
                           type="button"
                           className="search-history-tag"
                           title={formatPath(path, { withProduct: true })}
-                          onMouseDown={(e) => {
-                            e.preventDefault();
-                            handleSelectProductItem(path);
-                          }}
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => handleSelectProductItem(path)}
                         >
                           🕒 {path.product}
                         </button>
