@@ -269,6 +269,7 @@ function App() {
         <ReceiptHistoryDetail
           receipt={selectedReceipt}
           onBack={() => setCurrentScreen(receiptDetailBackScreen)}
+          onUpdate={setSelectedReceipt} // 編集して保存した内容を、親が持つレシートにも反映
         />
       )}
     </div>

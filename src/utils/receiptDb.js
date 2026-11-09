@@ -64,6 +64,77 @@ export const saveReceiptToDatabase = async (receiptData, itemsData) => {
 };
 
 /**
+ * 保存済みのレシートの内容を更新する（レシート詳細の編集）
+ *  ・レシート本体（店舗名・購入日）と、変更のあった明細だけを更新する
+ *  ・自分のレシートだけが対象（DB の RLS と、user_id の条件の両方で守る）
+ *  ・明細は 1 件ずつ更新するため、途中で失敗すると一部だけ更新された状態になりうる。その場合はエラーを返す
+ * @param {number|string} receiptId
+ * @param {{ store_name: string, purchase_date: string } | null} receiptFields 変更が無ければ null
+ * @param {{ id, item_name, main_category, category, sub_category, product_name, price, is_discount, volume }[]} itemUpdates
+ */
+export const updateReceiptInDatabase = async (receiptId, receiptFields, itemUpdates = []) => {
+  try {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      throw new Error('ログインユーザーの取得に失敗しました。');
+    }
+
+    if (receiptFields) {
+      const { data, error } = await supabase
+        .from('receipts')
+        .update({
+          store_name: receiptFields.store_name || '',
+          purchase_date: receiptFields.purchase_date,
+        })
+        .eq('id', receiptId)
+        .eq('user_id', user.id)
+        .select('id');
+
+      if (error) throw error;
+      // RLS で対象外の行は、エラーにならず 0 件になる
+      if (!data || data.length === 0) {
+        throw new Error('レシートを更新できませんでした。');
+      }
+    }
+
+    const failedIds = [];
+    await Promise.all(
+      itemUpdates.map(async (item) => {
+        const { data, error } = await supabase
+          .from('receipt_items')
+          .update({
+            item_name: item.item_name || '',
+            main_category: item.main_category || null,
+            category: item.category || '未選択',
+            sub_category: item.sub_category || null,
+            product_name: item.product_name || null,
+            price: Number(item.price) || 0,
+            is_discount: Boolean(item.is_discount),
+            volume: normalizeVolume(item.volume),
+          })
+          .eq('id', item.id)
+          .eq('receipt_id', receiptId)
+          .select('id');
+
+        if (error || !data || data.length === 0) failedIds.push(item.id);
+      })
+    );
+
+    if (failedIds.length > 0) {
+      throw new Error(`${failedIds.length}件の商品を更新できませんでした。もう一度お試しください。`);
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Update receipt failed:', error);
+    return {
+      success: false,
+      error: error.message || 'レシートの更新に失敗しました。',
+    };
+  }
+};
+
+/**
  * ログイン中ユーザーのレシート履歴を取得する
  */
 export const fetchReceiptHistory = async () => {

@@ -41,20 +41,6 @@
   font-weight: bold;
 }
 
-.msp-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 12px;
-  font-size: 11px;
-  color: #888888;
-}
-
-.msp-legend-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
 /* 自分 / 他のユーザー の見分け */
 .msp-badge {
   display: inline-block;
@@ -87,14 +73,10 @@
   color: #c62828;
 }
 
-.msp-card {
+.msp-empty {
   background-color: #ffffff;
   border-radius: 10px;
   border: 1px solid #e0e0e0;
-  overflow: hidden;
-}
-
-.msp-empty {
   padding: 16px;
   text-align: center;
   font-size: 13px;
@@ -116,13 +98,23 @@
   cursor: pointer;
 }
 
+/* 店舗ごとのまとまり: 見出し + 「自分」のカード + 「他のユーザー」のカード */
+.msp-store {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.msp-store + .msp-store {
+  margin-top: 8px;
+}
+
 .msp-store-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 8px;
-  padding: 12px 16px;
-  border-bottom: 1px solid #f0f0f0;
+  padding: 0 4px;
 }
 
 .msp-store-name {
@@ -146,6 +138,45 @@
   color: #e53935;
 }
 
+/* 自分のカード・他のユーザーのカード（別々の枠。左の太線の色でも見分ける） */
+.msp-card {
+  background-color: #ffffff;
+  border-radius: 10px;
+  border: 1px solid #e0e0e0;
+  border-left-width: 4px;
+  overflow: hidden;
+}
+
+.msp-card-mine {
+  border-left-color: #e53935;
+}
+
+.msp-card-others {
+  border-left-color: #9e9e9e;
+}
+
+.msp-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.msp-card-note {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  color: #888888;
+  text-align: left;
+}
+
+.msp-card-count {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: #888888;
+}
+
 .msp-no-data {
   padding: 12px 16px;
   font-size: 12px;
@@ -158,47 +189,13 @@
   padding: 0;
 }
 
+/* 行の見た目は、購入履歴と同じ部品（PurchaseRow、purchaseRow.css）。ここでは、行の外側の余白と区切り線だけ */
 .msp-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   padding: 10px 16px;
 }
 
 .msp-item + .msp-item {
   border-top: 1px solid #f5f5f5;
-}
-
-.msp-detail {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.msp-date {
-  font-size: 12px;
-  color: #333333;
-}
-
-.msp-volume {
-  font-size: 11px;
-  color: #888888;
-}
-
-.msp-discount {
-  flex-shrink: 0;
-  font-size: 11px;
-  font-weight: 600;
-  color: #d32f2f;
-}
-
-.msp-price {
-  flex-shrink: 0;
-  font-size: 16px;
-  font-weight: bold;
-  color: #333333;
 }
 
 .msp-toggle {

@@ -1,0 +1,95 @@
+/* 価格の 1 行（購入履歴・購入履歴の一覧・マイ店舗の価格比較で共通） */
+.purchase-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  text-align: left; /* 親の中央ぞろえを引き継がない */
+}
+
+/* 1 行を、単独のカードにする（購入履歴） */
+.purchase-row.is-card {
+  background-color: #ffffff;
+  border-radius: 10px;
+  padding: 12px 16px;
+  border: 1px solid #e0e0e0;
+}
+
+/* 押せる行（レシートを開く） */
+.purchase-row.is-clickable {
+  cursor: pointer;
+  transition: background-color 0.15s, transform 0.1s;
+}
+
+.purchase-row.is-clickable:active {
+  background-color: #f5f5f5;
+}
+
+.purchase-row.is-card.is-clickable:active {
+  transform: scale(0.99);
+}
+
+.purchase-row-left {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+/* 日付と店名を、同じ行に並べる */
+.purchase-row-main {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}
+
+.purchase-row-primary {
+  font-size: 14px;
+  font-weight: bold;
+  color: #333333;
+}
+
+.purchase-row-primary.is-muted {
+  font-weight: normal;
+  color: #999999;
+}
+
+.purchase-row-secondary {
+  font-size: 14px;
+  font-weight: bold;
+  color: #333333;
+}
+
+/* 印字名・容量 */
+.purchase-row-sub {
+  font-size: 12px;
+  color: #555555;
+  word-break: break-word;
+}
+
+.purchase-row-right {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.purchase-row-price {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333333;
+}
+
+.purchase-row-discount {
+  font-size: 11px;
+  color: #888888;
+}
+
+.purchase-row-discount.has-discount {
+  color: #d32f2f;
+  font-weight: 600;
+}

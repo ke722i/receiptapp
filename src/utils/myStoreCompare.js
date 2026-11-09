@@ -9,6 +9,49 @@ export const PERIOD_OPTIONS = [
   { days: 183, label: '半年' },
 ];
 export const DEFAULT_PERIOD_DAYS = 7;
+export const MAX_PERIOD_DAYS = 183; // 半年
+
+/**
+ * 「何日前まで」の、いちばん古い購入日（YYYY-MM-DD、日本時間）。
+ *  DB の関数 get_my_store_prices と同じ計算（1〜183 日に収め、日本時間の今日から引く）
+ */
+export const sinceDate = (days, now = new Date()) => {
+  const clamped = Math.min(Math.max(Number(days) || DEFAULT_PERIOD_DAYS, 1), MAX_PERIOD_DAYS);
+  const jst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+  jst.setUTCDate(jst.getUTCDate() - clamped);
+  return jst.toISOString().slice(0, 10);
+};
+
+/**
+ * 自分の購入履歴（fetchProductPriceHistory の結果）から、価格比較に出す「自分の行」を取り出す。
+ *  ・マイ店舗に登録した店舗のものだけ。期間内のものだけ。0 円以下・10 万円以上は除く（DB の関数と同じ条件）
+ *  ・自分の行には、印字名（商品名）と、レシートの ID も付ける（他のユーザーの行には付かない）
+ * @param {{ shop, dateValue, price, volume, isDiscount, itemName, receiptId }[]} history
+ * @param {{ store_name: string }[]} myStores
+ */
+export const pickOwnRows = (history, myStores, days, now = new Date()) => {
+  const names = new Set(myStores.map((store) => store.store_name));
+  const since = sinceDate(days, now);
+  return (history || [])
+    .filter(
+      (h) =>
+        names.has(h.shop) &&
+        /^\d{4}-\d{2}-\d{2}/.test(h.dateValue || '') &&
+        h.dateValue.slice(0, 10) >= since &&
+        h.price > 0 &&
+        h.price < 100000
+    )
+    .map((h) => ({
+      storeName: h.shop,
+      price: h.price,
+      volume: h.volume || null,
+      isDiscount: Boolean(h.isDiscount),
+      isMine: true,
+      purchaseDate: h.dateValue.slice(0, 10),
+      itemName: h.itemName || null,
+      receiptId: h.receiptId,
+    }));
+};
 
 /**
  * 価格の一覧を、マイ店舗ごとにまとめる。
@@ -22,12 +65,17 @@ export const groupPricesByStore = (myStores, rows) => {
     const storeRows = rows
       .filter((row) => row.storeName === store.store_name)
       .sort((a, b) => a.price - b.price || Number(b.isMine) - Number(a.isMine));
+    const mineRows = storeRows.filter((row) => row.isMine);
+    const othersRows = storeRows.filter((row) => !row.isMine);
     return {
       storeName: store.store_name,
       rows: storeRows,
+      // 画面では、自分のレシートと他のユーザーのレシートを、別のカードに分けて出す
+      mineRows,
+      othersRows,
       minPrice: storeRows.length ? storeRows[0].price : null,
-      mineCount: storeRows.filter((row) => row.isMine).length,
-      othersCount: storeRows.filter((row) => !row.isMine).length,
+      mineCount: mineRows.length,
+      othersCount: othersRows.length,
     };
   });
 

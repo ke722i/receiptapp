@@ -88,98 +88,10 @@
   gap: 8px;
 }
 
-/* 履歴カード */
-.history-card {
-  background-color: #ffffff;
-  border-radius: 10px;
-  padding: 14px 16px;
-  border: 1px solid #e0e0e0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.history-card-left {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-}
-
-.history-date {
-  font-size: 14px;
-  font-weight: bold;
-  color: #333333;
-}
-
-.history-shop {
-  font-size: 14px;
-  font-weight: bold;
-  color: #333333;
-}
-
-.history-card-right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
-}
-
-.history-price-group {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-}
-
-.history-price {
-  font-size: 16px;
-  font-weight: bold;
-  color: #333333;
-}
-
-.history-original-price {
-  font-size: 11px;
-  color: #999999;
-  text-decoration: line-through;
-}
-
-.history-discount {
-  font-size: 11px;
-  color: #888888;
-}
-
-.history-discount.has-discount {
-  color: #d32f2f;
-  font-weight: 600;
-}
 /* --- DB連携で追加 --- */
 .history-message {
   text-align: center;
   color: #888888;
   font-size: 14px;
   padding: 24px 0;
-}
-
-.history-item-name {
-  font-size: 12px;
-  color: #555555;
-}
-
-/* 日付と店名を同じ行に並べる */
-.history-title-row {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 4px 10px;
-}
-
-/* カード全体をボタンとして扱う */
-.history-card.clickable {
-  cursor: pointer;
-  transition: background-color 0.15s, transform 0.1s;
-}
-
-.history-card.clickable:active {
-  background-color: #f5f5f5;
-  transform: scale(0.99);
 }

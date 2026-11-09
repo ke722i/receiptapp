@@ -30,3 +30,9 @@ supabase/.branches
 # Environment variables
 .env
 .env.*
+
+# テスト項目書の Excel（結果を書き込む手元のファイル。tools/export_test_items.py でいつでも作れるので、リポジトリには入れない）
+TEST_ITEMS.xlsx
+
+# Excel が、ファイルを開いている間だけ作る一時ファイル（ロックファイル）
+~$*

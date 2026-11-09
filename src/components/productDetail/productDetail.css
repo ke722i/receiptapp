@@ -120,16 +120,39 @@
   text-align: left;
 }
 
+/* 最安値の下の、印字名が別の商品ごとの行（購入履歴と同じ見た目。赤枠は、いちばん上の最安値だけ） */
+.others-list {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.others-list + .view-all-button {
+  margin-top: 8px;
+}
+
 /* 直近の購入カード */
 .recent-purchase-card {
   background-color: #ffffff;
-  border-radius: 12px;
+  border-radius: 10px; /* 購入履歴のカードと同じ */
   padding: 16px;
-  border: 2px solid #e53935; /* 赤色枠線で強調 */
+  border: 2px solid #e53935; /* 最安値だけ、赤い枠で強調 */
   box-shadow: 0 2px 8px rgba(229, 57, 53, 0.1);
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+/* 押せるカード（レシートを開く） */
+.recent-purchase-card.is-clickable {
+  cursor: pointer;
+  transition: background-color 0.15s, transform 0.1s;
+}
+
+.recent-purchase-card.is-clickable:active {
+  background-color: #f5f5f5;
+  transform: scale(0.99);
 }
 
 .recent-card-header {
@@ -138,8 +161,8 @@
   align-items: baseline;
   flex-wrap: wrap;
   gap: 4px 10px;
-  border-bottom: 1px dashed #e0e0e0;
-  padding-bottom: 8px;
+  border-top: 1px dashed #e0e0e0; /* 価格・商品名の下に、日付・店名 */
+  padding-top: 8px;
 }
 
 .purchase-date {
@@ -159,13 +182,33 @@
 .recent-card-body {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: center;
+  gap: 12px;
 }
 
-.price-info {
+/* 最安値カードの商品名（印字名・容量）。左詰め・太字 */
+.recent-item-name {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  font-size: 16px;
+  font-weight: bold;
+  color: #333333;
+  word-break: break-word;
+}
+
+/* 値引きの有無（日付・店名の行の右端）。色は purchase-row-discount と同じ */
+.recent-card-count {
+  margin-left: auto;
+  font-size: 11px;
+}
+
+/* 価格（右詰め）。値引きがあるときは、その左に印を並べる */
+.recent-price-side {
+  flex-shrink: 0;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  gap: 8px;
 }
 
 .current-price {
@@ -220,68 +263,11 @@
   gap: 8px;
 }
 
-.history-card {
-  background-color: #ffffff;
-  border-radius: 10px;
-  padding: 12px 16px;
-  border: 1px solid #e0e0e0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.history-card-left {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-}
-
-.history-date {
-  font-size: 14px;
-  font-weight: bold;
-  color: #333333;
-}
-
+/* 店名（最安値カードで使う） */
 .history-shop {
   font-size: 14px;
   font-weight: bold;
   color: #333333;
-}
-
-.history-card-right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
-}
-
-.history-price-group {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-}
-
-.history-price {
-  font-size: 16px;
-  font-weight: bold;
-  color: #333333;
-}
-
-.history-original-price {
-  font-size: 11px;
-  color: #999999;
-  text-decoration: line-through;
-}
-
-.history-discount {
-  font-size: 11px;
-  color: #888888;
-}
-
-.history-discount.has-discount {
-  color: #d32f2f;
-  font-weight: 600;
 }
 
 /* すべて見るボタン */
@@ -314,53 +300,4 @@
   color: #888888;
   font-size: 14px;
   padding: 24px 0;
-}
-
-.history-item-name {
-  font-size: 12px;
-  color: #555555;
-}
-
-/* 日付と店名を同じ行に並べる */
-.history-title-row {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 4px 10px;
-}
-
-/* カード全体をボタンとして扱う */
-.history-card.clickable {
-  cursor: pointer;
-  transition: background-color 0.15s, transform 0.1s;
-}
-
-.history-card.clickable:active {
-  background-color: #f5f5f5;
-  transform: scale(0.99);
-}
-
-/* 最安値カード右側: 値引きタグ + レシート詳細ボタン */
-.recent-card-actions {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 8px;
-}
-
-.receipt-link-button {
-  background-color: #ffffff;
-  color: #e53935;
-  border: 1px solid #e53935;
-  border-radius: 16px;
-  padding: 6px 14px;
-  font-size: 13px;
-  font-weight: bold;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background-color 0.15s;
-}
-
-.receipt-link-button:active {
-  background-color: #ffebee;
 }

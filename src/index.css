@@ -58,7 +58,7 @@ body {
   width: 1126px;
   max-width: 100%;
   margin: 0 auto;
-  text-align: center;
+  text-align: left; /* 文字は基本、左詰め。中央ぞろえにしたい所は、その部品で指定する */
   border-inline: 1px solid var(--border);
   min-height: 100svh;
   display: flex;
