@@ -142,7 +142,14 @@ export default function Home({
 
     // 検索タグ履歴更新（最新5件・同じ場所の商品は重複させない）
     const key = productKey(path);
-    setSearchHistory((prev) => [path, ...prev.filter((item) => productKey(item) !== key)].slice(0, 5));
+    const nextHistory = [path, ...searchHistory.filter((item) => productKey(item) !== key)].slice(0, 5);
+    setSearchHistory(nextHistory);
+    // すぐ保存する。画面が移ると、ホームが消えて、下の自動保存（useEffect）が動かず、履歴が残らないため
+    try {
+      localStorage.setItem(STORAGE_KEY_SEARCH_HISTORY, JSON.stringify(nextHistory));
+    } catch (err) {
+      console.error('Failed to save search history:', err);
+    }
 
     // 親コンポーネント（App.jsx）で閲覧履歴更新と画面遷移を実行
     if (onSelectProduct) {
