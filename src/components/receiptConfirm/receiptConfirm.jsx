@@ -23,6 +23,7 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
         category: item.category || '未選択', // 中分類
         subCategory: item.sub_category || '', // 小分類
         productName: item.product_name || '', // 商品名（極小分類）
+        volume: item.volume || '', // 容量（印字されていれば AI が入れる。無ければ空 = 不明）
         price: item.price || 0,
         isDiscount: typeof item.is_discount === 'boolean' ? item.is_discount : !!item.isDiscount,
       }));
@@ -102,6 +103,7 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
       category: item.category, // 中分類
       sub_category: item.subCategory || null, // 小分類
       product_name: item.productName || null, // 商品名（該当なしは null）
+      volume: item.volume || null, // 容量（不明は null）
       price: item.price,
       is_discount: item.isDiscount,
     }));
@@ -232,7 +234,10 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
                         onChange={() => handleToggleCheck(item.id)}
                       />
                     </td>
-                    <td className="item-name-cell">{item.printName}</td>
+                    <td className="item-name-cell">
+                      {item.printName}
+                      {item.volume && <div className="item-volume">{item.volume}</div>}
+                    </td>
                     <td className="price-cell">{item.price}円</td>
                     <td className="category-cell">
                       {/* 大分類がその他なら中分類もその他なので、大分類の表示は省く */}

@@ -23,6 +23,7 @@ export default function Home({
   onOpenCamera,
   onNavigateToHistory,
   onNavigateToStores,
+  onNavigateToMyStores,
   onNavigateToSettings,
   onSelectProduct,
   viewHistory = [],
@@ -162,6 +163,9 @@ export default function Home({
           </button>
           <button type="button" className="drawer-item" onClick={() => handleMenuClick(onNavigateToStores)}>
             <span className="drawer-icon">🏪</span><span>店舗別一覧</span>
+          </button>
+          <button type="button" className="drawer-item" onClick={() => handleMenuClick(onNavigateToMyStores)}>
+            <span className="drawer-icon">⭐</span><span>マイ店舗</span>
           </button>
           <button type="button" className="drawer-item" onClick={() => handleMenuClick(onNavigateToSettings)}>
             <span className="drawer-icon">⚙️</span><span>設定</span>

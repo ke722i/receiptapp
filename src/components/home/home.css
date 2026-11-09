@@ -192,24 +192,22 @@
   color: #d32f2f;
 }
 
-/* --- 検索バー領域（黒半透明オーバーレイ & クリアボタン） --- */
+/* --- 検索バー領域（外側タップ用の透明な層 & クリアボタン） --- */
 
-/* 検索入力中の黒色半透明背景 */
+/* 検索入力中に画面全体を覆う透明な層。背景は暗くしない。
+   検索欄の外をタップしたとき、検索の候補を閉じるために残している。 */
 .search-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: transparent;
   z-index: 80;
-  opacity: 0;
   visibility: hidden;
-  transition: opacity 0.25s ease, visibility 0.25s ease;
 }
 
 .search-overlay.is-active {
-  opacity: 1;
   visibility: visible;
 }
 

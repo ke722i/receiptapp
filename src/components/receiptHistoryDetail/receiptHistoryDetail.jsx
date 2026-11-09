@@ -104,7 +104,10 @@ export default function ReceiptHistoryDetail({ receipt, onBack, onDelete }) {
 
                   return (
                     <tr key={item.id || index}>
-                      <td className="item-name-cell">{printName}</td>
+                      <td className="item-name-cell">
+                        {printName}
+                        {item.volume && <div className="item-volume">{item.volume}</div>}
+                      </td>
                       <td className="price-cell">{price}円</td>
                       <td className="category-cell">
                         {/* 大分類がその他なら中分類もその他なので、大分類の表示は省く */}

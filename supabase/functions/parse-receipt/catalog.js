@@ -78,6 +78,17 @@ const resolveCategory = (item) => {
   return { main_category: null, category: '未選択', sub_category: null, product_name: null };
 };
 
+/**
+ * 容量（例: "900ml" "1L" "10個" "6枚切"）を整える。
+ *  印字名に書かれていなければ AI は null を返す。数字を含まない値や長すぎる値は捨てる（DB は 30 文字まで）
+ */
+const normalizeVolume = (value) => {
+  if (typeof value !== 'string') return null;
+  const text = value.normalize('NFKC').replace(/\s+/g, '').trim();
+  if (!text || !/\d/.test(text) || text.length > 30) return null;
+  return text;
+};
+
 /** AI の答えの番号を 4階層の名前に変換する（表に無い番号はここで捨てる） */
 export const resolveItems = (parsedData) => {
   if (!parsedData || !Array.isArray(parsedData.items)) return parsedData;
@@ -87,6 +98,7 @@ export const resolveItems = (parsedData) => {
       item_name: item.item_name,
       price: item.price,
       is_discount: item.is_discount,
+      volume: normalizeVolume(item.volume),
       ...resolveCategory(item),
     })),
   };
@@ -104,6 +116,8 @@ export const PROMPT_TEXT = `レシート画像から情報を抽出してくだ�
 - item_name: 「単100」等の単価表記を除いた純粋な商品名
 - price: 複数購入（例: @100、3点 300）の場合、合計額ではなく必ず「1点あたりの単品価格」を数値で取得
 - is_discount: 対象商品が値引き・割引されているか(boolean)
+- volume: レシートの印字名に容量・数量が書かれていれば、その表記を単位つきで（例: "900ml" "1L" "300g" "10個" "6枚切"）。
+  印字名に書かれていなければ必ず null。商品から推測しない。
 - product_code: 下の「カテゴリ表」から、その商品に最も当てはまる商品の P番号 を1つ（例: "P12"）。
   当てはまる商品がなければ必ず null（無理に当てはめない）。
 - mid_code: その商品が属する中分類の M番号（例: "M3"）。product_code を選んだ場合はその商品がある中分類。
@@ -129,6 +143,7 @@ export const RESPONSE_SCHEMA = {
           item_name: { type: 'STRING' },
           price: { type: 'INTEGER' },
           is_discount: { type: 'BOOLEAN' },
+          volume: { type: 'STRING', nullable: true },
           product_code: { type: 'STRING', nullable: true },
           mid_code: { type: 'STRING', nullable: true },
         },

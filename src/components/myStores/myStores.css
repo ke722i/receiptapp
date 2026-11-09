@@ -1,0 +1,199 @@
+/* マイ店舗（店舗別一覧・レシート一覧と同じ配色・サイズ） */
+.my-stores-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  background-color: #f8f9fa;
+  box-sizing: border-box;
+}
+
+.my-stores-header {
+  height: 60px;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px;
+  background-color: #e53935;
+  color: #ffffff;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-sizing: border-box;
+}
+
+.my-stores-header .back-button {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 32px;
+  font-weight: 300;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 8px;
+}
+
+.my-stores-header .header-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.my-stores-header .header-right-spacer {
+  width: 32px;
+}
+
+.my-stores-main {
+  flex: 1;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 500px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.my-stores-note {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #888888;
+  margin: 0;
+}
+
+.my-stores-error {
+  color: #c62828;
+  background-color: #ffebee;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.my-stores-message {
+  text-align: center;
+  color: #888888;
+  margin-top: 40px;
+  font-size: 14px;
+}
+
+.my-stores-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.my-stores-section-title {
+  font-size: 15px;
+  font-weight: bold;
+  color: #333333;
+  margin: 0;
+}
+
+.my-stores-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.my-stores-empty {
+  padding: 16px;
+  font-size: 13px;
+  color: #888888;
+  text-align: center;
+}
+
+.my-stores-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.my-stores-list li + li {
+  border-top: 1px solid #f0f0f0;
+}
+
+.my-stores-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+.my-stores-candidate {
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.my-stores-candidate:active {
+  background-color: #f5f5f5;
+}
+
+.my-stores-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.my-stores-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: bold;
+  color: #333333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.my-stores-add {
+  font-size: 12px;
+  font-weight: bold;
+  color: #e53935;
+  flex-shrink: 0;
+}
+
+.my-stores-remove {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border: 1px solid #e53935;
+  border-radius: 16px;
+  background-color: #ffffff;
+  color: #e53935;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.my-stores-remove:active {
+  background-color: #ffebee;
+}
+
+.my-stores-search {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 14px;
+  border: 1px solid #cccccc;
+  border-radius: 24px;
+  background-color: #ffffff;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.my-stores-search:focus {
+  border-color: #e53935;
+}
+
+.my-stores-more {
+  font-size: 12px;
+  color: #888888;
+  margin: 0;
+  text-align: center;
+}

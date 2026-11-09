@@ -1,5 +1,6 @@
 import { supabase } from '../services/supabaseClient';
 import { formatPurchaseDate } from './purchaseDate';
+import { normalizeVolume } from './volume';
 
 /**
  * レシート本体と明細を Supabase DB に一括保存するユーティリティ
@@ -40,6 +41,7 @@ export const saveReceiptToDatabase = async (receiptData, itemsData) => {
       product_name: item.product_name || null, // 商品名（極小分類）
       price: Number(item.price) || 0,
       is_discount: Boolean(item.is_discount || item.isDiscount),
+      volume: normalizeVolume(item.volume), // 容量（不明なら null）
     }));
 
     const { error: itemsError } = await supabase
@@ -126,6 +128,7 @@ export const fetchProductPriceHistory = async (path) => {
         product_name,
         price,
         is_discount,
+        volume,
         receipts!inner ( purchase_date, store_name, user_id )
       `)
       .eq('main_category', path.main)
@@ -149,6 +152,7 @@ export const fetchProductPriceHistory = async (path) => {
         itemName: row.item_name || '',
         price: Number(row.price) || 0,
         isDiscount: Boolean(row.is_discount),
+        volume: row.volume || null,
       }))
       // 新しい購入日順（同日は価格の安い順）
       .sort((a, b) => b.dateValue.localeCompare(a.dateValue) || a.price - b.price);

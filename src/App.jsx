@@ -13,6 +13,7 @@ import ReceiptSuccess from './components/receiptSuccess/receiptSuccess';
 import ReceiptHistoryList from './components/receiptHistoryList/receiptHistoryList';
 import ReceiptHistoryDetail from './components/receiptHistoryDetail/receiptHistoryDetail';
 import StoreList from './components/storeList/storeList';
+import MyStores from './components/myStores/myStores';
 import { fetchReceiptById } from './utils/receiptDb';
 import { productKey } from './utils/categoryUtils';
 
@@ -28,6 +29,8 @@ function App() {
   const [selectedReceipt, setSelectedReceipt] = useState(null);
   // レシート詳細から「戻る」で帰る画面（レシート一覧 / 商品詳細 / 購入履歴一覧）
   const [receiptDetailBackScreen, setReceiptDetailBackScreen] = useState('receiptHistoryList');
+  // マイ店舗の画面から「戻る」で帰る画面（ホームのメニュー / 商品詳細）
+  const [myStoresBackScreen, setMyStoresBackScreen] = useState('home');
   // 選択中の商品（{ main, category, sub, product }。同名の商品を場所で区別する）
   const [selectedProduct, setSelectedProduct] = useState(null);
 
@@ -140,6 +143,10 @@ function App() {
           onNavigateToSettings={() => setCurrentScreen('settings')}
           onNavigateToHistory={() => setCurrentScreen('receiptHistoryList')}
           onNavigateToStores={() => setCurrentScreen('storeList')}
+          onNavigateToMyStores={() => {
+            setMyStoresBackScreen('home');
+            setCurrentScreen('myStores');
+          }}
           onNavigateToCategory={handleSelectProduct}
           onSelectProduct={handleSelectProduct}
           onOpenCamera={() => setCurrentScreen('receiptScanner')} // Scanner画面へ遷移
@@ -159,7 +166,15 @@ function App() {
           onBack={() => setCurrentScreen('home')}
           onViewAllHistory={() => setCurrentScreen('productHistoryList')}
           onSelectReceipt={(id) => handleOpenReceiptFromProduct(id, 'productDetail')}
+          onNavigateToMyStores={() => {
+            setMyStoresBackScreen('productDetail');
+            setCurrentScreen('myStores');
+          }}
         />
+      )}
+      {/* マイ店舗（登録・削除） */}
+      {currentScreen === 'myStores' && (
+        <MyStores onBack={() => setCurrentScreen(myStoresBackScreen)} />
       )}
       {currentScreen === 'productHistoryList' && (
         <ProductHistoryList
