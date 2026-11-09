@@ -7,6 +7,7 @@ import {
 import { buildItemReadingMap, filterSearchSuggestions } from '../../utils/searchUtils';
 import { findProductPaths, formatPath, productKey } from '../../utils/categoryUtils';
 
+const SEARCH_INPUT_ID = 'home-search-input';
 const STORAGE_KEY_SEARCH_HISTORY = 'receipt_app_search_history';
 
 // 履歴の1件を商品のパス { main, category, sub, product } にそろえる
@@ -54,6 +55,9 @@ export default function Home({
     [searchQuery, itemReadingMap]
   );
 
+  // 検索履歴の商品（候補を、履歴を先に並べるために使う）
+  const historyKeys = useMemo(() => new Set(searchHistory.map((path) => productKey(path))), [searchHistory]);
+
   // 候補（商品名）を表の場所ごとに展開する。
   // 同じ名前の商品が複数の場所にある場合（例: 常温の「そば」と冷凍の「そば」）は別々の候補になる。
   const pathSuggestions = useMemo(() => {
@@ -68,8 +72,11 @@ export default function Home({
         }
       });
     });
-    return list.slice(0, 10);
-  }, [suggestions]);
+    // 検索したことのある商品を、先に出す（YouTube の検索履歴のように）
+    const inHistory = list.filter((path) => historyKeys.has(productKey(path)));
+    const others = list.filter((path) => !historyKeys.has(productKey(path)));
+    return [...inHistory, ...others].slice(0, 10);
+  }, [suggestions, historyKeys]);
 
   // 検索キーワード履歴の永続化
   useEffect(() => {
@@ -119,6 +126,42 @@ export default function Home({
   });
   const searchBarRef = useRef(null);
 
+  // 検索履歴の保存（画面が移ると、ホームの自動保存は動かないので、変えたらすぐ保存する）
+  const saveSearchHistory = (list) => {
+    setSearchHistory(list);
+    try {
+      localStorage.setItem(STORAGE_KEY_SEARCH_HISTORY, JSON.stringify(list));
+    } catch (err) {
+      console.error('Failed to save search history:', err);
+    }
+  };
+
+  // 検索を閉じる（検索欄の左の「‹」）
+  const closeSearch = () => {
+    setIsSearchFocused(false);
+    document.getElementById(SEARCH_INPUT_ID)?.blur();
+  };
+
+  // 行の右のボタン（検索欄に入れる ↖／履歴から消す ✕）。
+  //  行全体は「触れた瞬間に選ぶ」ので、ボタンでは、それを起こさず、ボタンの動作だけをする
+  const rowButtonProps = (action) => ({
+    onMouseDown: (e) => e.preventDefault(),
+    onPointerDown: (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      action();
+    },
+    onClick: (e) => e.stopPropagation(),
+  });
+  const fillSearch = (name) => {
+    setSearchQuery(name);
+    document.getElementById(SEARCH_INPUT_ID)?.focus();
+  };
+  const removeFromHistory = (path) => {
+    const key = productKey(path);
+    saveSearchHistory(searchHistory.filter((item) => productKey(item) !== key));
+  };
+
   // 検索欄の外側を押したら、候補を閉じる。
   //  以前は、画面全体を覆う透明な層を置いていたが、iPhone では、キーボードが開いて画面がずれたとき、
   //  その層が候補のタップを受けてしまい、候補を選べなかった。層は置かず、画面全体の押下を見て閉じる。
@@ -127,6 +170,13 @@ export default function Home({
     const closeIfOutside = (e) => {
       if (searchBarRef.current && !searchBarRef.current.contains(e.target)) {
         setIsSearchFocused(false);
+        // 暗くなっている所を押したときは、閉じるだけ。下にある部品（カテゴリなど）は動かさない
+        const stopClick = (ev) => {
+          ev.preventDefault();
+          ev.stopPropagation();
+        };
+        document.addEventListener('click', stopClick, true);
+        setTimeout(() => document.removeEventListener('click', stopClick, true), 700);
       }
     };
     document.addEventListener('pointerdown', closeIfOutside);
@@ -142,14 +192,7 @@ export default function Home({
 
     // 検索タグ履歴更新（最新5件・同じ場所の商品は重複させない）
     const key = productKey(path);
-    const nextHistory = [path, ...searchHistory.filter((item) => productKey(item) !== key)].slice(0, 5);
-    setSearchHistory(nextHistory);
-    // すぐ保存する。画面が移ると、ホームが消えて、下の自動保存（useEffect）が動かず、履歴が残らないため
-    try {
-      localStorage.setItem(STORAGE_KEY_SEARCH_HISTORY, JSON.stringify(nextHistory));
-    } catch (err) {
-      console.error('Failed to save search history:', err);
-    }
+    saveSearchHistory([path, ...searchHistory.filter((item) => productKey(item) !== key)].slice(0, 5));
 
     // 親コンポーネント（App.jsx）で閲覧履歴更新と画面遷移を実行
     if (onSelectProduct) {
@@ -223,75 +266,106 @@ export default function Home({
 
       {/* メインエリア */}
       <main className="home-main">
-        {/* 検索バー */}
+        {/* 検索バー（YouTube のように、押すと、履歴と候補が出る。バーと候補以外は暗くなる） */}
         <div ref={searchBarRef} className={`search-bar-container ${isSearchFocused ? 'is-focused' : ''}`}>
           <div className="search-input-wrapper">
-            <input
-              type="search"
-              className="search-input"
-              placeholder="商品を検索 (例: ぎゅうにゅう, 醤油)..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onFocus={() => setIsSearchFocused(true)}
-              inputMode="search"
-              enterKeyHint="search"
-            />
-            {isSearchFocused && searchQuery.length > 0 && (
-              <button
-                type="button"
-                className="search-clear-button"
-                onClick={handleClearSearch}
-                aria-label="検索文字をクリア"
-              >
-                ✕
+            {isSearchFocused && (
+              <button type="button" className="search-back-button" onClick={closeSearch} aria-label="検索を閉じる">
+                ‹
               </button>
             )}
+            <div className="search-field">
+              <input
+                id={SEARCH_INPUT_ID}
+                type="search"
+                className="search-input"
+                placeholder="商品を検索 (例: ぎゅうにゅう, 醤油)..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => setIsSearchFocused(true)}
+                onKeyDown={(e) => {
+                  // 変換の確定の Enter は除き、いちばん上の候補を選ぶ
+                  if (e.key === 'Enter' && !e.nativeEvent.isComposing && pathSuggestions[0]) {
+                    e.preventDefault();
+                    handleSelectProductItem(pathSuggestions[0]);
+                  }
+                }}
+                inputMode="search"
+                enterKeyHint="search"
+              />
+              {isSearchFocused && searchQuery.length > 0 && (
+                <button
+                  type="button"
+                  className="search-clear-button"
+                  onClick={handleClearSearch}
+                  aria-label="検索文字をクリア"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* 検索ドロップダウン */}
+          {/* 履歴と候補 */}
           {isSearchFocused && (
             <div className="search-suggestions-dropdown">
               {searchQuery.trim().length > 0 ? (
                 pathSuggestions.length > 0 ? (
                   <ul className="search-suggestions-list">
-                    {pathSuggestions.map((path) => (
-                      <li
-                        key={productKey(path)}
-                        className="search-suggestion-item"
-                        {...tapProps(path)}
-                      >
-                        <span className="suggestion-icon">🔍</span>
-                        <span className="suggestion-body">
-                          <span className="suggestion-text">{path.product}</span>
-                          <span className="suggestion-path">{formatPath(path)}</span>
-                        </span>
-                      </li>
-                    ))}
+                    {pathSuggestions.map((path) => {
+                      const isHistory = historyKeys.has(productKey(path));
+                      return (
+                        <li key={productKey(path)} className="search-suggestion-item" {...tapProps(path)}>
+                          <span className="suggestion-icon">{isHistory ? '🕒' : '🔍'}</span>
+                          <span className="suggestion-body">
+                            <span className="suggestion-text">{path.product}</span>
+                            <span className="suggestion-path">{formatPath(path)}</span>
+                          </span>
+                          <button
+                            type="button"
+                            className="suggestion-action"
+                            aria-label="検索欄に入れる"
+                            {...rowButtonProps(() => fillSearch(path.product))}
+                          >
+                            ↖
+                          </button>
+                        </li>
+                      );
+                    })}
                   </ul>
                 ) : (
                   <div className="search-no-result">一致する商品が見つかりません</div>
                 )
+              ) : searchHistory.length > 0 ? (
+                <ul className="search-suggestions-list">
+                  {searchHistory.map((path) => (
+                    <li key={productKey(path)} className="search-suggestion-item" {...tapProps(path)}>
+                      <span className="suggestion-icon">🕒</span>
+                      <span className="suggestion-body">
+                        <span className="suggestion-text">{path.product}</span>
+                        <span className="suggestion-path">{formatPath(path)}</span>
+                      </span>
+                      <button
+                        type="button"
+                        className="suggestion-action"
+                        aria-label="検索欄に入れる"
+                        {...rowButtonProps(() => fillSearch(path.product))}
+                      >
+                        ↖
+                      </button>
+                      <button
+                        type="button"
+                        className="suggestion-action"
+                        aria-label="履歴から消す"
+                        {...rowButtonProps(() => removeFromHistory(path))}
+                      >
+                        ✕
+                      </button>
+                    </li>
+                  ))}
+                </ul>
               ) : (
-                <div className="search-history-container">
-                  <div className="search-history-header">最近検索した商品</div>
-                  {searchHistory.length > 0 ? (
-                    <div className="search-history-tags">
-                      {searchHistory.map((path) => (
-                        <button
-                          key={productKey(path)}
-                          type="button"
-                          className="search-history-tag"
-                          title={formatPath(path, { withProduct: true })}
-                          {...tapProps(path)}
-                        >
-                          🕒 {path.product}
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="search-no-result" style={{ padding: '8px 0' }}>検索履歴はありません</div>
-                  )}
-                </div>
+                <div className="search-no-result">検索履歴はありません</div>
               )}
             </div>
           )}
