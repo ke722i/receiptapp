@@ -2,6 +2,7 @@ import { useState } from 'react';
 import './receiptConfirm.css';
 import { saveReceiptToDatabase } from '../../utils/receiptDb';
 import { formatPurchaseDate } from '../../utils/purchaseDate';
+import { OTHER } from '../../utils/categoryUtils';
 import ReceiptEdit from "../receiptEdit/receiptEdit";
 import ReceiptImagePreview from "../receiptImagePreview/receiptImagePreview";
 
@@ -234,7 +235,8 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
                     <td className="item-name-cell">{item.printName}</td>
                     <td className="price-cell">{item.price}円</td>
                     <td className="category-cell">
-                      {item.mainCategory && (
+                      {/* 大分類がその他なら中分類もその他なので、大分類の表示は省く */}
+                      {item.mainCategory && item.mainCategory !== OTHER && (
                         <div style={{ fontSize: '10px', color: '#999999' }}>{item.mainCategory}</div>
                       )}
                       {item.category}

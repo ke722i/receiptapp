@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import './receiptEdit.css';
 import {
+  OTHER,
   getMainCategories,
   getMidCategories,
   getSubCategories,
   getProducts,
+  applyCategoryChange,
 } from '../../utils/categoryUtils';
 
 export default function ReceiptEdit({ isOpen, selectedItems, onClose, onSave }) {
@@ -26,22 +28,10 @@ export default function ReceiptEdit({ isOpen, selectedItems, onClose, onSave }) 
   };
 
   // カテゴリは 大 → 中 → 小 → 商品名 の順に絞り込む。
-  // 上の階層を変えたら、それより下は選び直しになるので空に戻す。
+  // 上の階層を変えたら下は空に戻し、「その他」を選んだら下は選択不要にする（categoryUtils）
   const handleCategoryChange = (index, level, value) => {
     setEditItems((prev) =>
-      prev.map((item, idx) => {
-        if (idx !== index) return item;
-        if (level === 'main') {
-          return { ...item, mainCategory: value, category: '未選択', subCategory: '', productName: '' };
-        }
-        if (level === 'category') {
-          return { ...item, category: value || '未選択', subCategory: '', productName: '' };
-        }
-        if (level === 'sub') {
-          return { ...item, subCategory: value, productName: '' };
-        }
-        return { ...item, productName: value };
-      })
+      prev.map((item, idx) => (idx === index ? applyCategoryChange(item, level, value) : item))
     );
   };
 
@@ -72,6 +62,11 @@ export default function ReceiptEdit({ isOpen, selectedItems, onClose, onSave }) 
             const productOptions = getProducts(item.mainCategory, item.category, item.subCategory);
             // 表に無い値（旧データの「未選択」など）は空として扱う
             const categoryValue = midOptions.includes(item.category) ? item.category : '';
+            // 「その他」を選んだ階層より下は選択不要
+            const mainIsOther = item.mainCategory === OTHER;
+            const midIsOther = mainIsOther || item.category === OTHER;
+            const subIsOther = midIsOther || item.subCategory === OTHER;
+            const placeholder = (parentIsOther) => (parentIsOther ? '選択不要（その他のため）' : '選択してください');
 
             return (
               <div key={item.id || index} className="edit-item-card">
@@ -128,11 +123,11 @@ export default function ReceiptEdit({ isOpen, selectedItems, onClose, onSave }) 
                   <label className="edit-label">中分類</label>
                   <select
                     className="edit-select"
-                    value={categoryValue}
-                    disabled={midOptions.length === 0}
+                    value={mainIsOther ? '' : categoryValue}
+                    disabled={mainIsOther || midOptions.length === 0}
                     onChange={(e) => handleCategoryChange(index, 'category', e.target.value)}
                   >
-                    <option value="">選択してください</option>
+                    <option value="">{placeholder(mainIsOther)}</option>
                     {midOptions.map((name) => (
                       <option key={name} value={name}>{name}</option>
                     ))}
@@ -143,11 +138,11 @@ export default function ReceiptEdit({ isOpen, selectedItems, onClose, onSave }) 
                   <label className="edit-label">小分類</label>
                   <select
                     className="edit-select"
-                    value={subOptions.includes(item.subCategory) ? item.subCategory : ''}
-                    disabled={subOptions.length === 0}
+                    value={!midIsOther && subOptions.includes(item.subCategory) ? item.subCategory : ''}
+                    disabled={midIsOther || subOptions.length === 0}
                     onChange={(e) => handleCategoryChange(index, 'sub', e.target.value)}
                   >
-                    <option value="">該当なし（中分類までで登録）</option>
+                    <option value="">{placeholder(midIsOther)}</option>
                     {subOptions.map((name) => (
                       <option key={name} value={name}>{name}</option>
                     ))}
@@ -158,11 +153,11 @@ export default function ReceiptEdit({ isOpen, selectedItems, onClose, onSave }) 
                   <label className="edit-label">商品名（価格比較に使います）</label>
                   <select
                     className="edit-select"
-                    value={productOptions.includes(item.productName) ? item.productName : ''}
-                    disabled={productOptions.length === 0}
+                    value={!subIsOther && productOptions.includes(item.productName) ? item.productName : ''}
+                    disabled={subIsOther || productOptions.length === 0}
                     onChange={(e) => handleCategoryChange(index, 'product', e.target.value)}
                   >
-                    <option value="">該当なし（中分類までで登録）</option>
+                    <option value="">{placeholder(subIsOther)}</option>
                     {productOptions.map((name) => (
                       <option key={name} value={name}>{name}</option>
                     ))}
