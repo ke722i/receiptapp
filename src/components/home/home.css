@@ -624,3 +624,80 @@
   color: #888888;
   text-align: center;
 }
+
+/* お知らせ: カテゴリの提案（「✕」で閉じると、もう出さない） */
+.proposal-tip {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 12px 40px 12px 14px;
+  background-color: #fff8e1;
+  border: 1px solid #ffe082;
+  border-radius: 12px;
+  text-align: left;
+}
+
+.proposal-tip-icon {
+  flex-shrink: 0;
+  font-size: 18px;
+  line-height: 1.4;
+}
+
+.proposal-tip-body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.proposal-tip-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: bold;
+  color: #5d4300;
+}
+
+.proposal-tip-text {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #6d5a1f;
+}
+
+.proposal-tip-open {
+  margin-top: 4px;
+  padding: 6px 14px;
+  border: 1px solid #e53935;
+  border-radius: 16px;
+  background-color: #ffffff;
+  color: #e53935;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.proposal-tip-open:active {
+  background-color: #ffebee;
+}
+
+.proposal-tip-close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #8d7a3a;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.proposal-tip-close:active {
+  background-color: rgba(0, 0, 0, 0.06);
+}

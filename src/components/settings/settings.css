@@ -203,16 +203,22 @@
 
 /* カテゴリの提案を開くボタン */
 .proposal-open-button {
-  color: #e53935;
+  display: block;
+  color: #333333;
   text-align: left;
 }
 
 .proposal-open-button:active {
-  background-color: #ffebee;
+  background-color: #f5f5f5;
 }
 
-/* カードの最後の説明（下の線は不要） */
+/* カードの最後の説明（下の線は不要）。文字は左詰め */
 .settings-note.settings-note-last {
   padding-top: 0;
   border-bottom: none;
+  text-align: left;
+}
+
+.settings-note.settings-note-last p {
+  text-align: left;
 }

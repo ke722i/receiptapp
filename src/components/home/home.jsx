@@ -8,6 +8,7 @@ import { buildItemReadingMap, filterSearchSuggestions } from '../../utils/search
 import { findProductPaths, formatPath, productKey } from '../../utils/categoryUtils';
 
 const SEARCH_INPUT_ID = 'home-search-input';
+const STORAGE_KEY_PROPOSAL_TIP = 'receipt_app_proposal_tip_dismissed'; // カテゴリの提案のお知らせを閉じたか
 const STORAGE_KEY_SEARCH_HISTORY = 'receipt_app_search_history';
 
 // 履歴の1件を商品のパス { main, category, sub, product } にそろえる
@@ -26,6 +27,7 @@ export default function Home({
   onNavigateToStores,
   onNavigateToMyStores,
   onNavigateToSettings,
+  onOpenCategoryProposal,
   onSelectProduct,
   viewHistory = [],
   userId = 'User_12345',
@@ -34,6 +36,23 @@ export default function Home({
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [openCategories, setOpenCategories] = useState({});
+
+  // カテゴリの提案のお知らせ（「×」で閉じたら、この端末では、もう出さない）
+  const [showProposalTip, setShowProposalTip] = useState(() => {
+    try {
+      return localStorage.getItem(STORAGE_KEY_PROPOSAL_TIP) !== '1';
+    } catch {
+      return true;
+    }
+  });
+  const dismissProposalTip = () => {
+    setShowProposalTip(false);
+    try {
+      localStorage.setItem(STORAGE_KEY_PROPOSAL_TIP, '1');
+    } catch {
+      // 保存できなくても、この画面では閉じる
+    }
+  };
 
   // 検索タグ履歴の初期化
   const [searchHistory, setSearchHistory] = useState(() => {
@@ -370,6 +389,25 @@ export default function Home({
             </div>
           )}
         </div>
+
+        {/* お知らせ: カテゴリの提案ができること */}
+        {showProposalTip && onOpenCategoryProposal && (
+          <aside className="proposal-tip" aria-label="お知らせ">
+            <span className="proposal-tip-icon" aria-hidden="true">💡</span>
+            <div className="proposal-tip-body">
+              <p className="proposal-tip-title">カテゴリを提案できます</p>
+              <p className="proposal-tip-text">
+                ぴったりの分類が無くて「その他」になる商品があれば、新しい中分類・小分類を提案してください。承認されると、みんなの表に追加されます。
+              </p>
+              <button type="button" className="proposal-tip-open" onClick={onOpenCategoryProposal}>
+                提案する ›
+              </button>
+            </div>
+            <button type="button" className="proposal-tip-close" onClick={dismissProposalTip} aria-label="お知らせを閉じる">
+              ✕
+            </button>
+          </aside>
+        )}
 
         {/* 閲覧履歴（最後に見た5件） */}
         <section className="section-container">
