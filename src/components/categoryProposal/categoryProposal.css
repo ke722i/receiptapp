@@ -1,0 +1,301 @@
+/* カテゴリの提案（マイ店舗・設定と同じ配色・サイズ） */
+.proposal-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  background-color: #f8f9fa;
+  box-sizing: border-box;
+  text-align: left;
+}
+
+.proposal-header {
+  height: 60px;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px;
+  background-color: #e53935;
+  color: #ffffff;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-sizing: border-box;
+}
+
+.proposal-header .back-button {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 32px;
+  font-weight: 300;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 8px;
+}
+
+.proposal-header .header-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.proposal-header .header-right-spacer {
+  width: 32px;
+}
+
+.proposal-main {
+  flex: 1;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 500px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.proposal-intro {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #666666;
+}
+
+.proposal-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+}
+
+.proposal-section-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: bold;
+  color: #333333;
+}
+
+.proposal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.proposal-label {
+  font-size: 12px;
+  font-weight: bold;
+  color: #757575;
+}
+
+.proposal-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  font-size: 16px; /* iPhone で、入力のとき、拡大されない大きさ */
+  color: #333333;
+  background-color: #ffffff;
+  border: 1px solid #cccccc;
+  border-radius: 8px;
+  outline: none;
+}
+
+.proposal-input:focus {
+  border-color: #e53935;
+}
+
+.proposal-input:disabled {
+  background-color: #f2f2f2;
+  color: #999999;
+}
+
+.proposal-textarea {
+  resize: vertical;
+  font-family: inherit;
+}
+
+/* この場所に、今ある商品 */
+.proposal-existing {
+  padding: 10px 12px;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+}
+
+.proposal-existing-title {
+  font-size: 12px;
+  font-weight: bold;
+  color: #666666;
+}
+
+.proposal-existing-list {
+  margin: 4px 0 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #444444;
+  word-break: break-word;
+}
+
+.proposal-link {
+  margin-top: 4px;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 12px;
+  color: #e53935;
+  cursor: pointer;
+}
+
+.proposal-error {
+  font-size: 12px;
+  color: #c62828;
+}
+
+.proposal-error-box {
+  margin: 0;
+  padding: 10px 12px;
+  background-color: #ffebee;
+  border-radius: 8px;
+}
+
+.proposal-warning {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #5d4300;
+  background-color: #fff3c4;
+  border-radius: 8px;
+}
+
+.proposal-success {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: #1b5e20;
+  background-color: #e8f5e9;
+  border-radius: 8px;
+}
+
+.proposal-submit {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 24px;
+  background-color: #e53935;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.proposal-submit:disabled {
+  background-color: #e0a3a1;
+  cursor: default;
+}
+
+.proposal-limit-note {
+  margin: -6px 0 0;
+  font-size: 12px;
+  color: #888888;
+  text-align: center;
+}
+
+/* 自分の提案 */
+.proposal-history {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.proposal-message {
+  margin: 0;
+  font-size: 13px;
+  color: #888888;
+}
+
+.proposal-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.proposal-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 12px 16px;
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+}
+
+.proposal-item-main {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.proposal-item-name {
+  min-width: 0;
+  font-size: 15px;
+  font-weight: bold;
+  color: #333333;
+  word-break: break-word;
+}
+
+.proposal-status {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.proposal-status.is-pending {
+  background-color: #eeeeee;
+  color: #616161;
+}
+
+.proposal-status.is-approved {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.proposal-status.is-rejected {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.proposal-item-path,
+.proposal-item-date {
+  font-size: 12px;
+  color: #888888;
+}
+
+.proposal-item-admin {
+  font-size: 12px;
+  color: #555555;
+  word-break: break-word;
+}
+
+.proposal-withdraw {
+  margin-top: 4px;
+  padding: 4px 12px;
+  border: 1px solid #cccccc;
+  border-radius: 14px;
+  background-color: #ffffff;
+  font-size: 12px;
+  color: #666666;
+  cursor: pointer;
+}

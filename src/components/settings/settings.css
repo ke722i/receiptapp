@@ -200,3 +200,19 @@
   text-decoration: underline;
   cursor: pointer;
 }
+
+/* カテゴリの提案を開くボタン */
+.proposal-open-button {
+  color: #e53935;
+  text-align: left;
+}
+
+.proposal-open-button:active {
+  background-color: #ffebee;
+}
+
+/* カードの最後の説明（下の線は不要） */
+.settings-note.settings-note-last {
+  padding-top: 0;
+  border-bottom: none;
+}
