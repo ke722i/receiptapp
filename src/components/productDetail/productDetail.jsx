@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import './productDetail.css';
 import { fetchProductPriceHistory } from '../../utils/receiptDb';
 import { formatPath } from '../../utils/categoryUtils';
 import MyStorePrices from '../myStorePrices/myStorePrices';
 import PurchaseRow from '../purchaseRow/purchaseRow';
-import { cheapestByItemName } from '../../utils/itemNameGroup';
+import { cheapestByItemName, normalizeForSearch, matchesItemSearch } from '../../utils/itemNameGroup';
 
 const OTHER_PREVIEW = 1; // 「他の商品の最安値」を最初に見せる件数（残りは「すべて表示」）
 
@@ -24,6 +24,7 @@ export default function ProductDetail({
   const [historyData, setHistoryData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
+  const [searchText, setSearchText] = useState(''); // 印字名の検索
   const [showAllOthers, setShowAllOthers] = useState(false); // 「他の商品の最安値」をすべて表示中か
 
   // 自分のレシートから、この商品の購入履歴を取得
@@ -48,21 +49,34 @@ export default function ProductDetail({
     };
   }, [product]);
 
+  // 印字名の検索（読み込み済みの履歴を、画面の中で絞り込むだけ。通信はしない）。
+  //  文字をそろえる処理は、履歴を読み込んだときに 1 回だけ行う
+  const searchIndex = useMemo(
+    () => historyData.map((item) => normalizeForSearch(item.itemName)),
+    [historyData]
+  );
+  const isSearching = normalizeForSearch(searchText) !== '';
+  const matchedHistory = useMemo(
+    () => (isSearching ? historyData.filter((_, i) => matchesItemSearch(searchIndex[i], searchText)) : historyData),
+    [historyData, searchIndex, searchText, isSearching]
+  );
+
   // 並び替え処理
-  const sortedHistory = [...historyData].sort((a, b) => {
+  const sortedHistory = [...matchedHistory].sort((a, b) => {
     if (sortOrder === 'priceAsc') return a.price - b.price;
     if (sortOrder === 'priceDesc') return b.price - a.price;
     return b.dateValue.localeCompare(a.dateValue); // dateDesc
   });
 
   // 同じカテゴリの商品でも、印字名が別の商品（例: ちいかわグミ／他メーカーのグミ）は、別々に最安値を出す
-  const cheapestList = cheapestByItemName(historyData);
+  const cheapestList = cheapestByItemName(matchedHistory);
   const topItem = cheapestList[0]; // いちばん安い商品は、大きいカードで
   const otherItems = cheapestList.slice(1); // 2 番目以降は、コンパクトな行（赤枠）で
   const visibleOthers = showAllOthers ? otherItems : otherItems.slice(0, OTHER_PREVIEW);
 
   // 履歴は最大4件までを表示（全件は「すべて見る」へ）
-  const previewHistory = sortedHistory.slice(0, 4);
+  //  検索中は、一致したものを全部出す（「すべて見る」の画面は、検索で絞り込まないため）
+  const previewHistory = isSearching ? sortedHistory : sortedHistory.slice(0, 4);
 
   return (
     <div className="product-detail-container">
@@ -108,6 +122,28 @@ export default function ProductDetail({
           <div className="detail-message">
             この商品の購入履歴はまだありません
           </div>
+        )}
+
+        {/* 印字名の検索（全角/半角・ひらがな/カタカナ・大文字/小文字・空白や記号の違いは、区別しない） */}
+        {!loading && historyData.length > 0 && (
+          <div className="item-search">
+            <input
+              type="search"
+              className="item-search-input"
+              placeholder="レシートの印字名で検索"
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              aria-label="レシートの印字名で検索"
+              enterKeyHint="search"
+            />
+            {isSearching && (
+              <span className="item-search-count">{matchedHistory.length}件</span>
+            )}
+          </div>
+        )}
+
+        {!loading && isSearching && matchedHistory.length === 0 && (
+          <div className="detail-message">「{searchText.trim()}」に一致する購入履歴はありません</div>
         )}
 
         {/* 3. 最安値の購入。いちばん安い商品は大きいカード、印字名が別の商品（2 番目以降）はコンパクトな行 */}
@@ -181,7 +217,7 @@ export default function ProductDetail({
         )}
 
         {/* 4. 購入履歴セクション */}
-        {!loading && historyData.length > 0 && (
+        {!loading && matchedHistory.length > 0 && (
           <section className="detail-section">
             <div className="history-header-row">
               <h3 className="section-title">購入履歴</h3>
@@ -214,7 +250,7 @@ export default function ProductDetail({
             </div>
 
             {/* すべて見るボタン（4件を超える場合のみ） */}
-            {historyData.length > previewHistory.length && (
+            {!isSearching && historyData.length > previewHistory.length && (
               <button
                 type="button"
                 className="view-all-button"

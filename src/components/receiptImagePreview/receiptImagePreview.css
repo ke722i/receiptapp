@@ -18,21 +18,22 @@
   box-sizing: border-box;
 }
 
+/* 画像の全体を、画面に収めて見せる（縦長でも、横長でも、スクロールなし）。ポップアップの余白（16px）を除いた大きさまで */
 .image-viewer-frame {
-  width: 100%;
-  max-width: 360px;
-}
-
-.image-viewer-scroll {
-  width: 100%;
-  max-height: 70vh;
-  overflow-y: auto;
+  display: flex;
+  max-width: 100%;
+  max-height: 100%;
   border-radius: 8px;
+  overflow: hidden;
   background-color: #ffffff;
 }
 
 .image-viewer-image {
   display: block;
-  width: 100%;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
+  width: auto;
   height: auto;
+  object-fit: contain;
 }

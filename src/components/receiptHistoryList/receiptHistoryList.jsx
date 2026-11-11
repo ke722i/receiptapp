@@ -1,12 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import './receiptHistoryList.css';
 import { fetchReceiptHistory } from '../../utils/receiptDb';
 import { formatPurchaseDate } from '../../utils/purchaseDate';
+import { RECEIPT_SORT_OPTIONS, DEFAULT_RECEIPT_SORT, sortReceipts } from '../../utils/receiptSort';
 
 export default function ReceiptHistoryList({ onBack, onSelectReceiptDetail }) {
   const [receipts, setReceipts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
+  const [sortKey, setSortKey] = useState(DEFAULT_RECEIPT_SORT); // 既定は購入日
+  const sortedReceipts = useMemo(() => sortReceipts(receipts, sortKey), [receipts, sortKey]);
 
   // Supabase からレシート履歴を取得
   useEffect(() => {
@@ -55,8 +58,26 @@ export default function ReceiptHistoryList({ onBack, onSelectReceiptDetail }) {
         )}
 
         {!loading && receipts.length > 0 && (
+          <div className="receipt-sort-row">
+            <label className="receipt-sort-label" htmlFor="receipt-sort">並び替え</label>
+            <select
+              id="receipt-sort"
+              className="sort-select"
+              value={sortKey}
+              onChange={(e) => setSortKey(e.target.value)}
+            >
+              {RECEIPT_SORT_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {!loading && receipts.length > 0 && (
           <div className="receipt-grid">
-            {receipts.map((receipt) => {
+            {sortedReceipts.map((receipt) => {
               // Supabase から取得したデータのキーマッピング
               const storeName = receipt.store_name || '店舗名未登録';
               const purchaseDate = receipt.purchase_date || '';

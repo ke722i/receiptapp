@@ -47,3 +47,28 @@ export const cheapestByItemName = (history) => {
       String(b.cheapest.dateValue || '').localeCompare(String(a.cheapest.dateValue || ''))
   );
 };
+
+/**
+ * 印字名の検索用に、文字をそろえる（normalizeItemName より軽い。容量・個数・カッコの中は、除かない）
+ *  全角/半角、大文字/小文字、ひらがな/カタカナ、空白・記号の違いを、区別しない
+ */
+export const normalizeForSearch = (text) =>
+  String(text || '')
+    .normalize('NFKC')
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]/gu, '')
+    .replace(/[ァ-ヶ]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0x60));
+
+/**
+ * 検索語（空白で区切った、すべての語）を、印字名が含んでいるか。
+ *  語が空（記号だけ・空白だけ）のときは、すべて一致とみなす
+ * @param {string} normalizedName normalizeForSearch した印字名
+ * @param {string} query 入力された検索語
+ */
+export const matchesItemSearch = (normalizedName, query) => {
+  const tokens = String(query || '')
+    .split(/\s+/)
+    .map(normalizeForSearch)
+    .filter(Boolean);
+  return tokens.every((token) => normalizedName.includes(token));
+};
