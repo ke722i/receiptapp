@@ -301,3 +301,37 @@
   font-size: 14px;
   padding: 24px 0;
 }
+
+
+/* 印字名の検索 */
+.item-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.item-search-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 56px 10px 16px; /* 右に、件数を出す隙間 */
+  font-size: 16px; /* iPhone で、入力のとき、拡大されない大きさ */
+  border: 1px solid #e0e0e0;
+  border-radius: 24px;
+  background-color: #ffffff;
+  color: #333333;
+  outline: none;
+  -webkit-appearance: none;
+}
+
+.item-search-input:focus {
+  border-color: #e53935;
+}
+
+.item-search-count {
+  position: absolute;
+  right: 16px;
+  font-size: 12px;
+  color: #888888;
+  pointer-events: none;
+}

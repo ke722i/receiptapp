@@ -100,11 +100,9 @@ export default function ReceiptImagePreview({ src, alt = 'レシート写真' })
           aria-label="レシート画像"
           onClick={close}
         >
-          {/* 縦長のレシートも読めるように、画像は横幅いっぱいで表示し、はみ出す分は縦にスクロールする */}
+          {/* クロップ済みの画像の全体を、画面に収めて表示する（スクロールしない）。拡大は、ユーザーが、ピンチ操作などで行う */}
           <div ref={frameRef} className="image-viewer-frame" onClick={(e) => e.stopPropagation()}>
-            <div className="image-viewer-scroll">
-              <img src={src} alt={alt} className="image-viewer-image" />
-            </div>
+            <img src={src} alt={alt} className="image-viewer-image" />
           </div>
         </div>
       )}

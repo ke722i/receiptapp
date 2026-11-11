@@ -1,5 +1,6 @@
 /* 店名・店舗名の入力欄（同じ行に別の枠）と、初めて入力された名前の吹き出し */
 .store-fields {
+  position: relative; /* 注意の吹き出しを、入力欄の下に重ねるため */
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -8,6 +9,7 @@
 
 .store-fields-row {
   display: flex;
+  align-items: flex-end; /* 「!」を、入力欄の高さにそろえる */
   gap: 8px;
 }
 
@@ -37,44 +39,65 @@
   color: #333333;
 }
 
-/* 吹き出し: 目を引く黄色・オレンジ系（エラーではないので、赤は使わない）。上の三角が、入力欄を指す */
+/* 初めて入力された名前: 入力欄の横の、赤い「!」 */
+.store-notice-button {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  margin-bottom: 4px; /* 入力欄の高さの中央にそろえる */
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background-color: #e53935;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: bold;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(229, 57, 53, 0.4);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.store-notice-button.is-open,
+.store-notice-button:active {
+  background-color: #b71c1c;
+}
+
+/* 注意の吹き出し: 小さな文字で、入力欄の下に重ねて出す（下の部品を押し下げない）。三角が「!」を指す */
 .store-notice {
-  position: relative;
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  margin-top: 6px;
-  padding: 10px 12px;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  margin-top: 8px;
+  padding: 8px 12px;
   background-color: #fff3c4;
   border: 2px solid #ffb300;
   border-radius: 10px;
   color: #5d4300;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: bold;
   line-height: 1.5;
-  box-shadow: 0 2px 6px rgba(255, 179, 0, 0.3);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
 .store-notice::before {
   content: '';
   position: absolute;
-  top: -8px;
-  left: 28px;
-  width: 12px;
-  height: 12px;
+  top: -7px;
+  right: 8px;
+  width: 10px;
+  height: 10px;
   background-color: #fff3c4;
   border-top: 2px solid #ffb300;
   border-left: 2px solid #ffb300;
   transform: rotate(45deg);
 }
 
-.store-notice-icon {
-  flex-shrink: 0;
-  font-size: 16px;
-  line-height: 1.3;
-}
-
 .store-notice-text {
+  display: block;
   min-width: 0;
+  text-align: left;
   word-break: break-word;
 }

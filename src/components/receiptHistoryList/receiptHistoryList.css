@@ -2,7 +2,10 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
+  height: 100dvh;
   width: 100%;
+  max-width: 100%;
+  overflow-x: hidden; /* 横にスワイプして、画面がずれないようにする */
   background-color: #f8f9fa;
   box-sizing: border-box;
 }
@@ -47,6 +50,9 @@
   flex: 1;
   padding: 16px;
   overflow-y: auto;
+  overflow-x: hidden; /* 横には動かさない（縦のスクロールだけ） */
+  overscroll-behavior-x: none;
+  touch-action: pan-y; /* 指の横の動きでは、スクロールしない */
   box-sizing: border-box;
 }
 
@@ -57,13 +63,39 @@
   font-size: 14px;
 }
 
+/* 2 列は、同じ幅にする。minmax(0, 1fr) にしないと、長い店名の側の列が広がって、左右の大きさが変わる */
 .receipt-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
 }
 
+/* 並び替え */
+.receipt-sort-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.receipt-sort-label {
+  font-size: 13px;
+  color: #666666;
+}
+
+.sort-select {
+  padding: 6px 10px;
+  font-size: 13px;
+  border: 1px solid #cccccc;
+  border-radius: 8px;
+  background-color: #ffffff;
+  color: #333333;
+  outline: none;
+}
+
 .receipt-card {
+  min-width: 0; /* 長い店名で、カードが広がらないように */
   position: relative;
   background-color: #ffffff;
   border-radius: 12px;
