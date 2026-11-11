@@ -14,6 +14,7 @@ import ReceiptHistoryList from './components/receiptHistoryList/receiptHistoryLi
 import ReceiptHistoryDetail from './components/receiptHistoryDetail/receiptHistoryDetail';
 import StoreList from './components/storeList/storeList';
 import MyStores from './components/myStores/myStores';
+import CategoryProposal from './components/categoryProposal/categoryProposal';
 import { fetchReceiptById } from './utils/receiptDb';
 import { productKey } from './utils/categoryUtils';
 
@@ -158,7 +159,11 @@ function App() {
         <Settings
           onBack={() => setCurrentScreen('home')}
           onDeleteAccount={() => setCurrentScreen('login')}
+          onOpenCategoryProposal={() => setCurrentScreen('categoryProposal')}
         />
+      )}
+      {currentScreen === 'categoryProposal' && (
+        <CategoryProposal onBack={() => setCurrentScreen('settings')} />
       )}
       {currentScreen === 'productDetail' && (
         <ProductDetail

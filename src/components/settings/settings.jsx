@@ -10,6 +10,7 @@ export default function Settings({
   onBack,
   onDeleteReceiptData,
   onDeleteAccount,
+  onOpenCategoryProposal,
 }) {
   const [retentionPeriod, setRetentionPeriod] = useState('90');
   const [userInfo, setUserInfo] = useState({ displayName: '読み込み中...' });
@@ -152,6 +153,21 @@ export default function Settings({
               <button type="button" className="link-button" onClick={() => setLegalDoc(PRIVACY)}>
                 プライバシーポリシー
               </button>
+            </div>
+          </div>
+        </section>
+
+        {/* カテゴリの提案（表に無い商品名を、管理者に提案する） */}
+        <section className="settings-section">
+          <h2 className="section-header">カテゴリ</h2>
+          <div className="settings-card">
+            <button type="button" className="action-button proposal-open-button" onClick={onOpenCategoryProposal}>
+              カテゴリを提案する ›
+            </button>
+            <div className="settings-note settings-note-last">
+              <p>
+                表に無い商品を提案できます。管理者が確認して、承認したものは、次の更新で、すべてのユーザーの表に追加されます。
+              </p>
             </div>
           </div>
         </section>
