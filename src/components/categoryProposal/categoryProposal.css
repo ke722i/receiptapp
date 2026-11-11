@@ -93,6 +93,12 @@
   color: #757575;
 }
 
+/* ラベルの中の、説明の区切りの余白（「。」の代わり） */
+.proposal-label-gap {
+  display: inline-block;
+  width: 1.2em;
+}
+
 .proposal-input {
   width: 100%;
   box-sizing: border-box;
@@ -109,9 +115,17 @@
   border-color: #e53935;
 }
 
+/* 選べない欄（大分類を選ぶまでの中分類）: 灰色の背景・薄い文字・矢印なし。iPhone でも、文字が薄くなるように指定する */
 .proposal-input:disabled {
-  background-color: #f2f2f2;
-  color: #999999;
+  background-color: #eeeeee;
+  border-color: #dddddd;
+  border-style: dashed;
+  color: #aaaaaa;
+  -webkit-text-fill-color: #aaaaaa;
+  opacity: 1;
+  cursor: not-allowed;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .proposal-textarea {
@@ -119,7 +133,49 @@
   font-family: inherit;
 }
 
-/* この場所に、今ある商品 */
+/* 何を追加するか（2 つから選ぶ、大きめの選択肢） */
+.proposal-kinds {
+  margin: 0;
+  padding: 0;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.proposal-kinds legend {
+  margin-bottom: 4px;
+  padding: 0;
+}
+
+.proposal-kind {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #dddddd;
+  border-radius: 10px;
+  background-color: #ffffff;
+  font-size: 14px;
+  color: #333333;
+  cursor: pointer;
+}
+
+.proposal-kind.is-selected {
+  border-color: #e53935;
+  background-color: #fff5f5;
+  font-weight: bold;
+}
+
+.proposal-kind input {
+  margin: 0;
+  width: 18px;
+  height: 18px;
+  accent-color: #e53935;
+  flex-shrink: 0;
+}
+
+/* 今ある分類 */
 .proposal-existing {
   padding: 10px 12px;
   background-color: #f5f5f5;

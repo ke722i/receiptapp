@@ -4,19 +4,20 @@ import {
   PROPOSAL_PENDING_LIMIT,
   PROPOSAL_NAME_MAX,
   PROPOSAL_NOTE_MAX,
+  PROPOSAL_KINDS,
   PROPOSAL_STATUS_LABELS,
   getProposalMains,
   getProposalMids,
   getProposalSubs,
-  getExistingProducts,
   validateProposal,
+  describeProposal,
 } from '../../utils/categoryProposal';
 import { fetchMyProposals, submitCategoryProposal, withdrawCategoryProposal } from '../../utils/categoryProposalDb';
 import { formatPurchaseDate } from '../../utils/purchaseDate';
 import ConfirmDialog from '../confirmDialog/confirmDialog';
 
-const EMPTY_FORM = { main: '', category: '', sub: '', product: '', reading: '', note: '' };
-const EXISTING_PREVIEW = 8; // 「この場所にある商品」を、最初に見せる数
+const EMPTY_FORM = { kind: 'category', main: '', category: '', sub: '', note: '' };
+const EXISTING_PREVIEW = 8; // 「今ある分類」を、最初に見せる数
 
 // DB の日時（UTC）を、日本時間の日付（YYYY-MM-DD）に
 const toJstDate = (value) => {
@@ -24,10 +25,29 @@ const toJstDate = (value) => {
   return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' });
 };
 
+/** 今ある分類の一覧（重ねて提案しないための参考） */
+function ExistingList({ title, names }) {
+  const [showAll, setShowAll] = useState(false);
+  const visible = showAll ? names : names.slice(0, EXISTING_PREVIEW);
+  return (
+    <div className="proposal-existing">
+      <span className="proposal-existing-title">
+        {title}（{names.length}）
+      </span>
+      <p className="proposal-existing-list">{visible.join('、') || 'まだありません'}</p>
+      {names.length > EXISTING_PREVIEW && (
+        <button type="button" className="proposal-link" onClick={() => setShowAll((v) => !v)}>
+          {showAll ? '閉じる' : `すべて見る（${names.length}）`}
+        </button>
+      )}
+    </div>
+  );
+}
+
 /**
- * カテゴリ（商品名）の提案（設定画面から開く）
- *  ・今の表の、大・中・小分類の位置を選んで、表に無い商品名を提案する
- *  ・管理者が確認して、承認したものは、次の表の更新で、全員の画面と AI の解析に追加される
+ * カテゴリの提案（設定画面・ホームのお知らせ・商品の編集画面の案内から開く）
+ *  ・提案できるのは、カテゴリ（新しい中分類／今ある中分類に新しい小分類）だけ。商品名は AI が決めるので、提案しない
+ *  ・管理者が確認して、承認したものは、管理者が商品名を決めて、次の表の更新で、全員の画面と AI の解析に追加される
  *  ・自分の提案の状況（承認待ち／承認／見送り）を見られる。承認待ちは取り下げられる
  */
 export default function CategoryProposal({ onBack }) {
@@ -38,7 +58,6 @@ export default function CategoryProposal({ onBack }) {
   const [proposals, setProposals] = useState([]);
   const [listLoading, setListLoading] = useState(true);
   const [listError, setListError] = useState('');
-  const [showAllExisting, setShowAllExisting] = useState(false);
   const [withdrawTarget, setWithdrawTarget] = useState(null); // 取り下げの確認中の提案
   const [withdrawing, setWithdrawing] = useState(false);
 
@@ -67,27 +86,27 @@ export default function CategoryProposal({ onBack }) {
     };
   }, []);
 
+  const isSubKind = form.kind === 'sub';
   const mains = useMemo(() => getProposalMains(), []);
   const mids = useMemo(() => getProposalMids(form.main), [form.main]);
-  const subs = useMemo(() => getProposalSubs(form.main, form.category), [form.main, form.category]);
-  const placeChosen = form.main && form.category && (subs.length === 0 || form.sub);
-  const existing = useMemo(
-    () => (placeChosen ? getExistingProducts(form.main, form.category, form.sub || null) : []),
-    [placeChosen, form.main, form.category, form.sub]
+  const subs = useMemo(
+    () => (isSubKind && form.category ? getProposalSubs(form.main, form.category) : []),
+    [isSubKind, form.main, form.category]
   );
   const check = useMemo(() => validateProposal(form), [form]);
   const pendingCount = proposals.filter((p) => p.status === 'pending').length;
   const atLimit = pendingCount >= PROPOSAL_PENDING_LIMIT;
 
-  // 上の階層を選び直したら、下は選び直し
+  // 上の項目を選び直したら、下は選び直し。種類を変えたら、名前の欄は空に
   const update = (field, value) => {
     setMessage(null);
     setForm((prev) => {
-      if (field === 'main') return { ...prev, main: value, category: '', sub: '' };
-      if (field === 'category') return { ...prev, category: value, sub: '' };
+      const subKind = prev.kind === 'sub';
+      if (field === 'kind') return { ...prev, kind: value, category: '', sub: '' };
+      if (field === 'main' && subKind) return { ...prev, main: value, category: '', sub: '' };
+      if (field === 'category' && subKind) return { ...prev, category: value, sub: '' };
       return { ...prev, [field]: value };
     });
-    if (field === 'main' || field === 'category' || field === 'sub') setShowAllExisting(false);
   };
 
   const handleSubmit = async (e) => {
@@ -102,29 +121,31 @@ export default function CategoryProposal({ onBack }) {
       setMessage({ type: 'error', text: result.error });
       return;
     }
-    setMessage({ type: 'success', text: `「${check.value.product}」を提案しました。管理者が確認します。` });
-    // 位置は残し、続けて同じ場所に提案しやすくする
-    setForm((prev) => ({ ...prev, product: '', reading: '', note: '' }));
+    const { title } = describeProposal({
+      kind: check.value.kind,
+      main_category: check.value.main,
+      category: check.value.category,
+      sub_category: check.value.sub,
+    });
+    setMessage({ type: 'success', text: `${title}を提案しました。管理者が確認します。` });
+    // 種類と大分類は残し、続けて提案しやすくする
+    setForm((prev) => ({ ...prev, category: '', sub: '', note: '' }));
     setTouched(false);
     loadProposals();
   };
 
   const handleWithdraw = async () => {
     if (!withdrawTarget) return;
+    const { title } = describeProposal(withdrawTarget);
     setWithdrawing(true);
     const result = await withdrawCategoryProposal(withdrawTarget.id);
     setWithdrawing(false);
     setWithdrawTarget(null);
-    setMessage(
-      result.success
-        ? { type: 'success', text: `「${withdrawTarget.product_name}」の提案を取り下げました。` }
-        : { type: 'error', text: result.error }
-    );
+    setMessage(result.success ? { type: 'success', text: `${title}の提案を取り下げました。` } : { type: 'error', text: result.error });
     loadProposals();
   };
 
   const errorOf = (field) => (touched ? check.errors[field] : '');
-  const visibleExisting = showAllExisting ? existing : existing.slice(0, EXISTING_PREVIEW);
 
   return (
     <div className="proposal-container">
@@ -138,13 +159,30 @@ export default function CategoryProposal({ onBack }) {
 
       <main className="proposal-main">
         <p className="proposal-intro">
-          表に無い商品を、「その他」ではなく、商品名で比べたいときに提案してください。
-          管理者が確認して、承認したものは、次の更新で、すべてのユーザーの表に追加されます（すぐには追加されません）。
+          ぴったりの分類が無くて「その他」になる商品があるときに、新しい中分類・小分類を提案してください。
+          管理者が確認して、承認したものは、管理者が商品名を決めて、次の更新で、すべてのユーザーの表に追加します（すぐには追加されません）。
+          商品名は、AI が決めるので、提案できません。
         </p>
 
         {/* 提案の入力 */}
         <form className="proposal-card" onSubmit={handleSubmit} noValidate>
-          <h2 className="proposal-section-title">新しい商品名を提案する</h2>
+          <h2 className="proposal-section-title">新しいカテゴリを提案する</h2>
+
+          <fieldset className="proposal-kinds">
+            <legend className="proposal-label">何を追加しますか</legend>
+            {PROPOSAL_KINDS.map((k) => (
+              <label key={k.value} className={`proposal-kind ${form.kind === k.value ? 'is-selected' : ''}`}>
+                <input
+                  type="radio"
+                  name="proposal-kind"
+                  value={k.value}
+                  checked={form.kind === k.value}
+                  onChange={() => update('kind', k.value)}
+                />
+                <span>{k.label}</span>
+              </label>
+            ))}
+          </fieldset>
 
           <label className="proposal-field">
             <span className="proposal-label">大分類</span>
@@ -159,83 +197,84 @@ export default function CategoryProposal({ onBack }) {
             {errorOf('main') && <span className="proposal-error">{errorOf('main')}</span>}
           </label>
 
-          <label className="proposal-field">
-            <span className="proposal-label">中分類</span>
-            <select
-              className="proposal-input"
-              value={form.category}
-              disabled={!form.main}
-              onChange={(e) => update('category', e.target.value)}
-            >
-              <option value="">選んでください</option>
-              {mids.map((name) => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              ))}
-            </select>
-            {errorOf('category') && <span className="proposal-error">{errorOf('category')}</span>}
-          </label>
+          {isSubKind ? (
+            <>
+              <label className="proposal-field">
+                <span className="proposal-label">中分類（今あるもの）</span>
+                <select
+                  className="proposal-input"
+                  value={form.category}
+                  disabled={!form.main}
+                  onChange={(e) => update('category', e.target.value)}
+                >
+                  <option value="">{form.main ? '選んでください' : '先に大分類を選んでください'}</option>
+                  {mids.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+                {errorOf('category') && <span className="proposal-error">{errorOf('category')}</span>}
+              </label>
 
-          {subs.length > 0 && (
-            <label className="proposal-field">
-              <span className="proposal-label">小分類</span>
-              <select className="proposal-input" value={form.sub} onChange={(e) => update('sub', e.target.value)}>
-                <option value="">選んでください</option>
-                {subs.map((name) => (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
-                ))}
-              </select>
-              {errorOf('sub') && <span className="proposal-error">{errorOf('sub')}</span>}
-            </label>
-          )}
-
-          {/* この場所に、今ある商品（重ねて提案しないための参考） */}
-          {placeChosen && (
-            <div className="proposal-existing">
-              <span className="proposal-existing-title">この場所に、今ある商品（{existing.length}）</span>
-              <p className="proposal-existing-list">{visibleExisting.join('、') || 'まだありません'}</p>
-              {existing.length > EXISTING_PREVIEW && (
-                <button type="button" className="proposal-link" onClick={() => setShowAllExisting((v) => !v)}>
-                  {showAllExisting ? '閉じる' : `すべて見る（${existing.length}）`}
-                </button>
+              {form.category && (
+                <ExistingList key={`${form.main}>${form.category}`} title="この中分類に、今ある小分類" names={subs} />
               )}
-            </div>
+
+              <label className="proposal-field">
+                <span className="proposal-label">新しい小分類の名前</span>
+                <input
+                  type="text"
+                  className="proposal-input"
+                  placeholder="例: ゼリー"
+                  maxLength={PROPOSAL_NAME_MAX + 10}
+                  value={form.sub}
+                  onChange={(e) => update('sub', e.target.value)}
+                />
+                {errorOf('sub') && <span className="proposal-error">{errorOf('sub')}</span>}
+              </label>
+            </>
+          ) : (
+            <>
+              {form.main && <ExistingList key={form.main} title={`${form.main}に、今ある中分類`} names={mids} />}
+
+              <label className="proposal-field">
+                <span className="proposal-label">新しい中分類の名前</span>
+                <input
+                  type="text"
+                  className="proposal-input"
+                  placeholder="例: ペット用品"
+                  maxLength={PROPOSAL_NAME_MAX + 10}
+                  value={form.category}
+                  onChange={(e) => update('category', e.target.value)}
+                />
+                {errorOf('category') && <span className="proposal-error">{errorOf('category')}</span>}
+              </label>
+
+              <label className="proposal-field">
+                <span className="proposal-label">
+                  小分類の名前（任意<span className="proposal-label-gap" />中分類の中に作りたいものがあれば）
+                </span>
+                <input
+                  type="text"
+                  className="proposal-input"
+                  placeholder="例: ペットフード"
+                  maxLength={PROPOSAL_NAME_MAX + 10}
+                  value={form.sub}
+                  onChange={(e) => update('sub', e.target.value)}
+                />
+                {errorOf('sub') && <span className="proposal-error">{errorOf('sub')}</span>}
+              </label>
+            </>
           )}
 
           <label className="proposal-field">
-            <span className="proposal-label">商品名</span>
-            <input
-              type="text"
-              className="proposal-input"
-              placeholder="例: ちいかわグミ"
-              maxLength={PROPOSAL_NAME_MAX + 10}
-              value={form.product}
-              onChange={(e) => update('product', e.target.value)}
-            />
-            {errorOf('product') && <span className="proposal-error">{errorOf('product')}</span>}
-          </label>
-
-          <label className="proposal-field">
-            <span className="proposal-label">読み仮名（ひらがな。漢字を含む商品名のときは必須）</span>
-            <input
-              type="text"
-              className="proposal-input"
-              placeholder="例: ちいかわぐみ"
-              maxLength={PROPOSAL_NAME_MAX + 10}
-              value={form.reading}
-              onChange={(e) => update('reading', e.target.value)}
-            />
-            {errorOf('reading') && <span className="proposal-error">{errorOf('reading')}</span>}
-          </label>
-
-          <label className="proposal-field">
-            <span className="proposal-label">メモ（任意。どんな商品か、なぜ必要か）</span>
+            <span className="proposal-label">
+              どんな商品が入るか（任意<span className="proposal-label-gap" />例を書くと、承認のときの参考になります）
+            </span>
             <textarea
               className="proposal-input proposal-textarea"
-              placeholder="例: よく買うので、店ごとの値段を比べたい"
+              placeholder="例: ドッグフード、キャットフード、猫砂"
               maxLength={PROPOSAL_NOTE_MAX + 20}
               rows={3}
               value={form.note}
@@ -275,25 +314,26 @@ export default function CategoryProposal({ onBack }) {
           )}
           {!listLoading && proposals.length > 0 && (
             <ul className="proposal-list">
-              {proposals.map((p) => (
-                <li key={p.id} className="proposal-item">
-                  <div className="proposal-item-main">
-                    <span className="proposal-item-name">{p.product_name}</span>
-                    <span className={`proposal-status is-${p.status}`}>{PROPOSAL_STATUS_LABELS[p.status] || p.status}</span>
-                  </div>
-                  <span className="proposal-item-path">
-                    {[p.main_category, p.category, p.sub_category].filter(Boolean).join(' > ')}
-                    {p.reading ? `（${p.reading}）` : ''}
-                  </span>
-                  <span className="proposal-item-date">提案日: {formatPurchaseDate(toJstDate(p.created_at))}</span>
-                  {p.admin_note && <span className="proposal-item-admin">運営からのメモ: {p.admin_note}</span>}
-                  {p.status === 'pending' && (
-                    <button type="button" className="proposal-withdraw" onClick={() => setWithdrawTarget(p)}>
-                      取り下げる
-                    </button>
-                  )}
-                </li>
-              ))}
+              {proposals.map((p) => {
+                const { title, place } = describeProposal(p);
+                return (
+                  <li key={p.id} className="proposal-item">
+                    <div className="proposal-item-main">
+                      <span className="proposal-item-name">{title}</span>
+                      <span className={`proposal-status is-${p.status}`}>{PROPOSAL_STATUS_LABELS[p.status] || p.status}</span>
+                    </div>
+                    <span className="proposal-item-path">{place}</span>
+                    {p.note && <span className="proposal-item-path">商品の例: {p.note}</span>}
+                    <span className="proposal-item-date">提案日: {formatPurchaseDate(toJstDate(p.created_at))}</span>
+                    {p.admin_note && <span className="proposal-item-admin">運営からのメモ: {p.admin_note}</span>}
+                    {p.status === 'pending' && (
+                      <button type="button" className="proposal-withdraw" onClick={() => setWithdrawTarget(p)}>
+                        取り下げる
+                      </button>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </section>
@@ -302,7 +342,7 @@ export default function CategoryProposal({ onBack }) {
       {withdrawTarget && (
         <ConfirmDialog
           title="提案の取り下げ"
-          message={`「${withdrawTarget.product_name}」の提案を取り下げますか？`}
+          message={`${describeProposal(withdrawTarget).title}の提案を取り下げますか？`}
           confirmLabel="取り下げる"
           danger
           busy={withdrawing}

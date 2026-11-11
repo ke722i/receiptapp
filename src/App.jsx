@@ -32,6 +32,7 @@ function App() {
   const [receiptDetailBackScreen, setReceiptDetailBackScreen] = useState('receiptHistoryList');
   // マイ店舗の画面から「戻る」で帰る画面（ホームのメニュー / 商品詳細）
   const [myStoresBackScreen, setMyStoresBackScreen] = useState('home');
+  const [proposalBackScreen, setProposalBackScreen] = useState('settings'); // カテゴリの提案から戻る画面
   // 選択中の商品（{ main, category, sub, product }。同名の商品を場所で区別する）
   const [selectedProduct, setSelectedProduct] = useState(null);
 
@@ -142,6 +143,10 @@ function App() {
           viewHistory={viewHistory}
           onLogout={() => setCurrentScreen('login')}
           onNavigateToSettings={() => setCurrentScreen('settings')}
+          onOpenCategoryProposal={() => {
+            setProposalBackScreen('home');
+            setCurrentScreen('categoryProposal');
+          }}
           onNavigateToHistory={() => setCurrentScreen('receiptHistoryList')}
           onNavigateToStores={() => setCurrentScreen('storeList')}
           onNavigateToMyStores={() => {
@@ -159,11 +164,14 @@ function App() {
         <Settings
           onBack={() => setCurrentScreen('home')}
           onDeleteAccount={() => setCurrentScreen('login')}
-          onOpenCategoryProposal={() => setCurrentScreen('categoryProposal')}
+          onOpenCategoryProposal={() => {
+            setProposalBackScreen('settings');
+            setCurrentScreen('categoryProposal');
+          }}
         />
       )}
       {currentScreen === 'categoryProposal' && (
-        <CategoryProposal onBack={() => setCurrentScreen('settings')} />
+        <CategoryProposal onBack={() => setCurrentScreen(proposalBackScreen)} />
       )}
       {currentScreen === 'productDetail' && (
         <ProductDetail

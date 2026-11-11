@@ -178,6 +178,13 @@ export default function ReceiptEdit({ isOpen, selectedItems, onClose, onSave }) 
                     ))}
                   </select>
                 </div>
+
+                {/* 「その他」を選んだときの案内（カテゴリの提案ができること） */}
+                {[item.mainCategory, item.category, item.subCategory, item.productName].includes(OTHER) && (
+                  <p className="edit-proposal-hint">
+                    💡 ぴったりの分類が無いときは、設定の「カテゴリを提案する」から、新しい中分類・小分類を提案できます。
+                  </p>
+                )}
               </div>
             );
           })}
