@@ -30,14 +30,21 @@ missing_cat = [x for x in all_categories if re.search(r'[一-鿿々]', x) and x 
 if missing_cat:
     print('★よみがな未登録（漢字を含む分類名）:', missing_cat)
 
-# 同じ小分類の中で同じ商品名が2回あれば止める（Excelの入力ミス検出）
+# Excel の入力ミス（行のコピー貼り付けの重なりなど）の検出。見つかったら、場所を示して止める
+#  ・同じ大分類の中に、同じ名前の中分類がある
+#  ・同じ中分類の中に、同じ名前の小分類がある（商品の場所の見分けがつかなくなる）
+#  ・同じ小分類の中に、同じ商品名が 2 回ある
 for a in tree:
+    dup = [k for k, v in collections.Counter(m['name'] for m in a['categories']).items() if v > 1]
+    assert not dup, ('同じ大分類の中に、同じ中分類が重なっています', a['name'], dup)
     for m in a['categories']:
+        dup = [k for k, v in collections.Counter(s['name'] for s in m['subCategories']).items() if v > 1]
+        assert not dup, ('同じ中分類の中に、同じ小分類が重なっています', a['name'], m['name'], dup)
         for s in m['subCategories']:
             dup = [k for k, v in collections.Counter(s['items']).items() if v > 1]
-            assert not dup, (a['name'], m['name'], s['name'], dup)
+            assert not dup, ('同じ小分類の中に、同じ商品名が重なっています', a['name'], m['name'], s['name'], dup)
 
-TOP_IDS = {'常温': 'ambient', '冷蔵': 'chilled', '冷凍': 'frozen', '日用品': 'daily_goods'}
+TOP_IDS = {'常温': 'ambient', '冷蔵': 'chilled', '冷凍': 'frozen', '日用品': 'daily_goods', '肉': 'meat', '魚': 'fish', '野菜果物': 'produce'}
 def q(s):
     assert "'" not in s and '\\' not in s, s
     return f"'{s}'"

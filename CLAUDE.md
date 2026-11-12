@@ -32,6 +32,8 @@
 # 4. レシート解析（Edge Function）
 - Gemini の呼び出しは Edge Function（supabase/functions/parse-receipt）で行う。API キーとプロンプトをブラウザ側のコードや VITE_ の環境変数に戻さない。
 - GEMINI_API_KEY は Supabase のシークレットに置く。ブラウザからは画像だけを送り、プロンプトは受け取らない（Gemini を別の用途に使われないため）。
+- Gemini が混み合っている（503 など）ときは、2 秒待って同じモデルでもう一度、それでもだめなら代わりのモデル（シークレット GEMINI_FALLBACK_MODELS、既定 gemini-3.8-flash）で試す。
+  全体の待ち時間は 140 秒まで（Edge Function の上限 150 秒の内側）。すべてだめなら ai_busy（「AI が混み合っていて…」）を返す。原因はログの「receipt parse attempt」「receipt parse failed」で分かる。
 - 解析は 1 ユーザー 1 日 30 回まで。上限は supabase/migrations の consume_receipt_parse_quota の v_limit にあり、この関数がログイン確認も兼ねる。
 - supabase/functions/_shared/categoryData.js は src/constants/categoryData.js のコピー。直接編集しない。
 - 関数を変更したら npm run deploy-functions でデプロイする（ユーザーの Supabase ログインが必要）。
