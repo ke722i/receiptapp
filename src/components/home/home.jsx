@@ -59,8 +59,10 @@ export default function Home({
   onNavigateToMyStores,
   onNavigateToSettings,
   onOpenCategoryProposal,
+  onOpenNotices,
   onSelectProduct,
-  viewHistory = [],
+  favorites = [],
+  unreadCount = 0,
   userId = 'User_12345',
   avatarId = '',
 }) {
@@ -404,7 +406,23 @@ export default function Home({
           <div className="header-logo-placeholder">レシート即！メモ</div>
         </div>
 
-        <div className="header-right-spacer"></div>
+        {/* 通知（手紙）。未読があると、黄色の丸に数が出る */}
+        {onOpenNotices ? (
+          <button
+            type="button"
+            className={`notice-bell ${unreadCount > 0 ? 'has-unread' : ''}`}
+            onClick={onOpenNotices}
+            aria-label={unreadCount > 0 ? `通知（未読 ${unreadCount} 件）` : '通知'}
+          >
+            <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#ffffff" strokeWidth="1.8" strokeLinejoin="round" strokeLinecap="round" aria-hidden="true">
+              <rect x="3" y="5" width="18" height="14" rx="2" />
+              <path d="M3.5 7l8.5 6.5L20.5 7" />
+            </svg>
+            {unreadCount > 0 && <span className="notice-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>}
+          </button>
+        ) : (
+          <div className="header-right-spacer"></div>
+        )}
       </header>
 
       {/* ドロワーメニュー */}
@@ -661,28 +679,28 @@ export default function Home({
           </aside>
         )}
 
-        {/* 閲覧履歴（最後に見た5件） */}
+        {/* お気に入り（商品詳細の ☆ で入れた商品） */}
         <section className="section-container">
-          <h2 className="section-title">閲覧履歴</h2>
-          {viewHistory && viewHistory.length > 0 ? (
+          <h2 className="section-title">お気に入り</h2>
+          {favorites.length > 0 ? (
             <div className="frequent-scroll-container">
-              {viewHistory.map((item) => (
+              {favorites.map((path) => (
                 <button
-                  key={item.id}
+                  key={productKey(path)}
                   type="button"
                   className="frequent-card"
-                  onClick={() => handleSelectProductItem(toProductPath(item.path || item.name))}
+                  onClick={() => handleSelectProductItem(path)}
                 >
                   <div className="card-image-placeholder">
-                    <ProductIcon product={item.path} fallback={item.icon || '🛍️'} />
+                    <ProductIcon product={path} fallback="★" />
                   </div>
-                  <span className="card-name">{item.name}</span>
+                  <span className="card-name">{path.product}</span>
                 </button>
               ))}
             </div>
           ) : (
             <div style={{ fontSize: '13px', color: '#888', padding: '12px 0' }}>
-              閲覧した商品履歴はありません
+              商品詳細の ☆ を押すと、ここに入ります
             </div>
           )}
         </section>

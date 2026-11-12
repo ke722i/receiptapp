@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import Login from './components/login/login';
 import Register from './components/register/register';
 import Home from './components/home/home';
@@ -15,11 +15,15 @@ import ReceiptHistoryDetail from './components/receiptHistoryDetail/receiptHisto
 import StoreList from './components/storeList/storeList';
 import MyStores from './components/myStores/myStores';
 import CategoryProposal from './components/categoryProposal/categoryProposal';
+import Notices from './components/notices/notices';
 import { fetchReceiptById } from './utils/receiptDb';
-import { productKey, isOpenablePath, pathTitle } from './utils/categoryUtils';
+import { isOpenablePath } from './utils/categoryUtils';
 import { createManualReceiptData } from './utils/manualReceipt';
+import { loadFavorites, saveFavorites, toggleFavorite, isFavorite } from './utils/favorites';
+import { decidedNotices, loadReadIds, saveReadIds, unreadIds } from './utils/notices';
+import { fetchMyProposals } from './utils/categoryProposalDb';
 
-const STORAGE_KEY_VIEW_HISTORY = 'receipt_app_view_history';
+const STORAGE_KEY_VIEW_HISTORY = 'receipt_app_view_history'; // 閲覧履歴は廃止（お気に入りに変えた）。以前の保存だけを消す
 const STORAGE_KEY_USER_ID = 'receipt_app_user_id';
 const STORAGE_KEY_AVATAR = 'receipt_app_avatar'; // 選んだアイコン（すぐ表示するための控え。本体は、アカウントの情報）
 
@@ -62,23 +66,56 @@ function App() {
     }
   };
 
-  // 閲覧履歴（App レベルで管理）
-  const [viewHistory, setViewHistory] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY_VIEW_HISTORY);
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
-
+  // 以前の閲覧履歴の保存を消す（ホームの「閲覧履歴」は、お気に入りに変えた）
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY_VIEW_HISTORY, JSON.stringify(viewHistory));
-    } catch (err) {
-      console.error('Failed to save view history:', err);
+      localStorage.removeItem(STORAGE_KEY_VIEW_HISTORY);
+    } catch {
+      // 消せなくても、使わない
     }
-  }, [viewHistory]);
+  }, []);
+
+  // お気に入りの商品（端末に保存。ユーザーごと）
+  const [favVersion, setFavVersion] = useState(0);
+  const favorites = useMemo(() => loadFavorites(userId), [userId, favVersion]); // eslint-disable-line react-hooks/exhaustive-deps
+  const handleToggleFavorite = (path) => {
+    saveFavorites(userId, toggleFavorite(favorites, path));
+    setFavVersion((v) => v + 1);
+  };
+
+  // 通知（承認されたカテゴリの提案）。ホームを開くたびに、自分の提案を 1 回読む（軽い問い合わせ）。
+  //  「読んだ」は端末に覚える。通知の画面を開いたとき、開く前の「読んだ」を控えて、未読の目印に使う
+  const [notices, setNotices] = useState({ status: 'loading', list: [] });
+  const [readVersion, setReadVersion] = useState(0);
+  const readIds = useMemo(() => loadReadIds(userId), [userId, readVersion]); // eslint-disable-line react-hooks/exhaustive-deps
+  const [readIdsOnOpen, setReadIdsOnOpen] = useState([]);
+  const unreadList = unreadIds(notices.list, readIds);
+  // 通知を、読んだことにする（端末に覚える）
+  const markNoticesRead = (list) => {
+    const all = list.map((n) => n.id);
+    saveReadIds(userId, [...new Set([...loadReadIds(userId), ...all])]);
+    setReadVersion((v) => v + 1);
+  };
+  const screenRef = useRef(currentScreen);
+  useEffect(() => {
+    screenRef.current = currentScreen;
+  }, [currentScreen]);
+  const noticeRequest = useRef(0);
+  useEffect(() => {
+    if (currentScreen !== 'home') return;
+    const requestId = ++noticeRequest.current;
+    fetchMyProposals().then((result) => {
+      if (requestId !== noticeRequest.current) return; // 古い問い合わせの結果は使わない
+      if (!result.success) {
+        setNotices({ status: 'error', list: [] });
+        return;
+      }
+      const list = decidedNotices(result.data);
+      setNotices({ status: 'ready', list });
+      // 読み込み中に通知の画面を開いていたときは、そのまま読んだことにする
+      if (screenRef.current === 'notices') markNoticesRead(list);
+    });
+  }, [currentScreen]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ログイン成功ハンドラー
   const handleLoginSuccess = (userObj, rawInputUserId) => {
@@ -115,20 +152,6 @@ function App() {
     if (!isOpenablePath(path)) return; // 表の商品、またはホームのカテゴリの「その他」
     setSelectedProduct(path);
     setProductSearchText(options.itemSearch || '');
-    const key = productKey(path);
-    setViewHistory((prev) => {
-      // 以前の履歴（path を持たない）は名前で比較
-      const filtered = prev.filter((item) =>
-        item.path ? productKey(item.path) !== key : item.name !== pathTitle(path)
-      );
-      const newItem = {
-        id: Date.now().toString(),
-        name: pathTitle(path), // 「その他」の箱は「菓子のその他」など
-        icon: '🛍️',
-        path,
-      };
-      return [newItem, ...filtered].slice(0, 5);
-    });
     setCurrentScreen('productDetail');
   };
 
@@ -166,7 +189,13 @@ function App() {
         <Home
           userId={userId}
           avatarId={avatarId}
-          viewHistory={viewHistory}
+          favorites={favorites}
+          unreadCount={notices.status === 'ready' ? unreadList.length : 0}
+          onOpenNotices={() => {
+            setReadIdsOnOpen(readIds);
+            if (notices.status === 'ready') markNoticesRead(notices.list);
+            setCurrentScreen('notices');
+          }}
           onLogout={() => setCurrentScreen('login')}
           onNavigateToSettings={() => setCurrentScreen('settings')}
           onOpenCategoryProposal={() => {
@@ -198,6 +227,14 @@ function App() {
           }}
         />
       )}
+      {currentScreen === 'notices' && (
+        <Notices
+          notices={notices.list}
+          unreadIds={unreadIds(notices.list, readIdsOnOpen)}
+          status={notices.status}
+          onBack={() => setCurrentScreen('home')}
+        />
+      )}
       {currentScreen === 'categoryProposal' && (
         <CategoryProposal onBack={() => setCurrentScreen(proposalBackScreen)} />
       )}
@@ -205,6 +242,8 @@ function App() {
         <ProductDetail
           product={selectedProduct}
           initialSearchText={productSearchText}
+          isFavorite={isFavorite(favorites, selectedProduct)}
+          onToggleFavorite={handleToggleFavorite}
           onBack={() => setCurrentScreen('home')}
           onViewAllHistory={() => setCurrentScreen('productHistoryList')}
           onSelectReceipt={(id) => handleOpenReceiptFromProduct(id, 'productDetail')}

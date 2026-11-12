@@ -366,3 +366,20 @@
   height: 100%;
   object-fit: contain;
 }
+
+/* お気に入りの星（ヘッダーの右） */
+.favorite-button {
+  width: 32px;
+  height: 32px;
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.favorite-button.is-on {
+  color: #ffeb3b;
+}

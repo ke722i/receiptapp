@@ -1,0 +1,149 @@
+/* 通知の一覧（承認されたカテゴリの提案） */
+.notices-container {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background-color: #f7f8fa;
+  display: flex;
+  flex-direction: column;
+}
+
+.notices-header {
+  height: 60px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px;
+  background-color: #e53935;
+  color: #ffffff;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-sizing: border-box;
+}
+
+.notices-header .back-button {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 32px;
+  line-height: 1;
+  cursor: pointer;
+  width: 32px;
+}
+
+.notices-header .header-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.notices-header .header-right-spacer {
+  width: 32px;
+}
+
+.notices-main {
+  padding: 16px;
+}
+
+.notices-message {
+  text-align: center;
+  color: #888888;
+  font-size: 14px;
+  line-height: 1.7;
+  margin-top: 40px;
+}
+
+.notices-error {
+  color: #c62828;
+}
+
+.notices-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.notice-item {
+  display: flex;
+  gap: 12px;
+  padding: 14px;
+  background-color: #ffffff;
+  border: 1px solid #eeeeee;
+  border-radius: 12px;
+  text-align: left;
+}
+
+/* 未読: 赤い枠と、うすい赤の背景で目立たせる */
+.notice-item.is-unread {
+  background-color: #fff5f5;
+  border: 1.5px solid #e53935;
+}
+
+.notice-mail {
+  font-size: 26px;
+  line-height: 1.2;
+}
+
+.notice-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.notice-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: bold;
+  color: #333333;
+}
+
+.notice-new {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 1px 7px;
+  border-radius: 10px;
+  background-color: #e53935;
+  color: #ffffff;
+  font-size: 11px;
+  vertical-align: 1px;
+}
+
+.notice-place {
+  margin: 6px 0 0;
+  font-size: 15px;
+  color: #333333;
+}
+
+.notice-note {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: #666666;
+  line-height: 1.5;
+}
+
+.notice-date {
+  margin: 6px 0 0;
+  font-size: 11px;
+  color: #999999;
+}
+
+/* 結果の札（承認＝緑、見送り＝灰色） */
+.notice-result {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 1px 7px;
+  border-radius: 10px;
+  color: #ffffff;
+  font-size: 11px;
+  vertical-align: 1px;
+}
+
+.notice-result.is-approved {
+  background-color: #2e7d32;
+}
+
+.notice-result.is-rejected {
+  background-color: #757575;
+}

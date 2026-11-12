@@ -748,3 +748,48 @@
   object-fit: contain;
   border-radius: 8px;
 }
+
+/* 通知（手紙）のボタン。未読があると、黄色の丸に数が出る */
+.notice-bell {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  padding: 3px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.notice-badge {
+  position: absolute;
+  top: -4px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  box-sizing: border-box;
+  border-radius: 9px;
+  background-color: #ffeb3b;
+  color: #b71c1c;
+  font-size: 11px;
+  font-weight: bold;
+  line-height: 18px;
+  text-align: center;
+}
+
+.notice-bell.has-unread svg {
+  animation: notice-wiggle 2.4s ease-in-out infinite;
+  transform-origin: 50% 80%;
+}
+
+@keyframes notice-wiggle {
+  0%, 80%, 100% { transform: rotate(0deg); }
+  85% { transform: rotate(-12deg); }
+  90% { transform: rotate(10deg); }
+  95% { transform: rotate(-6deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notice-bell.has-unread svg { animation: none; }
+}
