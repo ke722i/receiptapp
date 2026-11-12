@@ -36,3 +36,6 @@ TEST_ITEMS.xlsx
 
 # Excel が、ファイルを開いている間だけ作る一時ファイル（ロックファイル）
 ~$*
+
+# SVG の軽量化前の控え（docs/icons.md）
+tools/svg_original/

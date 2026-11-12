@@ -19,3 +19,9 @@
 4. `npm run build` が通ることを確認する。
 - カテゴリ表（categoryTable.xlsx）を更新したあとは、手順 1 を実行し直す（商品名が変わると、対応が外れる）。
 - 「その他」にはアイコンを付けない（表に無いため）。
+
+## SVG の軽量化（SVG をまとめて入れたとき）
+- 目安は 1 つ 10KB 以下（トレースで作った SVG は 200KB を超えることがある）。
+- 手順: 元のファイルを `tools/svg_original/` に控える（Git には入れない）→ `npx --yes svgo@3 -q --config tools/svgo.config.cjs -f src/assets/categoryIcons`。
+- 軽くしたら、絵が崩れていないかを、ユーザーが目で確認する（特に、細かいトレースの絵）。
+- Excel の B 列と SVG のファイル名が違うと対応しない。点検（手順 1）の「SVG が無いアイコン」で分かる。Excel に無い SVG・SVG が無いアイコンは、とりあえず無視してよい（ユーザーの指示）。
