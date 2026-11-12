@@ -357,6 +357,10 @@
 
 /* 商品のアイコン（画像の枠の中） */
 .product-icon-image {
+  -webkit-touch-callout: none; /* スマホの長押しで「画像を保存」が出ないように */
+  -webkit-user-select: none;
+  user-select: none;
+  pointer-events: none; /* 長押し・右クリックは、後ろのボタンなどに通す */
   width: 100%;
   height: 100%;
   object-fit: contain;

@@ -223,18 +223,54 @@ export default function Home({
   //  click も touchend も届かないことがある。そのため、指が触れた瞬間（pointerdown）に選ぶ。
   //  選んで画面が移ったあとに、続けて来る click が、移った先の画面の部品を押してしまわないよう、
   //  その click は止める（パソコンのマウスでも同じ動き）。
+  //  ただし、一覧をスクロールしようとして触れたときは、選ばない。指で触れてから 150ms のあいだに、
+  //  指が 8px 以上動いた・ブラウザがスクロールを始めた（pointercancel）ときは、取りやめる。
+  //  （指を離すのが 150ms より早いときは、離した時点で選ぶ）マウス・ペンは、触れた瞬間に選ぶ。
+  const startTap = (e, run) => {
+    if (e.pointerType !== 'touch') {
+      run();
+      return;
+    }
+    const el = e.currentTarget;
+    const startX = e.clientX;
+    const startY = e.clientY;
+    let finished = false;
+    let timer = null;
+    const cleanup = () => {
+      finished = true;
+      clearTimeout(timer);
+      el.removeEventListener('pointermove', onMove);
+      el.removeEventListener('pointercancel', cleanup);
+      el.removeEventListener('pointerup', fire);
+    };
+    const fire = () => {
+      if (finished) return;
+      cleanup();
+      run();
+    };
+    const onMove = (ev) => {
+      if (Math.hypot(ev.clientX - startX, ev.clientY - startY) > 8) cleanup();
+    };
+    el.addEventListener('pointermove', onMove);
+    el.addEventListener('pointercancel', cleanup);
+    el.addEventListener('pointerup', fire);
+    timer = setTimeout(fire, 150);
+  };
+
   const tapAction = (action) => ({
     onMouseDown: (e) => e.preventDefault(), // 入力欄からフォーカスを外さない
     onPointerDown: (e) => {
       if (e.pointerType === 'mouse' && e.button !== 0) return;
       e.preventDefault();
-      const stopClick = (ev) => {
-        ev.preventDefault();
-        ev.stopPropagation();
-      };
-      document.addEventListener('click', stopClick, true);
-      setTimeout(() => document.removeEventListener('click', stopClick, true), 700);
-      action();
+      startTap(e, () => {
+        const stopClick = (ev) => {
+          ev.preventDefault();
+          ev.stopPropagation();
+        };
+        document.addEventListener('click', stopClick, true);
+        setTimeout(() => document.removeEventListener('click', stopClick, true), 700);
+        action();
+      });
     },
     onClick: action, // pointerdown が使えない環境の、予備
   });
@@ -266,7 +302,7 @@ export default function Home({
     onPointerDown: (e) => {
       e.stopPropagation();
       e.preventDefault();
-      action();
+      startTap(e, action);
     },
     onClick: (e) => e.stopPropagation(),
   });
