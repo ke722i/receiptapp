@@ -201,6 +201,27 @@ export const updateReceiptInDatabase = async (receiptId, receiptFields, itemUpda
 };
 
 /**
+ * 同じ店名・同じ購入日・同じ合計金額の、自分のレシートがすでにあるか（登録の前の、二重登録の確認）
+ *  読み込めなかったときは、止めないよう「無い」として返す
+ * @param {{ store_name: string, purchase_date: string }} receipt
+ * @param {number} total 明細の値段の合計
+ * @returns {Promise<boolean>}
+ */
+export const hasDuplicateReceipt = async (receipt, total) => {
+  try {
+    const { data, error } = await supabase
+      .from('receipts')
+      .select('id, receipt_items (price)')
+      .eq('store_name', receipt.store_name || '')
+      .eq('purchase_date', receipt.purchase_date);
+    if (error || !data) return false;
+    return data.some((r) => (r.receipt_items || []).reduce((sum, item) => sum + Number(item.price || 0), 0) === total);
+  } catch {
+    return false;
+  }
+};
+
+/**
  * ログイン中ユーザーのレシート履歴を取得する
  */
 export const fetchReceiptHistory = async () => {

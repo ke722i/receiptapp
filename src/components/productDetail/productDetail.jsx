@@ -4,6 +4,7 @@ import { fetchProductPriceHistory } from '../../utils/receiptDb';
 import { isOtherPath, pathTitle, formatPlace } from '../../utils/categoryUtils';
 import MyStorePrices from '../myStorePrices/myStorePrices';
 import ProductIcon from '../productIcon/productIcon';
+import { canFavorite } from '../../utils/favorites';
 import PurchaseRow from '../purchaseRow/purchaseRow';
 import { unitPriceText } from '../../utils/volume';
 import { cheapestByItemName, normalizeForSearch, matchesItemSearch } from '../../utils/itemNameGroup';
@@ -17,6 +18,8 @@ const withVolume = (itemName, volume) => [itemName, volume].filter(Boolean).join
 export default function ProductDetail({
   product,
   initialSearchText = '',
+  isFavorite = false,
+  onToggleFavorite,
   onBack,
   onViewAllHistory,
   onSelectReceipt,
@@ -94,7 +97,20 @@ export default function ProductDetail({
           ‹
         </button>
         <h1 className="header-title">商品詳細</h1>
-        <div className="header-right-spacer"></div>
+        {/* お気に入り（☆ → ★）。ホームの「お気に入り」に出る */}
+        {onToggleFavorite && canFavorite(product) ? (
+          <button
+            type="button"
+            className={`favorite-button ${isFavorite ? 'is-on' : ''}`}
+            onClick={() => onToggleFavorite(product)}
+            aria-pressed={!!isFavorite}
+            aria-label={isFavorite ? 'お気に入りから外す' : 'お気に入りに入れる'}
+          >
+            {isFavorite ? '★' : '☆'}
+          </button>
+        ) : (
+          <div className="header-right-spacer"></div>
+        )}
       </header>
 
       {/* メインコンテンツ */}

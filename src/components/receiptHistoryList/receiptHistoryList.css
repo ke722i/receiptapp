@@ -155,3 +155,32 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+/* 絞り込み（店名・商品名、期間） */
+.receipt-filter-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.receipt-filter-input {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+  box-sizing: border-box;
+  padding: 0 12px;
+  border: 1px solid #dddddd;
+  border-radius: 20px;
+  font-size: 14px;
+  background-color: #ffffff;
+}
+
+.receipt-filter-input:focus {
+  outline: none;
+  border-color: #e53935;
+}
+
+.receipt-filter-count {
+  font-size: 12px;
+  color: #888888;
+  margin: 0 4px 8px;
+}

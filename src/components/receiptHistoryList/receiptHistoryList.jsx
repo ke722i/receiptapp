@@ -3,13 +3,21 @@ import './receiptHistoryList.css';
 import { fetchReceiptHistory } from '../../utils/receiptDb';
 import { formatPurchaseDate } from '../../utils/purchaseDate';
 import { RECEIPT_SORT_OPTIONS, DEFAULT_RECEIPT_SORT, sortReceipts } from '../../utils/receiptSort';
+import { RECEIPT_PERIOD_OPTIONS, filterReceipts } from '../../utils/receiptFilter';
 
 export default function ReceiptHistoryList({ onBack, onSelectReceiptDetail }) {
   const [receipts, setReceipts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [sortKey, setSortKey] = useState(DEFAULT_RECEIPT_SORT); // 既定は購入日
-  const sortedReceipts = useMemo(() => sortReceipts(receipts, sortKey), [receipts, sortKey]);
+  const [searchText, setSearchText] = useState(''); // 店名・印字名の絞り込み
+  const [period, setPeriod] = useState('all'); // 購入日の期間
+  // 絞り込んでから、並び替える
+  const sortedReceipts = useMemo(
+    () => sortReceipts(filterReceipts(receipts, { text: searchText, period }), sortKey),
+    [receipts, sortKey, searchText, period]
+  );
+  const isFiltering = searchText.trim() !== '' || period !== 'all';
 
   // Supabase からレシート履歴を取得
   useEffect(() => {
@@ -58,6 +66,31 @@ export default function ReceiptHistoryList({ onBack, onSelectReceiptDetail }) {
         )}
 
         {!loading && receipts.length > 0 && (
+          <div className="receipt-filter-row">
+            <input
+              type="search"
+              className="receipt-filter-input"
+              placeholder="店名・商品名で探す"
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              aria-label="店名・商品名で探す"
+            />
+            <select
+              className="sort-select"
+              value={period}
+              onChange={(e) => setPeriod(e.target.value)}
+              aria-label="期間"
+            >
+              {RECEIPT_PERIOD_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {!loading && receipts.length > 0 && (
           <div className="receipt-sort-row">
             <label className="receipt-sort-label" htmlFor="receipt-sort">並び替え</label>
             <select
@@ -72,6 +105,12 @@ export default function ReceiptHistoryList({ onBack, onSelectReceiptDetail }) {
                 </option>
               ))}
             </select>
+          </div>
+        )}
+
+        {!loading && receipts.length > 0 && isFiltering && (
+          <div className="receipt-filter-count">
+            {sortedReceipts.length > 0 ? `${sortedReceipts.length}件のレシート` : '条件に合うレシートはありません'}
           </div>
         )}
 

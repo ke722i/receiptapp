@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import './receiptConfirm.css';
-import { saveReceiptToDatabase } from '../../utils/receiptDb';
+import { saveReceiptToDatabase, hasDuplicateReceipt } from '../../utils/receiptDb';
 import { formatPurchaseDate } from '../../utils/purchaseDate';
 import { OTHER } from '../../utils/categoryUtils';
 import { splitStoreName, joinStoreName } from '../../utils/storeNameNormalizer';
@@ -51,6 +51,8 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
   const [draftItem, setDraftItem] = useState(null);
   // 「選択した商品を削除」の確認ポップアップ
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  // 同じ店・同じ日付・同じ合計のレシートがすでにあるときの確認ポップアップ
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
   // AI で解析できず、手で入力するとき（画像確認の「手動で入力する」から来たとき）
   const isManual = !!parsedData?._manual;
 
@@ -136,23 +138,44 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
     setVolumeEditId(null);
   };
 
-  // DB登録処理
+  // 「この内容で登録する」: 入力の確認 → 二重登録の確認 → 保存
   const handleRegisterToDatabase = async () => {
     setErrorMessage('');
+    if (!validateBeforeRegister()) return;
 
+    setIsSaving(true);
+    const total = items.reduce((sum, item) => sum + Number(item.price || 0), 0);
+    const isDuplicate = await hasDuplicateReceipt(
+      { store_name: joinStoreName(storeChain, storeBranch), purchase_date: purchaseDate },
+      total
+    );
+    setIsSaving(false);
+    if (isDuplicate) {
+      setShowDuplicateModal(true);
+      return;
+    }
+    await saveReceipt();
+  };
+
+  // 入力の確認（問題があれば、画面に出して false）
+  const validateBeforeRegister = () => {
     // 商品が無い・印字名が空・値段が 0 円の商品があると、比較に使えないので止める（手で入力したときに起きやすい）
     const itemError = validateItemsForRegister(items);
     if (itemError) {
       setErrorMessage(itemError);
-      return;
+      return false;
     }
 
     // 店舗名だけ入れて、店名が空だと、店舗別の集計がずれるので止める
     if (!storeChain.trim() && storeBranch.trim()) {
       setErrorMessage('店名を入力してください。');
-      return;
+      return false;
     }
+    return true;
+  };
 
+  // DB に保存する
+  const saveReceipt = async () => {
     setIsSaving(true);
 
     // 1. 画像URLを含むレシート本体データ（店名と店舗名は、「ディオ 和泉店」の 1 つにつなぐ）
@@ -377,6 +400,20 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
         focusVolume={volumeEditId !== null}
         isAdding={!!draftItem}
       />
+
+      {showDuplicateModal && (
+        <ConfirmDialog
+          title="同じレシートがあります"
+          message="同じ店・同じ購入日・同じ合計金額のレシートが、すでに登録されています。二重に登録していませんか？それでも登録しますか？"
+          cancelLabel="やめる"
+          confirmLabel="登録する"
+          onCancel={() => setShowDuplicateModal(false)}
+          onConfirm={() => {
+            setShowDuplicateModal(false);
+            saveReceipt();
+          }}
+        />
+      )}
 
       {showDeleteModal && (
         <ConfirmDialog
