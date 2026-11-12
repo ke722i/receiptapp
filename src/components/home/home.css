@@ -737,3 +737,11 @@
   box-shadow: 0 0 0 2px #ffb300 inset;
   transition: background-color 0.3s;
 }
+
+/* 閲覧履歴のカードの、商品のアイコン */
+.card-image-placeholder .product-icon-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+}

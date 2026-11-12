@@ -12,6 +12,7 @@
 - マイ店舗・価格比較・共有・容量と単価・利用規約 → docs/spec-mystore.md
 - 作業手順: 「カテゴリ表を更新して」「提案を確認して」「承認したものを追加して」「店名を追加して」→ docs/procedures.md
 - テスト項目書（TEST_ITEMS.md、Excel への変換、書き方）→ docs/test-items-rules.md
+- 「アイコン」と指示されたとき（商品のアイコン。tools/categoryIcon.xlsx、tools/parse_category_icons.py）→ docs/icons.md
 - 仕様を変えたら、該当する docs のファイルを短く直す（この CLAUDE.md には書き足さない）。
 - 変えてはいけない基本ルール: .env を読まない／API キーとプロンプトをブラウザに出さない／categoryData.js は生成物（直接編集しない）／他のユーザーのデータは DB の関数経由だけ（RLS を緩めない）／「その他」は Excel に入れない。
 

@@ -3,6 +3,7 @@ import './productDetail.css';
 import { fetchProductPriceHistory } from '../../utils/receiptDb';
 import { isOtherPath, pathTitle, formatPlace } from '../../utils/categoryUtils';
 import MyStorePrices from '../myStorePrices/myStorePrices';
+import ProductIcon from '../productIcon/productIcon';
 import PurchaseRow from '../purchaseRow/purchaseRow';
 import { unitPriceText } from '../../utils/volume';
 import { cheapestByItemName, normalizeForSearch, matchesItemSearch } from '../../utils/itemNameGroup';
@@ -107,7 +108,9 @@ export default function ProductDetail({
               <div className="product-name-note">{formatPlace(product)}</div>
             </div>
             <div className="product-image-container">
-              <div className="product-image-placeholder">画像</div>
+              <div className="product-image-placeholder">
+                <ProductIcon product={product} fallback="画像" />
+              </div>
             </div>
           </div>
         </section>
