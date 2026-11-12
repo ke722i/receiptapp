@@ -18,26 +18,26 @@ export const normalizeVolume = (value) => {
 /** 選べる単位（この順に並べる） */
 export const VOLUME_UNITS = ['g', 'kg', 'ml', 'l', '個', '袋', '本', '切れ', '尾', 'カット'];
 
-// 分類ごとの単位（ユーザーと決めたもの）
-const MEAT_FISH_UNITS = ['g', '切れ', '尾'];
-const DRINK_UNITS = ['ml', 'l'];
-const PRODUCE_UNITS = ['個', '袋', '本', 'カット'];
-
 // 牛乳・飲料とみなす分類（中分類・小分類の名前）
 const DRINK_MIDS = ['飲料', '酒類'];
 const DRINK_SUBS = ['牛乳・乳飲料', 'チルド飲料'];
 
 /**
- * その商品で選べる単位。肉・魚 → g／切れ／尾、牛乳・飲料 → ml／l、野菜・果物 → 個／袋／本／カット、
- * それ以外 → すべての単位
+ * 選べる単位。どの分類でも、すべての単位を出す（例外の商品で、ややこしくならないように。ユーザーの指示）
+ */
+export const unitsForItem = () => VOLUME_UNITS;
+
+/**
+ * 容量が空のときに、最初に選んでおく単位（分類から推す。どの単位も選べる）
+ *  肉・魚 → g、牛乳・飲料 → ml、野菜・果物 → 個、それ以外 → g
  * @param {{ mainCategory?, category?, subCategory? }} item
  */
-export const unitsForItem = (item = {}) => {
+export const defaultUnitForItem = (item = {}) => {
   const { mainCategory, category, subCategory } = item;
-  if (mainCategory === '肉' || mainCategory === '魚') return MEAT_FISH_UNITS;
-  if (mainCategory === '野菜果物') return PRODUCE_UNITS;
-  if (DRINK_MIDS.includes(category) || DRINK_SUBS.includes(subCategory)) return DRINK_UNITS;
-  return VOLUME_UNITS;
+  if (mainCategory === '肉' || mainCategory === '魚') return 'g';
+  if (mainCategory === '野菜果物') return '個';
+  if (DRINK_MIDS.includes(category) || DRINK_SUBS.includes(subCategory)) return 'ml';
+  return 'g';
 };
 
 // 書き方のゆれ → 単位（小文字・全角半角をそろえたあとで引く）

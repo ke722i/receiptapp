@@ -8,7 +8,7 @@ import {
   getProducts,
   applyCategoryChange,
 } from '../../utils/categoryUtils';
-import { parseVolume, composeVolume, isValidAmount, unitsForItem, unitPriceText } from '../../utils/volume';
+import { parseVolume, composeVolume, isValidAmount, unitsForItem, defaultUnitForItem, unitPriceText } from '../../utils/volume';
 
 // 容量は、「数の欄＋単位のプルダウン」で入力する。保存されている容量（"300g" など）を、数と単位に分けて持つ
 //  ・分けられない容量（「6枚切」など）は volRaw にそのまま残す。数を入れると、新しい容量に置き換わる
@@ -17,7 +17,7 @@ const toEditItem = (item) => {
   return {
     ...item,
     volAmount: parsed ? parsed.amount : '',
-    volUnit: parsed ? parsed.unit : unitsForItem(item)[0],
+    volUnit: parsed ? parsed.unit : defaultUnitForItem(item),
     volRaw: parsed ? '' : item.volume || '',
   };
 };
@@ -148,7 +148,7 @@ export default function ReceiptEdit({ isOpen, selectedItems, onClose, onSave, fo
                 </div>
 
                 {/* 容量（レシートに印字されていれば自動で入る。無ければ任意で入力、空欄は「不明」）
-                    数の欄＋単位のプルダウン。単位は分類に合わせて絞る（肉・魚: g／切れ／尾、飲料: ml／l、野菜・果物: 個／袋／本／カット） */}
+                    数の欄＋単位のプルダウン。単位は、どの分類でも全部出す（最初に選んでおく単位だけ、分類から推す） */}
                 <div className="edit-form-group">
                   <label className="edit-label" htmlFor={VOLUME_INPUT_ID(index)}>
                     容量（任意<span className="edit-label-gap" />入れると、単価で比べられます）
