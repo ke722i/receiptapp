@@ -203,12 +203,19 @@
   font-size: 11px;
 }
 
-/* 価格（右詰め）。値引きがあるときは、その左に印を並べる */
+/* 価格（右詰め）。単価があれば、その下に小さく */
 .recent-price-side {
   flex-shrink: 0;
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.recent-unit-price {
+  font-size: 11px;
+  color: #777777;
+  white-space: nowrap;
 }
 
 .current-price {

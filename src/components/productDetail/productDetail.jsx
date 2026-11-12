@@ -4,6 +4,7 @@ import { fetchProductPriceHistory } from '../../utils/receiptDb';
 import { formatPath } from '../../utils/categoryUtils';
 import MyStorePrices from '../myStorePrices/myStorePrices';
 import PurchaseRow from '../purchaseRow/purchaseRow';
+import { unitPriceText } from '../../utils/volume';
 import { cheapestByItemName, normalizeForSearch, matchesItemSearch } from '../../utils/itemNameGroup';
 
 const OTHER_PREVIEW = 1; // 「他の商品の最安値」を最初に見せる件数（残りは「すべて表示」）
@@ -175,6 +176,9 @@ export default function ProductDetail({
                 </span>
                 <div className="recent-price-side">
                   <span className="current-price">{topItem.cheapest.price}<span className="unit">円</span></span>
+                  {unitPriceText(topItem.cheapest.price, topItem.cheapest.volume) && (
+                    <span className="recent-unit-price">{unitPriceText(topItem.cheapest.price, topItem.cheapest.volume)}</span>
+                  )}
                 </div>
               </div>
               <div className="recent-card-header">
@@ -198,6 +202,7 @@ export default function ProductDetail({
                       muted={!cheapest.itemName && !cheapest.volume}
                       sub={`${cheapest.date}  ${cheapest.shop} ・ 購入 ${count}件`}
                       price={cheapest.price}
+                      unitPrice={unitPriceText(cheapest.price, cheapest.volume)}
                       isDiscount={cheapest.isDiscount}
                       onClick={onSelectReceipt ? () => onSelectReceipt(cheapest.receiptId) : undefined}
                     />
@@ -244,6 +249,7 @@ export default function ProductDetail({
                   muted={!item.itemName && !item.volume}
                   sub={`${item.date}  ${item.shop}`}
                   price={item.price}
+                  unitPrice={unitPriceText(item.price, item.volume)}
                   isDiscount={item.isDiscount}
                   onClick={onSelectReceipt ? () => onSelectReceipt(item.receiptId) : undefined}
                 />

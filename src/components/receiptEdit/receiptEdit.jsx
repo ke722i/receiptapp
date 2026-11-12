@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './receiptEdit.css';
 import {
   OTHER,
@@ -8,17 +8,48 @@ import {
   getProducts,
   applyCategoryChange,
 } from '../../utils/categoryUtils';
-import { MAX_VOLUME_LENGTH, normalizeVolume } from '../../utils/volume';
+import { parseVolume, composeVolume, isValidAmount, unitsForItem, unitPriceText } from '../../utils/volume';
 
-export default function ReceiptEdit({ isOpen, selectedItems, onClose, onSave }) {
-  const [editItems, setEditItems] = useState(selectedItems || []);
+// 容量は、「数の欄＋単位のプルダウン」で入力する。保存されている容量（"300g" など）を、数と単位に分けて持つ
+//  ・分けられない容量（「6枚切」など）は volRaw にそのまま残す。数を入れると、新しい容量に置き換わる
+const toEditItem = (item) => {
+  const parsed = parseVolume(item.volume);
+  return {
+    ...item,
+    volAmount: parsed ? parsed.amount : '',
+    volUnit: parsed ? parsed.unit : unitsForItem(item)[0],
+    volRaw: parsed ? '' : item.volume || '',
+  };
+};
+
+// 編集の欄を除いて、容量を 1 つの文字に戻す（空欄は '' = 不明）
+const fromEditItem = (item) => {
+  const { volAmount, volUnit, volRaw, ...rest } = item;
+  return { ...rest, volume: composeVolume(volAmount, volUnit) || volRaw || '' };
+};
+
+export const VOLUME_INPUT_ID = (index) => `edit-volume-${index}`;
+
+/**
+ * 商品の編集画面（確認画面・レシート詳細の編集から開く）
+ * @param {boolean} [focusVolume] 開いたときに、1 つ目の商品の容量の欄に、カーソルを入れる（「＋容量」から開いたとき）
+ */
+export default function ReceiptEdit({ isOpen, selectedItems, onClose, onSave, focusVolume = false }) {
+  const [editItems, setEditItems] = useState(() => (selectedItems || []).map(toEditItem));
   const [prevSelectedItems, setPrevSelectedItems] = useState(selectedItems);
+  const [volumeErrors, setVolumeErrors] = useState({}); // index → エラー文
 
   // レンダリング時の props 変更検出（useEffect 不要パターン）
   if (selectedItems !== prevSelectedItems) {
     setPrevSelectedItems(selectedItems);
-    setEditItems(selectedItems || []);
+    setEditItems((selectedItems || []).map(toEditItem));
+    setVolumeErrors({});
   }
+
+  // 「＋容量」から開いたときは、容量の欄にカーソルを入れる
+  useEffect(() => {
+    if (isOpen && focusVolume) document.getElementById(VOLUME_INPUT_ID(0))?.focus();
+  }, [isOpen, focusVolume]);
 
   if (!isOpen) return null;
 
@@ -37,8 +68,18 @@ export default function ReceiptEdit({ isOpen, selectedItems, onClose, onSave }) 
   };
 
   const handleSave = () => {
-    // 容量は全角を半角に・空白を詰めてそろえる（空欄は '' = 不明）
-    onSave(editItems.map((item) => ({ ...item, volume: normalizeVolume(item.volume) || '' })));
+    // 容量の数が正しくないものがあれば、保存しない（その欄に案内を出す）
+    const errors = {};
+    editItems.forEach((item, index) => {
+      if (!isValidAmount(item.volAmount)) errors[index] = '数で入れてください（例: 300、0.5、1/2）。';
+    });
+    setVolumeErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      document.getElementById(VOLUME_INPUT_ID(Number(Object.keys(errors)[0])))?.focus();
+      return;
+    }
+    // 容量は「数＋単位」の 1 つの文字に戻す（全角は半角に。空欄は '' = 不明）
+    onSave(editItems.map(fromEditItem));
     onClose();
   };
 
@@ -106,17 +147,47 @@ export default function ReceiptEdit({ isOpen, selectedItems, onClose, onSave }) 
                   </div>
                 </div>
 
-                {/* 容量（レシートに印字されていれば自動で入る。無ければ任意で入力、空欄は「不明」） */}
+                {/* 容量（レシートに印字されていれば自動で入る。無ければ任意で入力、空欄は「不明」）
+                    数の欄＋単位のプルダウン。単位は分類に合わせて絞る（肉・魚: g／切れ／尾、飲料: ml／l、野菜・果物: 個／袋／本／カット） */}
                 <div className="edit-form-group">
-                  <label className="edit-label">容量（任意）</label>
-                  <input
-                    type="text"
-                    className="edit-input"
-                    value={item.volume || ''}
-                    maxLength={MAX_VOLUME_LENGTH}
-                    placeholder="例: 900ml、1L、10個（わからなければ空欄）"
-                    onChange={(e) => handleChange(index, 'volume', e.target.value)}
-                  />
+                  <label className="edit-label" htmlFor={VOLUME_INPUT_ID(index)}>
+                    容量（任意<span className="edit-label-gap" />入れると、単価で比べられます）
+                  </label>
+                  <div className="edit-volume-row">
+                    <input
+                      id={VOLUME_INPUT_ID(index)}
+                      type="text"
+                      inputMode="decimal"
+                      className={`edit-input edit-volume-amount ${volumeErrors[index] ? 'has-error' : ''}`}
+                      value={item.volAmount}
+                      maxLength={10}
+                      placeholder="例: 300"
+                      onChange={(e) => handleChange(index, 'volAmount', e.target.value)}
+                    />
+                    <select
+                      className="edit-select edit-volume-unit"
+                      value={item.volUnit}
+                      onChange={(e) => handleChange(index, 'volUnit', e.target.value)}
+                      aria-label="容量の単位"
+                    >
+                      {Array.from(new Set([...unitsForItem(item), item.volUnit])).map((unit) => (
+                        <option key={unit} value={unit}>
+                          {unit}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  {volumeErrors[index] && <span className="edit-volume-error">{volumeErrors[index]}</span>}
+                  {item.volRaw && !item.volAmount && (
+                    <span className="edit-volume-note">
+                      今の容量: {item.volRaw}（数と単位に分けられないので、このまま残ります。数を入れると、置き換わります）
+                    </span>
+                  )}
+                  {unitPriceText(item.price, composeVolume(item.volAmount, item.volUnit)) && (
+                    <span className="edit-volume-note">
+                      単価: {unitPriceText(item.price, composeVolume(item.volAmount, item.volUnit))}
+                    </span>
+                  )}
                 </div>
 
                 {/* カテゴリ（大 → 中 → 小 → 商品名） */}

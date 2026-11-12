@@ -1,3 +1,5 @@
+import { unitPriceOf } from './volume';
+
 // マイ店舗の価格比較の、画面に依存しない処理
 
 /** 期間の選択肢（最長は半年）。既定は 1 週間 */
@@ -91,4 +93,37 @@ const toSearchText = (text) =>
 export const matchesStoreQuery = (storeName, query) => {
   const q = toSearchText(query);
   return !q || toSearchText(storeName).includes(q);
+};
+
+/** 並び順の選択肢（マイ店舗の価格比較） */
+export const SORT_OPTIONS = [
+  { value: 'price', label: '値段順' },
+  { value: 'unit', label: '単価順' },
+];
+
+/**
+ * 単価の安い順に並べる（新しい配列を返す）。
+ *  ・単価は、同じ種類（g どうし・ml どうし・個どうし…）でしか比べられないので、
+ *    その中でいちばん多い種類を先に、単価の安い順に並べる。ほかの種類は、そのあとに、種類ごとに単価順
+ *  ・単価が出せない行（容量が空など）は、最後に、値段の安い順
+ * @param {{ price, volume }[]} rows
+ */
+export const sortRowsByUnitPrice = (rows) => {
+  const withUnit = rows.map((row) => ({ row, unit: unitPriceOf(row.price, row.volume) }));
+  const counts = new Map();
+  withUnit.forEach(({ unit }) => {
+    if (unit) counts.set(unit.family, (counts.get(unit.family) || 0) + 1);
+  });
+  const rank = (family) => {
+    const sorted = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+    return sorted.findIndex(([f]) => f === family);
+  };
+  return withUnit
+    .sort((a, b) => {
+      if (!a.unit && !b.unit) return a.row.price - b.row.price;
+      if (!a.unit) return 1;
+      if (!b.unit) return -1;
+      return rank(a.unit.family) - rank(b.unit.family) || a.unit.value - b.unit.value || a.row.price - b.row.price;
+    })
+    .map(({ row }) => row);
 };

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import './productHistoryList.css';
 import { fetchProductPriceHistory } from '../../utils/receiptDb';
 import PurchaseRow from '../purchaseRow/purchaseRow';
+import { unitPriceText } from '../../utils/volume';
 
 // product: { main, category, sub, product }（同じ名前の商品を場所で区別する）
 export default function ProductHistoryList({ product, onBack, onSelectReceipt }) {
@@ -96,6 +97,7 @@ export default function ProductHistoryList({ product, onBack, onSelectReceipt })
                   muted={!item.itemName && !item.volume}
                   sub={`${item.date}  ${item.shop}`}
                   price={item.price}
+                  unitPrice={unitPriceText(item.price, item.volume)}
                   isDiscount={item.isDiscount}
                   onClick={onSelectReceipt ? () => onSelectReceipt(item.receiptId) : undefined}
                 />

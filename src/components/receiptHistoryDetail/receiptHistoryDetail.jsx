@@ -7,6 +7,7 @@ import { normalizeVolume } from '../../utils/volume';
 import ReceiptImagePreview from '../receiptImagePreview/receiptImagePreview';
 import { splitStoreName, joinStoreName } from '../../utils/storeNameNormalizer';
 import ReceiptEdit from '../receiptEdit/receiptEdit';
+import VolumeButton from '../volumeButton/volumeButton';
 import ConfirmDialog from '../confirmDialog/confirmDialog';
 import StoreNameFields from '../storeNameFields/storeNameFields';
 import { useKnownStores } from '../storeNameFields/useKnownStores';
@@ -66,6 +67,8 @@ export default function ReceiptHistoryDetail({ receipt, onBack, onDelete, onUpda
   const [draftItems, setDraftItems] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
   const [isItemEditOpen, setIsItemEditOpen] = useState(false);
+  // 「＋容量」から開いた商品（その 1 件だけを、容量の欄にカーソルを入れて開く）
+  const [volumeEditId, setVolumeEditId] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
   const [pendingExit, setPendingExit] = useState(null); // 'cancel' | 'back'（保存していない変更があるとき）
@@ -110,6 +113,7 @@ export default function ReceiptHistoryDetail({ receipt, onBack, onDelete, onUpda
     setIsEditing(false);
     setSelectedIds([]);
     setIsItemEditOpen(false);
+    setVolumeEditId(null);
     setPendingExit(null);
     setErrorMessage('');
   };
@@ -149,7 +153,22 @@ export default function ReceiptHistoryDetail({ receipt, onBack, onDelete, onUpda
         return updated ? { ...item, ...updated } : item;
       })
     );
-    setSelectedIds([]);
+    if (volumeEditId === null) setSelectedIds([]);
+    setVolumeEditId(null);
+  };
+
+  // 商品の行の「＋容量」（または容量）を押したとき: 編集を始めて（まだなら）、その商品だけの編集画面を開く。
+  //  保存は、今までどおり、上の「保存」で行う
+  const handleOpenVolumeEdit = (id) => {
+    if (id === null) return;
+    if (!isEditing) handleStartEdit();
+    setVolumeEditId(id);
+    setIsItemEditOpen(true);
+  };
+
+  const handleCloseItemEdit = () => {
+    setIsItemEditOpen(false);
+    setVolumeEditId(null);
   };
 
   // --- 保存 ---
@@ -232,7 +251,10 @@ export default function ReceiptHistoryDetail({ receipt, onBack, onDelete, onUpda
     }
   };
 
-  const selectedItemsToEdit = draftItems.filter((item) => selectedIds.includes(item.id));
+  const selectedItemsToEdit =
+    volumeEditId !== null
+      ? draftItems.filter((item) => item.id === volumeEditId)
+      : draftItems.filter((item) => selectedIds.includes(item.id));
   const editableIds = draftItems.map((item) => item.id).filter((id) => id !== null);
 
   return (
@@ -389,7 +411,13 @@ export default function ReceiptHistoryDetail({ receipt, onBack, onDelete, onUpda
                     )}
                     <td className="item-name-cell">
                       {item.printName || `商品 ${index + 1}`}
-                      {item.volume && <div className="item-volume">{item.volume}</div>}
+                      {/* 容量: 空なら「＋容量」、あれば容量。押すと、編集を始めて、その商品の編集画面（容量の欄）が開く */}
+                      <VolumeButton
+                        volume={item.volume}
+                        price={item.price}
+                        disabled={item.id === null}
+                        onClick={() => handleOpenVolumeEdit(item.id)}
+                      />
                     </td>
                     <td className="price-cell">{item.price}円</td>
                     <td className="category-cell">
@@ -435,8 +463,9 @@ export default function ReceiptHistoryDetail({ receipt, onBack, onDelete, onUpda
       <ReceiptEdit
         isOpen={isItemEditOpen}
         selectedItems={selectedItemsToEdit}
-        onClose={() => setIsItemEditOpen(false)}
+        onClose={handleCloseItemEdit}
         onSave={handleSaveEditedItems}
+        focusVolume={volumeEditId !== null}
       />
 
       {/* 保存していない変更があるまま、取り消し・戻るをするとき */}
