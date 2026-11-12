@@ -175,35 +175,41 @@
   flex-shrink: 0;
 }
 
-/* 今ある分類 */
+/* 今ある分類: 最初は 1 行（「○○に、今ある中分類を表示する」）。押すと、中身が出る */
 .proposal-existing {
-  padding: 10px 12px;
   background-color: #f5f5f5;
   border-radius: 8px;
 }
 
-.proposal-existing-title {
-  font-size: 12px;
+.proposal-existing-toggle {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: none;
+  background: none;
+  font-size: 13px;
   font-weight: bold;
-  color: #666666;
+  color: #555555;
+  text-align: left;
+  cursor: pointer;
+}
+
+.proposal-existing-arrow {
+  flex-shrink: 0;
+  font-size: 10px;
+  color: #888888;
 }
 
 .proposal-existing-list {
-  margin: 4px 0 0;
+  margin: 0;
+  padding: 0 12px 10px;
   font-size: 13px;
   line-height: 1.6;
   color: #444444;
   word-break: break-word;
-}
-
-.proposal-link {
-  margin-top: 4px;
-  padding: 0;
-  border: none;
-  background: none;
-  font-size: 12px;
-  color: #e53935;
-  cursor: pointer;
 }
 
 .proposal-error {

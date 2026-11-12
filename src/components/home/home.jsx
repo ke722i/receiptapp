@@ -4,12 +4,30 @@ import {
   CATEGORY_TREE,
   INITIAL_SEARCH_HISTORY,
 } from '../../constants/categoryData';
-import { buildItemReadingMap, filterSearchSuggestions } from '../../utils/searchUtils';
+import {
+  buildItemReadingMap,
+  filterSearchSuggestions,
+  filterCategorySuggestions,
+  buildItemNameIndex,
+  filterItemNameSuggestions,
+} from '../../utils/searchUtils';
+import { fetchMyItemNames } from '../../utils/receiptDb';
 import { findProductPaths, formatPath, productKey } from '../../utils/categoryUtils';
 
 const SEARCH_INPUT_ID = 'home-search-input';
 const STORAGE_KEY_PROPOSAL_TIP = 'receipt_app_proposal_tip_dismissed'; // カテゴリの提案のお知らせを閉じたか
 const STORAGE_KEY_SEARCH_HISTORY = 'receipt_app_search_history';
+const STORAGE_KEY_SEARCH_FILTER = 'receipt_app_search_filter'; // 検索の切り替え（最後に選んだもの）
+
+// 検索の対象（検索バーの左のプルダウン）。すべて（カテゴリ・商品名・印字名）／カテゴリだけ／商品名だけ
+const SEARCH_FILTERS = [
+  { value: 'all', label: 'すべて', placeholder: '例: ぎゅうにゅう' },
+  { value: 'category', label: 'カテゴリ', placeholder: '例: ちょうみりょう' },
+  { value: 'item', label: '商品名', placeholder: '例: ぎゅうにゅう' },
+];
+// 「すべて」のときに、種類ごとに出す最大の件数（切り替えたときは、もっと出す）
+const ALL_LIMIT = { category: 3, product: 5, item: 5 };
+const ONE_LIMIT = { category: 20, product: 10, item: 20 };
 
 // 履歴の1件を商品のパス { main, category, sub, product } にそろえる
 //  （以前は商品名の文字列で保存していたので、文字列なら表から探して変換する）
@@ -36,6 +54,28 @@ export default function Home({
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [openCategories, setOpenCategories] = useState({});
+  const [highlightCategory, setHighlightCategory] = useState(null); // 検索から開いた分類（少しのあいだ色を付ける）
+
+  // 検索の切り替え（端末に覚える）
+  const [searchFilter, setSearchFilter] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_SEARCH_FILTER);
+      return SEARCH_FILTERS.some((f) => f.value === saved) ? saved : 'all';
+    } catch {
+      return 'all';
+    }
+  });
+  const changeSearchFilter = (value) => {
+    setSearchFilter(value);
+    try {
+      localStorage.setItem(STORAGE_KEY_SEARCH_FILTER, value);
+    } catch {
+      // 保存できなくても、この画面では切り替える
+    }
+  };
+
+  // 自分のレシートの印字名（「すべて」で、検索を始めたときに 1 回だけ読み込む。印字名は「すべて」のときだけ探す）
+  const [itemNames, setItemNames] = useState(null); // null: まだ / { index } / { error }
 
   // カテゴリの提案のお知らせ（「×」で閉じたら、この端末では、もう出さない）
   const [showProposalTip, setShowProposalTip] = useState(() => {
@@ -97,6 +137,47 @@ export default function Home({
     return [...inHistory, ...others].slice(0, 10);
   }, [suggestions, historyKeys]);
 
+  // 切り替えに合わせた、検索結果（カテゴリ・商品名・印字名）
+  const trimmedQuery = searchQuery.trim();
+  const wantsCategories = searchFilter !== 'item';
+  const wantsProducts = searchFilter !== 'category';
+  const wantsItemNames = searchFilter === 'all';
+  const limits = searchFilter === 'all' ? ALL_LIMIT : ONE_LIMIT;
+  const categoryResults = useMemo(
+    () => (wantsCategories && trimmedQuery ? filterCategorySuggestions(trimmedQuery, limits.category) : []),
+    [wantsCategories, trimmedQuery, limits.category]
+  );
+  const productResults = wantsProducts && trimmedQuery ? pathSuggestions.slice(0, limits.product) : [];
+  const itemResults = useMemo(
+    () =>
+      wantsItemNames && trimmedQuery && itemNames?.index
+        ? filterItemNameSuggestions(itemNames.index, trimmedQuery, limits.item)
+        : [],
+    [wantsItemNames, trimmedQuery, itemNames, limits.item]
+  );
+  const itemNamesLoading = wantsItemNames && Boolean(trimmedQuery) && itemNames === null;
+
+  // 印字名の読み込み（必要になったときに 1 回だけ。読み込んだものは、DB の処理の側でも覚えている）
+  useEffect(() => {
+    if (!isSearchFocused || searchFilter !== 'all' || itemNames !== null) return undefined;
+    let cancelled = false;
+    fetchMyItemNames().then((result) => {
+      if (cancelled) return;
+      setItemNames(result.success ? { index: buildItemNameIndex(result.data) } : { error: result.error });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [isSearchFocused, searchFilter, itemNames]);
+
+  // 検索から開いた分類まで、画面を動かす
+  useEffect(() => {
+    if (!highlightCategory) return undefined;
+    document.getElementById(`cat-${highlightCategory}`)?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+    const timer = setTimeout(() => setHighlightCategory(null), 2000);
+    return () => clearTimeout(timer);
+  }, [highlightCategory]);
+
   // 検索キーワード履歴の永続化
   useEffect(() => {
     try {
@@ -128,7 +209,7 @@ export default function Home({
   //  click も touchend も届かないことがある。そのため、指が触れた瞬間（pointerdown）に選ぶ。
   //  選んで画面が移ったあとに、続けて来る click が、移った先の画面の部品を押してしまわないよう、
   //  その click は止める（パソコンのマウスでも同じ動き）。
-  const tapProps = (path) => ({
+  const tapAction = (action) => ({
     onMouseDown: (e) => e.preventDefault(), // 入力欄からフォーカスを外さない
     onPointerDown: (e) => {
       if (e.pointerType === 'mouse' && e.button !== 0) return;
@@ -139,10 +220,13 @@ export default function Home({
       };
       document.addEventListener('click', stopClick, true);
       setTimeout(() => document.removeEventListener('click', stopClick, true), 700);
-      handleSelectProductItem(path);
+      action();
     },
-    onClick: () => handleSelectProductItem(path), // pointerdown が使えない環境の、予備
+    onClick: action, // pointerdown が使えない環境の、予備
   });
+  const tapProps = (path) => tapAction(() => handleSelectProductItem(path));
+
+
   const searchBarRef = useRef(null);
 
   // 検索履歴の保存（画面が移ると、ホームの自動保存は動かないので、変えたらすぐ保存する）
@@ -155,7 +239,7 @@ export default function Home({
     }
   };
 
-  // 検索を閉じる（検索欄の左の「‹」）
+  // 検索を閉じる（カテゴリを選んだとき・Esc キー）
   const closeSearch = () => {
     setIsSearchFocused(false);
     document.getElementById(SEARCH_INPUT_ID)?.blur();
@@ -201,6 +285,35 @@ export default function Home({
     document.addEventListener('pointerdown', closeIfOutside);
     return () => document.removeEventListener('pointerdown', closeIfOutside);
   }, [isSearchFocused]);
+
+  // カテゴリの結果を選んだとき: 検索を閉じて、下のカテゴリ一覧を、その場所まで開く
+  const handleSelectCategory = (entry) => {
+    setSearchQuery('');
+    closeSearch();
+    setOpenCategories((prev) => {
+      const next = { ...prev };
+      entry.ids.forEach((id) => {
+        next[id] = true;
+      });
+      return next;
+    });
+    setHighlightCategory(entry.ids[entry.ids.length - 1]);
+  };
+
+  // 印字名の結果を選んだとき: その商品の商品詳細を、入力した文字で絞り込んだ状態で開く（検索履歴には残さない）
+  const handleSelectItemName = (entry) => {
+    const text = trimmedQuery;
+    setSearchQuery('');
+    setIsSearchFocused(false);
+    if (onSelectProduct) onSelectProduct(entry.path, { itemSearch: text });
+  };
+
+  // Enter: 出ている結果の、いちばん上を選ぶ（商品名 → カテゴリ → 印字名の順に並んでいる）
+  const selectFirstResult = () => {
+    if (productResults[0]) handleSelectProductItem(productResults[0]);
+    else if (categoryResults[0]) handleSelectCategory(categoryResults[0]);
+    else if (itemResults[0]) handleSelectItemName(itemResults[0]);
+  };
 
   // 商品タップ時のハンドラー（検索履歴追加 ＆ 親の画面遷移ハンドラー呼出）
   //  path: { main, category, sub, product }（商品は名前ではなく場所で区別する）
@@ -288,25 +401,41 @@ export default function Home({
         {/* 検索バー（YouTube のように、押すと、履歴と候補が出る。バーと候補以外は暗くなる） */}
         <div ref={searchBarRef} className={`search-bar-container ${isSearchFocused ? 'is-focused' : ''}`}>
           <div className="search-input-wrapper">
-            {isSearchFocused && (
-              <button type="button" className="search-back-button" onClick={closeSearch} aria-label="検索を閉じる">
-                ‹
-              </button>
-            )}
+            {/* 検索の対象（すべて／カテゴリ／商品名）。検索バーの左に、いつも出す */}
+            <select
+              className="search-filter-select"
+              value={searchFilter}
+              onChange={(e) => {
+                changeSearchFilter(e.target.value);
+                // 検索中に切り替えたときは、続けて入力できるように、入力欄に戻す
+                if (isSearchFocused) document.getElementById(SEARCH_INPUT_ID)?.focus();
+              }}
+              aria-label="検索の対象"
+            >
+              {SEARCH_FILTERS.map((f) => (
+                <option key={f.value} value={f.value}>
+                  {f.label}
+                </option>
+              ))}
+            </select>
             <div className="search-field">
               <input
                 id={SEARCH_INPUT_ID}
                 type="search"
                 className="search-input"
-                placeholder="商品を検索 (例: ぎゅうにゅう, 醤油)..."
+                placeholder={SEARCH_FILTERS.find((f) => f.value === searchFilter)?.placeholder}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={() => setIsSearchFocused(true)}
                 onKeyDown={(e) => {
-                  // 変換の確定の Enter は除き、いちばん上の候補を選ぶ
-                  if (e.key === 'Enter' && !e.nativeEvent.isComposing && pathSuggestions[0]) {
+                  if (e.key === 'Escape') {
+                    closeSearch();
+                    return;
+                  }
+                  // 変換の確定の Enter は除き、いちばん上の結果を選ぶ
+                  if (e.key === 'Enter' && !e.nativeEvent.isComposing && trimmedQuery) {
                     e.preventDefault();
-                    handleSelectProductItem(pathSuggestions[0]);
+                    selectFirstResult();
                   }
                 }}
                 inputMode="search"
@@ -328,33 +457,103 @@ export default function Home({
           {/* 履歴と候補 */}
           {isSearchFocused && (
             <div className="search-suggestions-dropdown">
-              {searchQuery.trim().length > 0 ? (
-                pathSuggestions.length > 0 ? (
-                  <ul className="search-suggestions-list">
-                    {pathSuggestions.map((path) => {
-                      const isHistory = historyKeys.has(productKey(path));
-                      return (
-                        <li key={productKey(path)} className="search-suggestion-item" {...tapProps(path)}>
-                          <span className="suggestion-icon">{isHistory ? '🕒' : '🔍'}</span>
-                          <span className="suggestion-body">
-                            <span className="suggestion-text">{path.product}</span>
-                            <span className="suggestion-path">{formatPath(path)}</span>
-                          </span>
-                          <button
-                            type="button"
-                            className="suggestion-action"
-                            aria-label="検索欄に入れる"
-                            {...rowButtonProps(() => fillSearch(path.product))}
+              {trimmedQuery ? (
+                <>
+                  {/* 商品名 */}
+                  {productResults.length > 0 && (
+                    <>
+                      {searchFilter === 'all' && <div className="search-section-title">商品名</div>}
+                      <ul className="search-suggestions-list">
+                        {productResults.map((path) => {
+                          const isHistory = historyKeys.has(productKey(path));
+                          return (
+                            <li key={productKey(path)} className="search-suggestion-item" {...tapProps(path)}>
+                              <span className="suggestion-icon">{isHistory ? '🕒' : '🔍'}</span>
+                              <span className="suggestion-body">
+                                <span className="suggestion-text">{path.product}</span>
+                                <span className="suggestion-path">{formatPath(path)}</span>
+                              </span>
+                              <button
+                                type="button"
+                                className="suggestion-action"
+                                aria-label="検索欄に入れる"
+                                {...rowButtonProps(() => fillSearch(path.product))}
+                              >
+                                ↖
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </>
+                  )}
+
+                  {/* カテゴリ */}
+                  {categoryResults.length > 0 && (
+                    <>
+                      {searchFilter === 'all' && <div className="search-section-title">カテゴリ</div>}
+                      <ul className="search-suggestions-list">
+                        {categoryResults.map((entry) => (
+                          <li
+                            key={entry.key}
+                            className="search-suggestion-item"
+                            {...tapAction(() => handleSelectCategory(entry))}
                           >
-                            ↖
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                ) : (
-                  <div className="search-no-result">一致する商品が見つかりません</div>
-                )
+                            <span className="suggestion-icon">📂</span>
+                            <span className="suggestion-body">
+                              <span className="suggestion-text">{entry.name}</span>
+                              <span className="suggestion-path">
+                                {entry.level}
+                                {entry.parent ? `（${entry.parent}）` : ''}
+                              </span>
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
+
+                  {/* 印字名（自分のレシート） */}
+                  {itemResults.length > 0 && (
+                    <>
+                      <div className="search-section-title">レシートの印字名</div>
+                      <ul className="search-suggestions-list">
+                        {itemResults.map((entry) => (
+                          <li
+                            key={entry.key}
+                            className="search-suggestion-item"
+                            {...tapAction(() => handleSelectItemName(entry))}
+                          >
+                            <span className="suggestion-icon">🧾</span>
+                            <span className="suggestion-body">
+                              <span className="suggestion-text">{entry.itemName}</span>
+                              <span className="suggestion-path">
+                                {entry.path.product}（{formatPath(entry.path)}）・{entry.count}件
+                              </span>
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
+
+                  {itemNamesLoading && <div className="search-no-result">印字名を読み込み中...</div>}
+                  {wantsItemNames && itemNames?.error && (
+                    <div className="search-no-result">{itemNames.error}</div>
+                  )}
+                  {!itemNamesLoading &&
+                    categoryResults.length === 0 &&
+                    productResults.length === 0 &&
+                    itemResults.length === 0 && (
+                      <div className="search-no-result">
+                        {searchFilter === 'category'
+                          ? '一致するカテゴリが見つかりません'
+                          : searchFilter === 'item'
+                            ? '一致する商品名が見つかりません'
+                            : '一致するものが見つかりません'}
+                      </div>
+                    )}
+                </>
               ) : searchHistory.length > 0 ? (
                 <ul className="search-suggestions-list">
                   {searchHistory.map((path) => (
@@ -441,7 +640,8 @@ export default function Home({
               <div key={topCat.id} className="category-group">
                 <button
                   type="button"
-                  className={`category-main-button ${openCategories[topCat.id] ? 'is-open' : ''}`}
+                  id={`cat-${topCat.id}`}
+                  className={`category-main-button ${openCategories[topCat.id] ? 'is-open' : ''} ${highlightCategory === topCat.id ? 'is-highlighted' : ''}`}
                   onClick={() => toggleCategory(topCat.id)}
                 >
                   <span className="category-label">{topCat.name}</span>
@@ -456,7 +656,8 @@ export default function Home({
                       <div key={mainCat.id} className="sub-category-group">
                         <button
                           type="button"
-                          className={`sub-category-button ${openCategories[mainCat.id] ? 'is-open' : ''}`}
+                          id={`cat-${mainCat.id}`}
+                          className={`sub-category-button ${openCategories[mainCat.id] ? 'is-open' : ''} ${highlightCategory === mainCat.id ? 'is-highlighted' : ''}`}
                           onClick={() => toggleCategory(mainCat.id)}
                         >
                           <span className="category-label">{mainCat.name}</span>
@@ -471,7 +672,8 @@ export default function Home({
                               <div key={subCat.id} className="item-category-group">
                                 <button
                                   type="button"
-                                  className={`sub-category-button ${openCategories[subCat.id] ? 'is-open' : ''}`}
+                                  id={`cat-${subCat.id}`}
+                                  className={`sub-category-button ${openCategories[subCat.id] ? 'is-open' : ''} ${highlightCategory === subCat.id ? 'is-highlighted' : ''}`}
                                   onClick={() => toggleCategory(subCat.id)}
                                 >
                                   <span>{subCat.name}</span>

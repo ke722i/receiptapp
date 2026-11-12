@@ -1,13 +1,38 @@
 import { useState, useRef } from 'react';
 import './cropImage.css';
+import { rotateImage, rotateCropBox } from '../../utils/imageUtils';
 
 export default function CropImage({ imageSrc, onCancel, onCropComplete }) {
   // トリミング枠の初期表示位置（%）
   const [cropBox, setCropBox] = useState({ top: 10, left: 10, width: 80, height: 80 });
   
+  // 回転: 元の画像から作り直す（回すたびに、JPEG に保存し直すと、画質が落ちるため）
+  const [rotation, setRotation] = useState(0); // 時計まわりの角度（0・90・180・270）
+  const [displaySrc, setDisplaySrc] = useState(imageSrc);
+  const [rotating, setRotating] = useState(false);
+  const [rotateError, setRotateError] = useState('');
+
   const imageRef = useRef(null);
   const boxRef = useRef(null);
   const dragInfo = useRef(null);
+
+  // 時計まわりに 90 度回す。トリミング枠も、画像といっしょに回す
+  const handleRotate = async () => {
+    if (rotating || !imageSrc) return;
+    const nextRotation = (rotation + 90) % 360;
+    setRotating(true);
+    setRotateError('');
+    try {
+      const rotated = await rotateImage(imageSrc, nextRotation);
+      setDisplaySrc(rotated);
+      setRotation(nextRotation);
+      setCropBox((box) => rotateCropBox(box, 'cw'));
+    } catch {
+      setRotateError('画像を回転できませんでした。');
+    } finally {
+      setRotating(false);
+    }
+  };
 
   // ドラッグ開始ハンドラー
   const handleStart = (e, handleType) => {
@@ -174,12 +199,12 @@ export default function CropImage({ imageSrc, onCancel, onCropComplete }) {
       {/* 3. トリミング領域 */}
       <main className="crop-main">
         <div className="crop-workspace">
-          {imageSrc ? (
+          {displaySrc ? (
             /* imgタグの表示領域と完全に合わせるラッパー */
             <div className="crop-image-wrapper" style={{ display: 'inline-block', position: 'relative', lineHeight: 0 }}>
               <img
                 ref={imageRef}
-                src={imageSrc}
+                src={displaySrc}
                 alt="トリミング対象"
                 className="crop-target-image"
                 style={{ display: 'block' }}
@@ -255,6 +280,8 @@ export default function CropImage({ imageSrc, onCancel, onCropComplete }) {
         </div>
       </main>
 
+      {rotateError && <p className="crop-rotate-error" role="alert">{rotateError}</p>}
+
       {/* 4. 下部ボタン操作バー */}
       <div className="crop-bottom-bar">
         <button
@@ -263,6 +290,18 @@ export default function CropImage({ imageSrc, onCancel, onCropComplete }) {
           onClick={onCancel}
         >
           キャンセル
+        </button>
+
+        {/* 回転（時計まわりに 90 度。押すたびに回る） */}
+        <button
+          type="button"
+          className="crop-rotate-button"
+          onClick={handleRotate}
+          disabled={rotating || !displaySrc}
+          aria-label="右に90度回転"
+        >
+          <span className="crop-rotate-icon" aria-hidden="true">↻</span>
+          <span className="crop-rotate-label">回転</span>
         </button>
         <button
           type="button"

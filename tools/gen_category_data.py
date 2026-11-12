@@ -1,5 +1,6 @@
 # 使い方: python3 gen_category_data.py parsed_tree.json readings.tsv 出力先.js
-#  readings.tsv: 「商品名<TAB>よみがな（空白区切りで複数可）」の1行1件
+#  readings.tsv: 「商品名 または 分類名<TAB>よみがな（空白区切りで複数可）」の1行1件
+#   商品名の読みは CUSTOM_READING_MAP、分類名（大・中・小分類）の読みは CATEGORY_READING_MAP に書き出す
 import json, sys, collections, re
 parsed, readings_tsv, out_js = sys.argv[1:4]
 tree = json.load(open(parsed, encoding='utf-8'))['tree']
@@ -18,6 +19,16 @@ for a in tree:
 missing = [x for x in all_items if re.search(r'[\u4e00-\u9fff々]', x) and x not in readings]
 if missing:
     print('★よみがな未登録（漢字を含む商品）:', missing)
+
+# 分類名（大・中・小分類）。カテゴリの検索で、ひらがなでも見つかるように
+all_categories = []
+for a in tree:
+    for name in [a['name']] + [m['name'] for m in a['categories']] + [s['name'] for m in a['categories'] for s in m['subCategories']]:
+        if name not in all_categories:
+            all_categories.append(name)
+missing_cat = [x for x in all_categories if re.search(r'[一-鿿々]', x) and x not in readings]
+if missing_cat:
+    print('★よみがな未登録（漢字を含む分類名）:', missing_cat)
 
 # 同じ小分類の中で同じ商品名が2回あれば止める（Excelの入力ミス検出）
 for a in tree:
@@ -49,6 +60,10 @@ out += ["// 検索用のよみがな（漢字を含む商品のみ。カタカ�
         "export const CUSTOM_READING_MAP = {"]
 entries = [f"  {q(k)}: {q(readings[k])}" for k in all_items if k in readings]
 out.append(',\n'.join(entries))
+out += ["};", "",
+        "// 検索用のよみがな（漢字を含む分類名＝大・中・小分類のみ。カテゴリの検索で使う）",
+        "export const CATEGORY_READING_MAP = {"]
+out.append(',\n'.join(f"  {q(k)}: {q(readings[k])}" for k in all_categories if k in readings))
 out += ["};", "", "export const INITIAL_SEARCH_HISTORY = [];", "export const INITIAL_VIEW_HISTORY = [];", ""]
 open(out_js, 'w', encoding='utf-8').write('\n'.join(out))
 print('generated', out_js)
