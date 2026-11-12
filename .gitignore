@@ -39,3 +39,10 @@ TEST_ITEMS.xlsx
 
 # SVG の軽量化前の控え（docs/icons.md）
 tools/svg_original/
+
+# Gemini のチャット用の指示文（tools/export_gemini_prompt.mjs で作る）
+tools/gemini_chat_prompt.txt
+
+# Gemini のチャットで作ったレシートの JSON（個人のデータ。Git に入れない）
+tools/receipt_json/*
+!tools/receipt_json/.gitkeep
