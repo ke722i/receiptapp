@@ -24,6 +24,7 @@ body {
 .app {
   width: 100%;
   min-height: 100vh;
+  min-height: 100dvh; /* スマホのブラウザの、下のバーに隠れないように（上の 100vh は、古いブラウザ用） */
   margin: 0 auto;
   max-width: 480px; /* スマホ表示の最大幅制限（PC閲覧時用） */
   background-color: var(--card-bg);
@@ -39,6 +40,7 @@ body {
   left: 0;
   width: 100vw;
   height: 100vh;
+  height: 100dvh; /* スマホのブラウザの、下のバーに隠れないように（上の 100vh は、古いブラウザ用） */
   background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
