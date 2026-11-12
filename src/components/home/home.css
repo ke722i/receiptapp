@@ -565,6 +565,7 @@
 }
 
 .search-suggestion-item {
+  touch-action: pan-y; /* 縦に動かすと、一覧のスクロール（選ぶ操作は取りやめになる） */
   display: flex;
   align-items: center;
   gap: 12px;
