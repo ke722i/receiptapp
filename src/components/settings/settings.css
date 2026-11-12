@@ -222,3 +222,63 @@
 .settings-note.settings-note-last p {
   text-align: left;
 }
+
+/* ユーザー情報: アイコン＋名前 */
+.settings-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* アイコンを選ぶ（用意された画像から。押すとすぐ変わる） */
+.avatar-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px 16px;
+  text-align: left;
+}
+
+.avatar-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* 選択の輪（64px）。中の絵（52px）を、ちょうど真ん中に置く（輪と絵のあいだは、まわり全部 3px）。
+   ボタンの中の絵が、文字の行のように扱われて、下に余白ができないよう、flex で並べて、行の高さを 0 にする */
+.avatar-choice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  padding: 0;
+  border: 3px solid transparent;
+  border-radius: 50%;
+  background: none;
+  box-sizing: border-box;
+  line-height: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.avatar-choice .avatar {
+  background-color: #f0f0f0;
+  box-shadow: inset 0 0 0 1px #e0e0e0;
+}
+
+/* 選んでいるアイコン: 赤い輪 */
+.avatar-choice.is-selected {
+  border-color: #e53935;
+}
+
+.avatar-choice:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.avatar-error {
+  margin: 0;
+  font-size: 12px;
+}

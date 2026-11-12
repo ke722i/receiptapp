@@ -16,10 +16,12 @@ import StoreList from './components/storeList/storeList';
 import MyStores from './components/myStores/myStores';
 import CategoryProposal from './components/categoryProposal/categoryProposal';
 import { fetchReceiptById } from './utils/receiptDb';
-import { productKey } from './utils/categoryUtils';
+import { productKey, isOpenablePath, pathTitle } from './utils/categoryUtils';
+import { createManualReceiptData } from './utils/manualReceipt';
 
 const STORAGE_KEY_VIEW_HISTORY = 'receipt_app_view_history';
 const STORAGE_KEY_USER_ID = 'receipt_app_user_id';
+const STORAGE_KEY_AVATAR = 'receipt_app_avatar'; // 選んだアイコン（すぐ表示するための控え。本体は、アカウントの情報）
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState('login');
@@ -41,6 +43,24 @@ function App() {
   const [userId, setUserId] = useState(() => {
     return localStorage.getItem(STORAGE_KEY_USER_ID) || 'User_12345';
   });
+
+  // ユーザーアイコン（用意された画像の id。選んでいなければ空）。アカウントの情報（user_metadata.avatar）が本体
+  const [avatarId, setAvatarId] = useState(() => {
+    try {
+      return localStorage.getItem(STORAGE_KEY_AVATAR) || '';
+    } catch {
+      return '';
+    }
+  });
+  const changeAvatar = (id) => {
+    setAvatarId(id || '');
+    try {
+      if (id) localStorage.setItem(STORAGE_KEY_AVATAR, id);
+      else localStorage.removeItem(STORAGE_KEY_AVATAR);
+    } catch {
+      // 控えを保存できなくても、アカウントの情報には保存されている
+    }
+  };
 
   // 閲覧履歴（App レベルで管理）
   const [viewHistory, setViewHistory] = useState(() => {
@@ -70,6 +90,7 @@ function App() {
 
     setUserId(extractedId);
     localStorage.setItem(STORAGE_KEY_USER_ID, extractedId);
+    changeAvatar(userObj?.user_metadata?.avatar || ''); // 別の端末で選んだアイコンも出る
     setCurrentScreen('home');
   };
 
@@ -83,6 +104,7 @@ function App() {
 
     setUserId(extractedId);
     localStorage.setItem(STORAGE_KEY_USER_ID, extractedId);
+    changeAvatar(userObj?.user_metadata?.avatar || ''); // 新しいアカウントは、まだ選んでいない（前のアカウントの控えを消す）
     setCurrentScreen('home');
   };
 
@@ -90,18 +112,18 @@ function App() {
   //  path: { main, category, sub, product }
   //  options.itemSearch: ホームの検索で、印字名から開いたときの文字（商品詳細の、印字名の検索に入れておく）
   const handleSelectProduct = (path, options = {}) => {
-    if (!path || !path.product) return;
+    if (!isOpenablePath(path)) return; // 表の商品、またはホームのカテゴリの「その他」
     setSelectedProduct(path);
     setProductSearchText(options.itemSearch || '');
     const key = productKey(path);
     setViewHistory((prev) => {
       // 以前の履歴（path を持たない）は名前で比較
       const filtered = prev.filter((item) =>
-        item.path ? productKey(item.path) !== key : item.name !== path.product
+        item.path ? productKey(item.path) !== key : item.name !== pathTitle(path)
       );
       const newItem = {
         id: Date.now().toString(),
-        name: path.product,
+        name: pathTitle(path), // 「その他」の箱は「菓子のその他」など
         icon: '🛍️',
         path,
       };
@@ -143,6 +165,7 @@ function App() {
       {currentScreen === 'home' && (
         <Home
           userId={userId}
+          avatarId={avatarId}
           viewHistory={viewHistory}
           onLogout={() => setCurrentScreen('login')}
           onNavigateToSettings={() => setCurrentScreen('settings')}
@@ -165,6 +188,8 @@ function App() {
       {/* 設定・商品詳細・履歴 */}
       {currentScreen === 'settings' && (
         <Settings
+          avatarId={avatarId}
+          onAvatarChange={changeAvatar}
           onBack={() => setCurrentScreen('home')}
           onDeleteAccount={() => setCurrentScreen('login')}
           onOpenCategoryProposal={() => {
@@ -241,13 +266,19 @@ function App() {
             if (compressedImage) setSelectedImage(compressedImage);
             setCurrentScreen('receiptConfirm');
           }}
+          onManualEntry={({ compressedImage }) => {
+            // AI で解析できなかったとき: 空の確認画面で、商品を手で入力して登録する
+            setParsedReceiptData(createManualReceiptData());
+            if (compressedImage) setSelectedImage(compressedImage);
+            setCurrentScreen('receiptConfirm');
+          }}
         />
       )}
 
       {/* STEP 3: レシート解析結果の確認・データ保存 */}
       {currentScreen === 'receiptConfirm' && (
         <ReceiptConfirm
-          key={parsedReceiptData?.purchase_date || 'receipt-confirm-screen'}
+          key={parsedReceiptData?._scanId || 'receipt-confirm-screen'}
           imageSrc={selectedImage}
           parsedData={parsedReceiptData}
           onBack={() => setCurrentScreen('receiptScanner')}

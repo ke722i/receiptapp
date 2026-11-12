@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import './productDetail.css';
 import { fetchProductPriceHistory } from '../../utils/receiptDb';
-import { formatPath } from '../../utils/categoryUtils';
+import { isOtherPath, pathTitle, formatPlace } from '../../utils/categoryUtils';
 import MyStorePrices from '../myStorePrices/myStorePrices';
 import PurchaseRow from '../purchaseRow/purchaseRow';
 import { unitPriceText } from '../../utils/volume';
@@ -21,7 +21,7 @@ export default function ProductDetail({
   onSelectReceipt,
   onNavigateToMyStores,
 }) {
-  const productName = product?.product || '';
+  const productName = pathTitle(product); // 「その他」の箱は「菓子のその他」など
   const [sortOrder, setSortOrder] = useState('dateDesc'); // デフォルト：日付順（新しい順）
   const [historyData, setHistoryData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -104,7 +104,7 @@ export default function ProductDetail({
             <div>
               <h2 className="product-name">{productName}</h2>
               {/* どの分類の商品か（例: 常温 > 麺類 > 乾麺） */}
-              <div className="product-name-note">{formatPath(product)}</div>
+              <div className="product-name-note">{formatPlace(product)}</div>
             </div>
             <div className="product-image-container">
               <div className="product-image-placeholder">画像</div>
@@ -268,8 +268,14 @@ export default function ProductDetail({
             )}
           </section>
         )}
-        {/* 5. マイ店舗の価格比較（自分＋価格データを提供している他のユーザー） */}
-        {product?.product && (
+        {/* 5. マイ店舗の価格比較（自分＋価格データを提供している他のユーザー）。
+            「その他」の箱は、いろいろな商品が入るので、比べない */}
+        {isOtherPath(product) && (
+          <p className="detail-other-note">
+            「その他」には、いろいろな商品が入るため、マイ店舗の価格比較は出しません。
+          </p>
+        )}
+        {product?.product && !isOtherPath(product) && (
           <MyStorePrices
             product={product}
             ownHistory={historyData}

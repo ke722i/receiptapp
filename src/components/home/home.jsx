@@ -12,7 +12,19 @@ import {
   filterItemNameSuggestions,
 } from '../../utils/searchUtils';
 import { fetchMyItemNames } from '../../utils/receiptDb';
-import { findProductPaths, formatPath, productKey } from '../../utils/categoryUtils';
+import Avatar from '../avatar/avatar';
+import {
+  findProductPaths,
+  formatPath,
+  productKey,
+  OTHER,
+  isOtherPath,
+  isOpenablePath,
+  otherMainPath,
+  otherMidPath,
+  otherSubPath,
+  otherProductPath,
+} from '../../utils/categoryUtils';
 
 const SEARCH_INPUT_ID = 'home-search-input';
 const STORAGE_KEY_PROPOSAL_TIP = 'receipt_app_proposal_tip_dismissed'; // カテゴリの提案のお知らせを閉じたか
@@ -34,7 +46,7 @@ const ONE_LIMIT = { category: 20, product: 10, item: 20 };
 const toProductPath = (entry) => {
   if (!entry) return null;
   if (typeof entry === 'string') return findProductPaths(entry)[0] || null;
-  return entry.product ? entry : null;
+  return entry.product || isOtherPath(entry) ? entry : null; // 「その他」の箱（閲覧履歴から開き直す）も
 };
 
 export default function Home({
@@ -49,6 +61,7 @@ export default function Home({
   onSelectProduct,
   viewHistory = [],
   userId = 'User_12345',
+  avatarId = '',
 }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -318,13 +331,14 @@ export default function Home({
   // 商品タップ時のハンドラー（検索履歴追加 ＆ 親の画面遷移ハンドラー呼出）
   //  path: { main, category, sub, product }（商品は名前ではなく場所で区別する）
   const handleSelectProductItem = (path) => {
-    if (!path || !path.product) return;
+    if (!isOpenablePath(path)) return;
     setSearchQuery('');
     setIsSearchFocused(false);
 
     // 検索タグ履歴更新（最新5件・同じ場所の商品は重複させない）
     const key = productKey(path);
-    saveSearchHistory([path, ...searchHistory.filter((item) => productKey(item) !== key)].slice(0, 5));
+    // 「その他」の箱（ホームのカテゴリの「その他」）は、検索履歴に残さない（商品名で探せないため）
+    if (!isOtherPath(path)) saveSearchHistory([path, ...searchHistory.filter((item) => productKey(item) !== key)].slice(0, 5));
 
     // 親コンポーネント（App.jsx）で閲覧履歴更新と画面遷移を実行
     if (onSelectProduct) {
@@ -363,7 +377,9 @@ export default function Home({
       />
       <aside className={`drawer-menu ${isMenuOpen ? 'is-active' : ''}`}>
         <div className="drawer-user-info">
-          <div className="user-avatar">👤</div>
+          <div className="user-avatar">
+            <Avatar avatarId={avatarId} size={44} />
+          </div>
           <div className="user-details">
             <span className="user-label">ログインユーザー</span>
             <span className="user-id">{userId}</span>
@@ -701,10 +717,29 @@ export default function Home({
                                         {itemName}
                                       </button>
                                     ))}
+                                    {/* 商品名の「その他」（編集画面と同じ。商品名に「その他」を選んだ明細） */}
+                                    <button
+                                      type="button"
+                                      className="item-category-button"
+                                      onClick={() => handleSelectProductItem(otherProductPath(topCat.name, mainCat.name, subCat.name))}
+                                    >
+                                      {OTHER}
+                                    </button>
                                   </div>
                                 )}
                               </div>
                             ))}
+                            {/* 小分類の「その他」（小分類に「その他」を選んだ明細。下の階層は無いので、押すとすぐ開く） */}
+                            <div className="item-category-group">
+                              <button
+                                type="button"
+                                className="sub-category-button"
+                                onClick={() => handleSelectProductItem(otherSubPath(topCat.name, mainCat.name))}
+                              >
+                                <span>{OTHER}</span>
+                                <span className="sub-arrow">›</span>
+                              </button>
+                            </div>
                           </div>
                         )}
 
@@ -727,14 +762,44 @@ export default function Home({
                                 {itemName}
                               </button>
                             ))}
+                            {/* 商品名の「その他」（小分類が無い、古い形式の中分類） */}
+                            <button
+                              type="button"
+                              className="item-category-button"
+                              onClick={() => handleSelectProductItem(otherProductPath(topCat.name, mainCat.name, null))}
+                            >
+                              {OTHER}
+                            </button>
                           </div>
                         )}
                       </div>
                     ))}
+                    {/* 中分類の「その他」（中分類に「その他」を選んだ明細。押すとすぐ開く） */}
+                    <div className="sub-category-group">
+                      <button
+                        type="button"
+                        className="sub-category-button"
+                        onClick={() => handleSelectProductItem(otherMidPath(topCat.name))}
+                      >
+                        <span className="category-label">{OTHER}</span>
+                        <span className="sub-arrow">›</span>
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
             ))}
+            {/* 大分類の「その他」（大分類に「その他」を選んだ明細。中分類も「その他」になるので、押すとすぐ開く） */}
+            <div className="category-group">
+              <button
+                type="button"
+                className="category-main-button"
+                onClick={() => handleSelectProductItem(otherMainPath())}
+              >
+                <span className="category-label">{OTHER}</span>
+                <span className="category-arrow">›</span>
+              </button>
+            </div>
           </div>
         </section>
       </main>
