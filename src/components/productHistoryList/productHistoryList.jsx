@@ -3,10 +3,11 @@ import './productHistoryList.css';
 import { fetchProductPriceHistory } from '../../utils/receiptDb';
 import PurchaseRow from '../purchaseRow/purchaseRow';
 import { unitPriceText } from '../../utils/volume';
+import { pathTitle } from '../../utils/categoryUtils';
 
 // product: { main, category, sub, product }（同じ名前の商品を場所で区別する）
 export default function ProductHistoryList({ product, onBack, onSelectReceipt }) {
-  const productName = product?.product || '';
+  const productName = pathTitle(product); // 「その他」の箱は「菓子のその他」など
   const [sortOrder, setSortOrder] = useState('dateDesc'); // デフォルト：日付順（新しい順）
   const [fullHistoryData, setFullHistoryData] = useState([]);
   const [loading, setLoading] = useState(true);

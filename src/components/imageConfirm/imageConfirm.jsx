@@ -2,18 +2,50 @@ import { useState } from 'react';
 import './imageConfirm.css';
 import { compressImage } from "../../utils/imageUtils";
 import { parseReceiptImage } from "../../utils/receiptParser";
+import ConfirmDialog from '../confirmDialog/confirmDialog';
 
-export default function ImageConfirm({ imageSrc, onCancel, onNavigateToCrop, onAnalysisComplete }) {
+/**
+ * 画像の確認と、AI の解析
+ * @param {Function} [onManualEntry] 解析できなかったとき（AI の混雑・1 日の上限・読み取り失敗）に、
+ *   「手動で入力する」を押すと呼ぶ。{ compressedImage }（軽くした画像。作れなかったときは null）
+ */
+export default function ImageConfirm({ imageSrc, onCancel, onNavigateToCrop, onAnalysisComplete, onManualEntry }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false); // 分析中ローディング状態
+  // 解析できなかったときのポップアップ（null = 出さない）。{ message, compressedImage }
+  const [failure, setFailure] = useState(null);
+
+  // 解析できなかったとき: 「閉じる」（もう一度試せる）か「手動で入力する」を選んでもらう
+  const showFailure = (message, compressedImage) => {
+    if (onManualEntry) {
+      setFailure({ message, compressedImage });
+    } else {
+      alert(message);
+    }
+  };
+
+  const handleManualEntry = async () => {
+    let compressedImage = failure?.compressedImage || null;
+    setFailure(null);
+    if (!compressedImage && imageSrc) {
+      try {
+        compressedImage = await compressImage(imageSrc, 1280, 1280, 0.85);
+      } catch {
+        compressedImage = null; // 画像が軽くできなくても、手動の入力はできる（元の画像を使う）
+      }
+    }
+    onManualEntry({ compressedImage });
+  };
 
   // 「分析する」クリック時の実際のAI解析フロー
   const handleStartAnalysis = async () => {
     if (!imageSrc) return;
     setIsAnalyzing(true);
+    let compressedForManual = null;
 
     try {
       // 1. 画像の軽量化・リサイズ処理を自動実行
       const compressedBase64 = await compressImage(imageSrc, 1280, 1280, 0.85);
+      compressedForManual = compressedBase64;
 
       // 2. Gemini API で高速かつ正確に解析（店舗名正規化・JSON化も内部で適用済み）
       const parseResult = await parseReceiptImage(compressedBase64);
@@ -21,7 +53,7 @@ export default function ImageConfirm({ imageSrc, onCancel, onNavigateToCrop, onA
       setIsAnalyzing(false);
 
       if (!parseResult.success) {
-        alert(parseResult.error);
+        showFailure(parseResult.error, compressedBase64);
         return;
       }
 
@@ -35,7 +67,7 @@ export default function ImageConfirm({ imageSrc, onCancel, onNavigateToCrop, onA
     } catch (error) {
       console.error('レシート解析中にエラーが発生しました:', error);
       setIsAnalyzing(false);
-      alert('レシートの解析に失敗しました。もう一度お試しください。');
+      showFailure('レシートの解析に失敗しました。もう一度お試しください。', compressedForManual);
     }
   };
 
@@ -121,6 +153,25 @@ export default function ImageConfirm({ imageSrc, onCancel, onNavigateToCrop, onA
           <span className="analyze-icon">➔</span>
         </button>
       </div>
+
+      {/* 解析できなかったとき（AI の混雑・1 日の上限など）。手で入力して登録することもできる */}
+      {failure && (
+        <ConfirmDialog
+          title="解析できませんでした"
+          message={
+            <>
+              {failure.message}
+              <br />
+              <br />
+              商品を手で入力して、登録することもできます。
+            </>
+          }
+          cancelLabel="閉じる"
+          confirmLabel="手動で入力する"
+          onCancel={() => setFailure(null)}
+          onConfirm={handleManualEntry}
+        />
+      )}
     </div>
   );
 }

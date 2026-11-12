@@ -29,12 +29,14 @@ const fromEditItem = (item) => {
 };
 
 export const VOLUME_INPUT_ID = (index) => `edit-volume-${index}`;
+export const NAME_INPUT_ID = (index) => `edit-name-${index}`;
 
 /**
  * 商品の編集画面（確認画面・レシート詳細の編集から開く）
  * @param {boolean} [focusVolume] 開いたときに、1 つ目の商品の容量の欄に、カーソルを入れる（「＋容量」から開いたとき）
+ * @param {boolean} [isAdding] 新しい商品を足すとき（「＋ 商品を追加」から開いたとき）。見出しを「商品の追加」にし、印字名の欄にカーソルを入れる
  */
-export default function ReceiptEdit({ isOpen, selectedItems, onClose, onSave, focusVolume = false }) {
+export default function ReceiptEdit({ isOpen, selectedItems, onClose, onSave, focusVolume = false, isAdding = false }) {
   const [editItems, setEditItems] = useState(() => (selectedItems || []).map(toEditItem));
   const [prevSelectedItems, setPrevSelectedItems] = useState(selectedItems);
   const [volumeErrors, setVolumeErrors] = useState({}); // index → エラー文
@@ -49,7 +51,8 @@ export default function ReceiptEdit({ isOpen, selectedItems, onClose, onSave, fo
   // 「＋容量」から開いたときは、容量の欄にカーソルを入れる
   useEffect(() => {
     if (isOpen && focusVolume) document.getElementById(VOLUME_INPUT_ID(0))?.focus();
-  }, [isOpen, focusVolume]);
+    if (isOpen && isAdding) document.getElementById(NAME_INPUT_ID(0))?.focus();
+  }, [isOpen, focusVolume, isAdding]);
 
   if (!isOpen) return null;
 
@@ -93,7 +96,7 @@ export default function ReceiptEdit({ isOpen, selectedItems, onClose, onSave, fo
           <button type="button" className="receipt-edit-back" onClick={onClose} aria-label="戻る">
             ‹
           </button>
-          <h2 className="receipt-edit-title">商品の編集 ({editItems.length}件)</h2>
+          <h2 className="receipt-edit-title">{isAdding ? '商品の追加' : `商品の編集 (${editItems.length}件)`}</h2>
           <div className="receipt-edit-header-spacer" />
         </header>
 
@@ -114,10 +117,12 @@ export default function ReceiptEdit({ isOpen, selectedItems, onClose, onSave, fo
             return (
               <div key={item.id || index} className="edit-item-card">
                 <div className="edit-form-group">
-                  <label className="edit-label">レシート印字名</label>
+                  <label className="edit-label" htmlFor={NAME_INPUT_ID(index)}>レシート印字名</label>
                   <input
+                    id={NAME_INPUT_ID(index)}
                     type="text"
                     className="edit-input"
+                    placeholder="例: 明治おいしい牛乳"
                     value={item.printName}
                     onChange={(e) => handleChange(index, 'printName', e.target.value)}
                   />
@@ -128,9 +133,11 @@ export default function ReceiptEdit({ isOpen, selectedItems, onClose, onSave, fo
                     <label className="edit-label">値段 (円)</label>
                     <input
                       type="number"
+                      inputMode="numeric"
                       className="edit-input"
+                      placeholder="例: 198"
                       value={item.price}
-                      onChange={(e) => handleChange(index, 'price', Number(e.target.value))}
+                      onChange={(e) => handleChange(index, 'price', e.target.value === '' ? '' : Number(e.target.value))}
                     />
                   </div>
 

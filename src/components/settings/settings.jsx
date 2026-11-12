@@ -4,9 +4,13 @@ import { deleteAllReceiptsFromDatabase } from '../../utils/receiptDb';
 import { fetchSharePrices, updateSharePrices } from '../../utils/myStoreDb';
 import { TERMS, PRIVACY, SHARING_SUMMARY } from '../../constants/legal';
 import LegalModal from '../legalModal/legalModal';
+import Avatar from '../avatar/avatar';
+import { AVATARS } from '../../constants/avatars';
 import './settings.css';
 
 export default function Settings({
+  avatarId = '',
+  onAvatarChange,
   onBack,
   onDeleteReceiptData,
   onDeleteAccount,
@@ -43,6 +47,23 @@ export default function Settings({
     if (!result.success) {
       setSharePrices(!next); // 保存できなければ元に戻す
       setShareError(result.error);
+    }
+  };
+
+  // ユーザーアイコン（用意された画像から選ぶ）。選んだ画像の id を、アカウントの情報（user_metadata.avatar）に保存する
+  const [avatarSaving, setAvatarSaving] = useState(false);
+  const [avatarError, setAvatarError] = useState('');
+  const handleSelectAvatar = async (id) => {
+    if (avatarSaving || id === avatarId) return;
+    const previous = avatarId;
+    setAvatarError('');
+    setAvatarSaving(true);
+    if (onAvatarChange) onAvatarChange(id); // すぐ表示を変える
+    const { error } = await supabase.auth.updateUser({ data: { avatar: id || null } });
+    setAvatarSaving(false);
+    if (error) {
+      if (onAvatarChange) onAvatarChange(previous); // 保存できなければ元に戻す
+      setAvatarError('アイコンを保存できませんでした。通信を確認して、もう一度お試しください。');
     }
   };
 
@@ -114,7 +135,43 @@ export default function Settings({
           <div className="settings-card">
             <div className="settings-row">
               <span className="row-label">ユーザー</span>
-              <span className="row-value">{userInfo.displayName}</span>
+              <span className="settings-user">
+                <Avatar avatarId={avatarId} size={36} />
+                <span className="row-value">{userInfo.displayName}</span>
+              </span>
+            </div>
+
+            {/* アイコン: 用意された画像から選ぶ（押すとすぐ変わる） */}
+            <div className="avatar-picker">
+              <span className="row-label">アイコン</span>
+              <div className="avatar-choices" role="radiogroup" aria-label="アイコンを選ぶ">
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={!avatarId}
+                  aria-label="標準"
+                  className={`avatar-choice ${!avatarId ? 'is-selected' : ''}`}
+                  disabled={avatarSaving}
+                  onClick={() => handleSelectAvatar('')}
+                >
+                  <Avatar size={52} />
+                </button>
+                {AVATARS.map((a) => (
+                  <button
+                    key={a.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={avatarId === a.id}
+                    aria-label={a.label}
+                    className={`avatar-choice ${avatarId === a.id ? 'is-selected' : ''}`}
+                    disabled={avatarSaving}
+                    onClick={() => handleSelectAvatar(a.id)}
+                  >
+                    <Avatar avatarId={a.id} size={52} />
+                  </button>
+                ))}
+              </div>
+              {avatarError && <p className="settings-error avatar-error">{avatarError}</p>}
             </div>
           </div>
         </section>

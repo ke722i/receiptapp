@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import './receiptConfirm.css';
 import { saveReceiptToDatabase } from '../../utils/receiptDb';
 import { formatPurchaseDate } from '../../utils/purchaseDate';
@@ -9,6 +9,8 @@ import ReceiptImagePreview from "../receiptImagePreview/receiptImagePreview";
 import StoreNameFields from "../storeNameFields/storeNameFields";
 import { useKnownStores } from "../storeNameFields/useKnownStores";
 import VolumeButton from "../volumeButton/volumeButton";
+import ConfirmDialog from "../confirmDialog/confirmDialog";
+import { createBlankItem, nextItemId, validateItemsForRegister } from '../../utils/manualReceipt';
 
 export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveComplete }) {
   // 店名（チェーン）と店舗名（支店）は別の入力欄。AI が読み取った「ディオ 和泉店」は、2 つに分けて入れる
@@ -45,6 +47,12 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   // 「＋容量」から開いた商品（その 1 件だけを、容量の欄にカーソルを入れて開く）。チェックの選択は変えない
   const [volumeEditId, setVolumeEditId] = useState(null);
+  // 「＋ 商品を追加」で開いた、新しい商品（保存するまで表には足さない。null = 追加ではない）
+  const [draftItem, setDraftItem] = useState(null);
+  // 「選択した商品を削除」の確認ポップアップ
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  // AI で解析できず、手で入力するとき（画像確認の「手動で入力する」から来たとき）
+  const isManual = !!parsedData?._manual;
 
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -76,22 +84,46 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
   const handleOpenEditModal = () => {
     if (selectedIds.length === 0) return;
     setVolumeEditId(null);
+    setDraftItem(null);
     setIsEditModalOpen(true);
   };
 
   // 商品の行の「＋容量」（または容量）を押したとき: その商品だけの編集画面を開く
   const handleOpenVolumeEdit = (id) => {
+    setDraftItem(null);
     setVolumeEditId(id);
     setIsEditModalOpen(true);
+  };
+
+  // 「＋ 商品を追加」: 空の商品で編集画面を開く（印字名の欄にカーソル）
+  const handleOpenAddItem = () => {
+    setVolumeEditId(null);
+    setDraftItem(createBlankItem(nextItemId(items)));
+    setIsEditModalOpen(true);
+    setErrorMessage('');
   };
 
   const handleCloseEditModal = () => {
     setIsEditModalOpen(false);
     setVolumeEditId(null);
+    setDraftItem(null);
+  };
+
+  // 選んだ商品を、表から消す（DB にはまだ保存していないので、表から消すだけ）
+  const handleDeleteSelected = () => {
+    setItems((prev) => prev.filter((item) => !selectedIds.includes(item.id)));
+    setSelectedIds([]);
+    setShowDeleteModal(false);
   };
 
   // 編集画面からの保存結果を反映
   const handleSaveEditedItems = (updatedSelectedItems) => {
+    if (draftItem) {
+      // 追加: 表の最後に足す（チェックの選択は変えない）
+      setItems((prev) => [...prev, ...updatedSelectedItems]);
+      setDraftItem(null);
+      return;
+    }
     setItems((prev) =>
       prev.map((item) => {
         const updated = updatedSelectedItems.find((u) => u.id === item.id);
@@ -105,9 +137,15 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
   };
 
   // DB登録処理
-  // DB登録処理
   const handleRegisterToDatabase = async () => {
     setErrorMessage('');
+
+    // 商品が無い・印字名が空・値段が 0 円の商品があると、比較に使えないので止める（手で入力したときに起きやすい）
+    const itemError = validateItemsForRegister(items);
+    if (itemError) {
+      setErrorMessage(itemError);
+      return;
+    }
 
     // 店舗名だけ入れて、店名が空だと、店舗別の集計がずれるので止める
     if (!storeChain.trim() && storeBranch.trim()) {
@@ -134,7 +172,7 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
       sub_category: item.subCategory || null, // 小分類
       product_name: item.productName || null, // 商品名（該当なしは null）
       volume: item.volume || null, // 容量（不明は null）
-      price: item.price,
+      price: Number(item.price),
       is_discount: item.isDiscount,
     }));
 
@@ -149,10 +187,13 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
   };
 
   // 編集する商品（「＋容量」からは、その 1 件。「選択した商品を編集」からは、チェック中のもの）
-  const selectedItemsToEdit =
-    volumeEditId !== null
+  //  「＋ 商品を追加」からは、新しい商品 1 件。配列は開くたびに作り直さない（編集画面が入力を捨てないように）
+  const selectedItemsToEdit = useMemo(() => {
+    if (draftItem) return [draftItem];
+    return volumeEditId !== null
       ? items.filter((item) => item.id === volumeEditId)
       : items.filter((item) => selectedIds.includes(item.id));
+  }, [draftItem, volumeEditId, items, selectedIds]);
 
   return (
     <div className="receipt-confirm-container">
@@ -173,6 +214,12 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
         {errorMessage && (
           <div style={{ color: '#c62828', backgroundColor: '#ffebee', padding: '10px', borderRadius: '8px', fontSize: '13px' }}>
             {errorMessage}
+          </div>
+        )}
+
+        {isManual && (
+          <div className="manual-entry-notice">
+            AI で解析できなかったため、手で入力します。店名・購入日を入れ、「＋ 商品を追加」で商品を足してください。
           </div>
         )}
 
@@ -220,14 +267,24 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
               <>選択中: <b>{selectedIds.length}</b> 件</>
             )}
           </span>
-          <button
-            type="button"
-            className="edit-cell-button"
-            onClick={handleOpenEditModal}
-            disabled={selectedIds.length === 0}
-          >
-            選択した商品を編集
-          </button>
+          <div className="selection-actions">
+            <button
+              type="button"
+              className="delete-cell-button"
+              onClick={() => setShowDeleteModal(true)}
+              disabled={selectedIds.length === 0}
+            >
+              削除
+            </button>
+            <button
+              type="button"
+              className="edit-cell-button"
+              onClick={handleOpenEditModal}
+              disabled={selectedIds.length === 0}
+            >
+              選択した商品を編集
+            </button>
+          </div>
         </div>
 
         <section className="table-wrapper">
@@ -251,7 +308,7 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
               {items.length === 0 ? (
                 <tr>
                   <td colSpan="5" style={{ textAlign: 'center', color: '#888', padding: '16px' }}>
-                    抽出された商品がありません
+                    {isManual ? '「＋ 商品を追加」で、商品を入力してください' : '抽出された商品がありません'}
                   </td>
                 </tr>
               ) : (
@@ -293,6 +350,11 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
             </tbody>
           </table>
         </section>
+
+        {/* 商品を手で足す（AI が読み落とした商品にも使える） */}
+        <button type="button" className="add-item-button" onClick={handleOpenAddItem}>
+          ＋ 商品を追加
+        </button>
       </main>
 
       <footer className="receipt-confirm-footer">
@@ -313,7 +375,19 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
         onClose={handleCloseEditModal}
         onSave={handleSaveEditedItems}
         focusVolume={volumeEditId !== null}
+        isAdding={!!draftItem}
       />
+
+      {showDeleteModal && (
+        <ConfirmDialog
+          title="商品の削除"
+          message={`選択した ${selectedIds.length} 件の商品を、このレシートから削除しますか？`}
+          confirmLabel="削除する"
+          danger
+          onCancel={() => setShowDeleteModal(false)}
+          onConfirm={handleDeleteSelected}
+        />
+      )}
 
       {/* 未保存のまま戻るときの確認ポップアップ */}
       {showLeaveModal && (

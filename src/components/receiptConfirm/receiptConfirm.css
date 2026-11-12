@@ -414,3 +414,63 @@
   color: #888888;
   margin-top: 2px;
 }
+
+/* 「削除」と「選択した商品を編集」を並べる */
+.selection-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.delete-cell-button {
+  padding: 8px 16px;
+  background-color: #ffffff;
+  color: #555555;
+  border: 1.5px solid #bbbbbb;
+  border-radius: 25px;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.delete-cell-button:active:not(:disabled) {
+  background-color: #f5f5f5;
+}
+
+.delete-cell-button:disabled {
+  color: #bdbdbd;
+  border-color: #cccccc;
+  cursor: not-allowed;
+}
+
+/* 表の下の「＋ 商品を追加」 */
+.add-item-button {
+  display: block;
+  width: 100%;
+  margin: 12px 0 4px;
+  padding: 12px;
+  background-color: #ffffff;
+  color: #e53935;
+  border: 1.5px dashed #e53935;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.add-item-button:active {
+  background-color: #ffebee;
+}
+
+/* 手で入力するときの案内（画像確認の「手動で入力する」から来たとき） */
+.manual-entry-notice {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background-color: #fff8e1;
+  border: 1px solid #ffe082;
+  color: #5d4037;
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: left;
+}

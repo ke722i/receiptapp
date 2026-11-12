@@ -1,6 +1,7 @@
 import { supabase } from '../services/supabaseClient';
 import { formatPurchaseDate } from './purchaseDate';
 import { normalizeVolume } from './volume';
+import { isOpenablePath } from './categoryUtils';
 
 // ---------- 自分の明細の印字名（ホームの検索で使う。読み込んだら覚えておく） ----------
 // レシートの保存・編集・削除のときは、覚えた内容を捨てて、次に使うときに読み直す
@@ -238,12 +239,14 @@ export const fetchReceiptHistory = async () => {
  * 指定した商品（4階層のパス）の、自分のレシートの購入履歴を取得する
  *  大分類・中分類・小分類・商品名がすべて一致するものだけを返す
  *  （例: 常温の「そば」と冷凍の「そば」は混ざらない）
+ * 「その他」の箱（ホームのカテゴリの「その他」）も開ける。空の階層（null）は、空のものだけを探す
+ *  （例: 中分類が「その他」の箱 → 小分類・商品名が空の明細だけ）
  * 画像データ(image_url)は重いので取得しない。
- * @param {{ main: string, category: string, sub: string, product: string }} path
+ * @param {{ main: string, category: string, sub: string|null, product: string|null }} path
  */
 export const fetchProductPriceHistory = async (path) => {
   try {
-    if (!path || !path.product) {
+    if (!isOpenablePath(path)) {
       throw new Error('商品が指定されていません。');
     }
 
@@ -269,11 +272,11 @@ export const fetchProductPriceHistory = async (path) => {
       `)
       .eq('main_category', path.main)
       .eq('category', path.category)
-      .eq('product_name', path.product)
       .eq('receipts.user_id', user.id);
 
-    // 小分類が無い表の形式にも対応（null は eq ではなく is で比較）
+    // 小分類が無い表の形式・「その他」の箱にも対応（null は eq ではなく is で比較）
     query = path.sub ? query.eq('sub_category', path.sub) : query.is('sub_category', null);
+    query = path.product ? query.eq('product_name', path.product) : query.is('product_name', null);
 
     const { data: rows, error } = await query;
     if (error) throw error;

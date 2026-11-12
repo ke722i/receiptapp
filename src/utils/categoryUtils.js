@@ -61,6 +61,48 @@ export const OTHER = 'その他';
 
 const uniq = (arr) => Array.from(new Set(arr));
 
+// ---------- ホームのカテゴリの「その他」（編集画面と同じ階層に出す） ----------
+/*
+ * 「その他」を選んだ明細は、その階層より下が空（null）で保存される。それを開くためのパス（「その他」の箱）:
+ *  ・大分類が その他: { main: その他, category: その他, sub: null, product: null }
+ *  ・中分類が その他: { main: 大分類, category: その他, sub: null, product: null }
+ *  ・小分類が その他: { main, category, sub: その他, product: null }
+ *  ・商品名が その他: { main, category, sub, product: その他 }
+ * 表（Excel）には入れない。検索の候補・カテゴリの検索にも出さない。マイ店舗の価格比較は出さない（何でも入る箱なので）
+ */
+export const otherMainPath = () => ({ main: OTHER, category: OTHER, sub: null, product: null });
+export const otherMidPath = (main) => ({ main, category: OTHER, sub: null, product: null });
+export const otherSubPath = (main, category) => ({ main, category, sub: OTHER, product: null });
+export const otherProductPath = (main, category, sub) => ({ main, category, sub: sub || null, product: OTHER });
+
+/** 「その他」の箱を指すパスか（どこかの階層が「その他」） */
+export const isOtherPath = (path) =>
+  !!path && [path.main, path.category, path.sub, path.product].includes(OTHER);
+
+/** 商品詳細で開けるパスか（表の商品、または「その他」の箱） */
+export const isOpenablePath = (path) => !!path && (!!path.product || isOtherPath(path));
+
+/**
+ * 画面に出す名前（商品詳細の見出し・閲覧履歴）。表の商品は商品名、「その他」の箱は「○○のその他」
+ *  例: 小分類「チョコレート・キャンディ」の商品名その他 → 「チョコレート・キャンディのその他」、
+ *      中分類「菓子」の小分類その他 → 「菓子のその他」、大分類「常温」の中分類その他 → 「常温のその他」、大分類その他 → 「その他」
+ */
+export const pathTitle = (path) => {
+  if (!path) return '';
+  if (path.product && path.product !== OTHER) return path.product;
+  if (path.product === OTHER) return `${path.sub || path.category}の${OTHER}`;
+  if (path.sub === OTHER) return `${path.category}の${OTHER}`;
+  if (path.category === OTHER && path.main && path.main !== OTHER) return `${path.main}の${OTHER}`;
+  return OTHER;
+};
+
+/** 場所の表示（例: 「常温 > 菓子」）。大分類が「その他」なら「その他」だけ（「その他 > その他」にしない） */
+export const formatPlace = (path) => {
+  if (!path) return '';
+  if (path.main === OTHER) return OTHER;
+  return [path.main, path.category, path.sub].filter(Boolean).join(' > ');
+};
+
 // 選択肢があれば末尾に「その他」を付ける（選択肢が無い階層には付けない）
 const withOther = (list) => (list.length > 0 ? uniq([...list, OTHER]) : []);
 
