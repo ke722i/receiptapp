@@ -8,8 +8,20 @@ warnings = []
 for ws in wb.worksheets:
     top = {'name': clean(ws.title), 'categories': []}
     mid = sub = None
+    # 中分類が書かれている列。ふつうは A 列だが、シートによって 1 列右にずれていることがある（例: 野菜果物）。
+    #  3 行目以降の、いちばん左に値のある列を「中分類の列」とみなす（番号の列 → 名前の列の順に並ぶ）
+    base = 0
+    first_cols = [
+        next((i for i in range(1, 8) if ws.cell(r, i).value is not None), None)
+        for r in range(3, ws.max_row + 1)
+    ]
+    first_cols = [c for c in first_cols if c is not None]
+    if first_cols:
+        base = min(first_cols) - 1
+        if base:
+            warnings.append((ws.title, 3, f'列が {base} つ右にずれているシート（自動で合わせた）', None))
     for r in range(3, ws.max_row + 1):
-        a, b, c, d = [ws.cell(r, i).value for i in range(1, 5)]
+        a, b, c, d = [ws.cell(r, base + i).value for i in range(1, 5)]
         if isinstance(a, int) and isinstance(b, str):
             mid = {'name': clean(b), 'subCategories': []}; top['categories'].append(mid); sub = None
         elif isinstance(b, int) and isinstance(c, str):

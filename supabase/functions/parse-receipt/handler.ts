@@ -3,12 +3,43 @@ import { PROMPT_TEXT, RESPONSE_SCHEMA, resolveItems } from './catalog.js';
 // モデルは古くなると新しいユーザーに提供されなくなる（gemini-2.5-flash がそうだった）。
 // 変えたいときは Supabase のシークレット GEMINI_MODEL を設定すれば、コードを直さずに切り替えられる。
 const DEFAULT_GEMINI_MODEL = 'gemini-3.6-flash';
-const geminiUrl = () =>
-  `https://generativelanguage.googleapis.com/v1beta/models/${
-    Deno.env.get('GEMINI_MODEL') || DEFAULT_GEMINI_MODEL
-  }:generateContent`;
-// 商品数の多いレシートに備えて長めにする。Edge Function の上限（150 秒）は超えないこと
+// Gemini が混み合っている（503 など）ときに、代わりに使うモデル（カンマ区切りで複数可）。
+// シークレット GEMINI_FALLBACK_MODELS で変えられる。空文字を設定すると、切り替えない
+const DEFAULT_FALLBACK_MODELS = 'gemini-3.8-flash';
+const geminiUrl = (model: string) =>
+  `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+
+// 1 回の問い合わせの待ち時間。商品数の多いレシートに備えて長めにする
 const GEMINI_TIMEOUT_MS = 120_000;
+// やり直しを含めた、全体の待ち時間。Edge Function の上限（150 秒）は超えないこと
+const TOTAL_BUDGET_MS = 140_000;
+// 残りがこれより短ければ、やり直さない（途中で打ち切られるだけなので）
+const MIN_ATTEMPT_MS = 15_000;
+// 同じモデルでやり直す前に待つ時間
+const RETRY_WAIT_MS = 2_000;
+// 混雑・一時的な障害（やり直すと通ることがある）
+const RETRYABLE_STATUS = new Set([429, 500, 502, 503, 504]);
+
+/** Gemini の失敗。retryable: 時間をおく・別のモデルにすると、通る可能性がある */
+class GeminiError extends Error {
+  retryable: boolean;
+  constructor(message: string, retryable: boolean) {
+    super(message);
+    this.retryable = retryable;
+  }
+}
+
+/** 試すモデルの順番: いつものモデル → もう一度いつものモデル → 代わりのモデル */
+const attemptPlan = () => {
+  const primary = (Deno.env.get('GEMINI_MODEL') || DEFAULT_GEMINI_MODEL).trim();
+  const fallbacks = (Deno.env.get('GEMINI_FALLBACK_MODELS') ?? DEFAULT_FALLBACK_MODELS)
+    .split(',')
+    .map((m) => m.trim())
+    .filter((m) => m && m !== primary);
+  return [primary, primary, ...fallbacks];
+};
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // 圧縮後のレシート画像は 1MB 前後。大きすぎる送信は Gemini に渡す前に断る
 const MAX_IMAGE_BASE64_LENGTH = 6_000_000;
@@ -49,27 +80,34 @@ const consumeQuota = async (authorization: string, apikey: string) => {
   return (await res.json()) === true ? 'ok' : 'exceeded';
 };
 
-const callGemini = async (apiKey: string, base64Image: string) => {
-  const res = await fetch(geminiUrl(), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
-    signal: AbortSignal.timeout(GEMINI_TIMEOUT_MS),
-    body: JSON.stringify({
-      contents: [
-        {
-          role: 'user',
-          parts: [
-            { text: PROMPT_TEXT },
-            { inlineData: { mimeType: 'image/jpeg', data: base64Image } },
-          ],
+const callGemini = async (apiKey: string, base64Image: string, model: string, timeoutMs: number) => {
+  let res: Response;
+  try {
+    res = await fetch(geminiUrl(model), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+      signal: AbortSignal.timeout(timeoutMs),
+      body: JSON.stringify({
+        contents: [
+          {
+            role: 'user',
+            parts: [
+              { text: PROMPT_TEXT },
+              { inlineData: { mimeType: 'image/jpeg', data: base64Image } },
+            ],
+          },
+        ],
+        generationConfig: {
+          responseMimeType: 'application/json',
+          responseSchema: RESPONSE_SCHEMA,
         },
-      ],
-      generationConfig: {
-        responseMimeType: 'application/json',
-        responseSchema: RESPONSE_SCHEMA,
-      },
-    }),
-  });
+      }),
+    });
+  } catch (error) {
+    // 時間切れ・通信の失敗は、やり直すと通ることがある
+    const name = error instanceof Error ? error.name : '';
+    throw new GeminiError(`Gemini request failed: ${name || 'network error'}`, true);
+  }
 
   if (!res.ok) {
     // 原因調べ用に、Google が返したエラー文だけをログに残す（キーが含まれていたら伏せ、300文字まで）
@@ -80,7 +118,7 @@ const callGemini = async (apiKey: string, base64Image: string) => {
       detail = String(JSON.parse(raw)?.error?.message ?? raw);
     } catch { /* JSON でない応答は、そのまま使う */ }
     detail = detail.split(apiKey).join('***').replace(/\s+/g, ' ').trim().slice(0, 300);
-    throw new Error(`Gemini API error: ${res.status} ${detail || '(説明なし)'}`);
+    throw new GeminiError(`Gemini API error: ${res.status} ${detail || '(説明なし)'}`, RETRYABLE_STATUS.has(res.status));
   }
 
   const data = await res.json();
@@ -90,8 +128,43 @@ const callGemini = async (apiKey: string, base64Image: string) => {
     .filter((p) => typeof p.text === 'string' && !p.thought)
     .map((p) => p.text)
     .join('');
-  if (!text) throw new Error('Gemini API returned no text');
-  return JSON.parse(text);
+  if (!text) {
+    const reason = data?.candidates?.[0]?.finishReason ?? data?.promptFeedback?.blockReason ?? 'unknown';
+    throw new GeminiError(`Gemini API returned no text (${reason})`, false);
+  }
+  try {
+    return JSON.parse(text);
+  } catch {
+    // 答えが途中で切れているなど。同じ画像で、もう一度やっても同じになりやすいので、やり直さない
+    throw new GeminiError('Gemini API returned invalid JSON', false);
+  }
+};
+
+/**
+ * Gemini に問い合わせる。混み合っている・一時的な障害のときは、少し待ってやり直し、
+ * それでもだめなら代わりのモデルで試す（全体で TOTAL_BUDGET_MS まで）。
+ * 最後の失敗を投げる（retryable が true なら、混雑が原因）
+ */
+const parseWithRetry = async (apiKey: string, base64Image: string) => {
+  const deadline = Date.now() + TOTAL_BUDGET_MS;
+  const plan = attemptPlan();
+  let lastError: GeminiError = new GeminiError('Gemini was not called', true);
+
+  for (let i = 0; i < plan.length; i++) {
+    const model = plan[i];
+    if (i > 0 && model === plan[i - 1]) await sleep(RETRY_WAIT_MS);
+    const remaining = deadline - Date.now();
+    if (remaining < MIN_ATTEMPT_MS) break;
+    try {
+      return await callGemini(apiKey, base64Image, model, Math.min(GEMINI_TIMEOUT_MS, remaining - 3_000));
+    } catch (error) {
+      lastError = error instanceof GeminiError ? error : new GeminiError('unknown', false);
+      // 画像やキーはログに出さない
+      console.error(`receipt parse attempt ${i + 1}/${plan.length} failed (${model})`, lastError.message);
+      if (!lastError.retryable) break;
+    }
+  }
+  throw lastError;
 };
 
 export const handleRequest = async (req: Request): Promise<Response> => {
@@ -129,10 +202,17 @@ export const handleRequest = async (req: Request): Promise<Response> => {
   if (quota === 'error') return fail(500, 'server_error', 'レシートの解析に失敗しました。');
 
   try {
-    return json(200, { data: resolveItems(await callGemini(geminiKey, image)) });
+    return json(200, { data: resolveItems(await parseWithRetry(geminiKey, image)) });
   } catch (error) {
     // 画像やキーはログに出さない
     console.error('receipt parse failed', error instanceof Error ? error.message : 'unknown');
+    if (error instanceof GeminiError && error.retryable) {
+      return fail(
+        503,
+        'ai_busy',
+        'AI が混み合っていて、解析できませんでした。少し時間をおいて、もう一度お試しください。',
+      );
+    }
     return fail(502, 'parse_failed', 'レシートの解析に失敗しました。もう一度お試しください。');
   }
 };
