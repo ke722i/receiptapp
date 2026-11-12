@@ -93,3 +93,10 @@
   color: #d32f2f;
   font-weight: 600;
 }
+
+/* 単価（例: 100gあたり 49円）。価格の下に小さく */
+.purchase-row-unit-price {
+  font-size: 11px;
+  color: #777777;
+  white-space: nowrap;
+}

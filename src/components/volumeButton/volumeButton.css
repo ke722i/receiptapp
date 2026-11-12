@@ -1,0 +1,46 @@
+/* レシートの表の、容量のボタン（「＋容量」／「300g ✎」） */
+.volume-button-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  margin-top: 4px;
+}
+
+.volume-button {
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: bold;
+  line-height: 1.6;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 容量が空: 点線の枠で「＋容量」 */
+.volume-button.is-empty {
+  border: 1px dashed #e53935;
+  background-color: #ffffff;
+  color: #e53935;
+}
+
+/* 容量あり: 灰色の小さな札 */
+.volume-button.has-volume {
+  border: 1px solid #dddddd;
+  background-color: #f5f5f5;
+  color: #555555;
+}
+
+.volume-button:active {
+  opacity: 0.7;
+}
+
+.volume-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.volume-unit-price {
+  font-size: 10px;
+  color: #888888;
+}

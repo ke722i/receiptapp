@@ -8,6 +8,7 @@ import ReceiptEdit from "../receiptEdit/receiptEdit";
 import ReceiptImagePreview from "../receiptImagePreview/receiptImagePreview";
 import StoreNameFields from "../storeNameFields/storeNameFields";
 import { useKnownStores } from "../storeNameFields/useKnownStores";
+import VolumeButton from "../volumeButton/volumeButton";
 
 export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveComplete }) {
   // 店名（チェーン）と店舗名（支店）は別の入力欄。AI が読み取った「ディオ 和泉店」は、2 つに分けて入れる
@@ -42,6 +43,8 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
   const [selectedIds, setSelectedIds] = useState([]);
   // 編集モーダルの開閉状態
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  // 「＋容量」から開いた商品（その 1 件だけを、容量の欄にカーソルを入れて開く）。チェックの選択は変えない
+  const [volumeEditId, setVolumeEditId] = useState(null);
 
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -72,7 +75,19 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
   // 編集ボタン押下時の処理
   const handleOpenEditModal = () => {
     if (selectedIds.length === 0) return;
+    setVolumeEditId(null);
     setIsEditModalOpen(true);
+  };
+
+  // 商品の行の「＋容量」（または容量）を押したとき: その商品だけの編集画面を開く
+  const handleOpenVolumeEdit = (id) => {
+    setVolumeEditId(id);
+    setIsEditModalOpen(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+    setVolumeEditId(null);
   };
 
   // 編集画面からの保存結果を反映
@@ -84,8 +99,9 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
         return updated ? { ...item, ...updated } : item;
       })
     );
-    // 編集完了後は選択を解除
-    setSelectedIds([]);
+    // 編集完了後は選択を解除（「＋容量」から開いたときは、チェックの選択はそのまま）
+    if (volumeEditId === null) setSelectedIds([]);
+    setVolumeEditId(null);
   };
 
   // DB登録処理
@@ -132,8 +148,11 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
     }
   };
 
-  // チェック中のアイテムのみを抽出
-  const selectedItemsToEdit = items.filter((item) => selectedIds.includes(item.id));
+  // 編集する商品（「＋容量」からは、その 1 件。「選択した商品を編集」からは、チェック中のもの）
+  const selectedItemsToEdit =
+    volumeEditId !== null
+      ? items.filter((item) => item.id === volumeEditId)
+      : items.filter((item) => selectedIds.includes(item.id));
 
   return (
     <div className="receipt-confirm-container">
@@ -247,7 +266,12 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
                     </td>
                     <td className="item-name-cell">
                       {item.printName}
-                      {item.volume && <div className="item-volume">{item.volume}</div>}
+                      {/* 容量: 空なら「＋容量」、あれば容量。押すと、その商品の編集画面（容量の欄）が開く */}
+                      <VolumeButton
+                        volume={item.volume}
+                        price={item.price}
+                        onClick={() => handleOpenVolumeEdit(item.id)}
+                      />
                     </td>
                     <td className="price-cell">{item.price}円</td>
                     <td className="category-cell">
@@ -286,8 +310,9 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
       <ReceiptEdit
         isOpen={isEditModalOpen}
         selectedItems={selectedItemsToEdit}
-        onClose={() => setIsEditModalOpen(false)}
+        onClose={handleCloseEditModal}
         onSave={handleSaveEditedItems}
+        focusVolume={volumeEditId !== null}
       />
 
       {/* 未保存のまま戻るときの確認ポップアップ */}

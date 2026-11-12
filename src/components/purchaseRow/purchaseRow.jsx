@@ -16,6 +16,7 @@ import './purchaseRow.css';
  * @param {boolean} isDiscount 値引きの有無。「値引きあり」（赤）／「値引きなし」（グレー）を出す
  * @param {boolean} [card]    1 行を、単独のカード（枠・白背景）にする。カードの中に並べるときは付けない
  * @param {() => void} [onClick] 渡すと、行を押せる（レシートを開くなど）
+ * @param {string} [unitPrice] 単価の表示（例: 「100gあたり 49円」）。価格の下に小さく出す
  */
 export default function PurchaseRow({
   primary,
@@ -26,6 +27,7 @@ export default function PurchaseRow({
   isDiscount,
   card = false,
   onClick,
+  unitPrice = '',
 }) {
   const className = ['purchase-row', card ? 'is-card' : '', onClick ? 'is-clickable' : '']
     .filter(Boolean)
@@ -56,6 +58,7 @@ export default function PurchaseRow({
       </div>
       <div className="purchase-row-right">
         <span className="purchase-row-price">{price}円</span>
+        {unitPrice && <span className="purchase-row-unit-price">{unitPrice}</span>}
         <span className={`purchase-row-discount ${isDiscount ? 'has-discount' : ''}`}>
           {isDiscount ? '値引きあり' : '値引きなし'}
         </span>

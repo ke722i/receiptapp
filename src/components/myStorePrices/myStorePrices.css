@@ -209,3 +209,13 @@
   font-weight: bold;
   cursor: pointer;
 }
+
+/* 並び順（値段順／単価順） */
+.msp-sort {
+  align-items: center;
+}
+
+.msp-sort-note {
+  font-size: 11px;
+  color: #999999;
+}

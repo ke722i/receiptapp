@@ -7,7 +7,10 @@ import {
   DEFAULT_PERIOD_DAYS,
   groupPricesByStore,
   pickOwnRows,
+  SORT_OPTIONS,
+  sortRowsByUnitPrice,
 } from '../../utils/myStoreCompare';
+import { unitPriceText } from '../../utils/volume';
 import { formatPurchaseDate } from '../../utils/purchaseDate';
 
 const PREVIEW_ROWS = 5; // カードごとに最初に見せる件数（残りは「すべて表示」）
@@ -19,8 +22,10 @@ const PREVIEW_ROWS = 5; // カードごとに最初に見せる件数（残り�
  *  ・自分のカード: 購入日・印字名（商品名）・容量・価格。押すと、そのレシートが開く
  *  ・他のユーザーのカード: 容量・価格だけ（購入日・印字名は匿名のため出さない）
  */
-function SourceCard({ mine, rows, expanded, onToggle, onSelectReceipt }) {
-  const visibleRows = expanded ? rows : rows.slice(0, PREVIEW_ROWS);
+function SourceCard({ mine, rows, expanded, onToggle, onSelectReceipt, sortMode }) {
+  // 値段順は、もとの並び（安い順）のまま。単価順は、単価の安い順（単価が出せない行は最後）
+  const sortedRows = sortMode === 'unit' ? sortRowsByUnitPrice(rows) : rows;
+  const visibleRows = expanded ? sortedRows : sortedRows.slice(0, PREVIEW_ROWS);
 
   return (
     <div className={`msp-card ${mine ? 'msp-card-mine' : 'msp-card-others'}`}>
@@ -44,6 +49,7 @@ function SourceCard({ mine, rows, expanded, onToggle, onSelectReceipt }) {
                     primary={[row.itemName, row.volume || '容量不明'].filter(Boolean).join(' ・ ')}
                     sub={formatPurchaseDate(row.purchaseDate)}
                     price={row.price}
+                    unitPrice={unitPriceText(row.price, row.volume)}
                     isDiscount={row.isDiscount}
                     onClick={onSelectReceipt && row.receiptId ? () => onSelectReceipt(row.receiptId) : undefined}
                   />
@@ -52,6 +58,7 @@ function SourceCard({ mine, rows, expanded, onToggle, onSelectReceipt }) {
                     primary={row.volume || '容量不明'}
                     muted={!row.volume}
                     price={row.price}
+                    unitPrice={unitPriceText(row.price, row.volume)}
                     isDiscount={row.isDiscount}
                   />
                 )}
@@ -91,6 +98,7 @@ export default function MyStorePrices({
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [expanded, setExpanded] = useState({}); // 'ディオ 和泉店|mine' → すべて表示中か
+  const [sortMode, setSortMode] = useState('price'); // 並び順: 値段順／単価順
 
   useEffect(() => {
     let cancelled = false;
@@ -148,6 +156,22 @@ export default function MyStorePrices({
         ))}
       </div>
 
+      {/* 並び順（値段順／単価順）。単価は、容量が入っている行だけ出せる */}
+      <div className="msp-periods msp-sort" role="group" aria-label="並び順">
+        {SORT_OPTIONS.map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            className={`msp-period ${sortMode === option.value ? 'is-active' : ''}`}
+            aria-pressed={sortMode === option.value}
+            onClick={() => setSortMode(option.value)}
+          >
+            {option.label}
+          </button>
+        ))}
+        <span className="msp-sort-note">単価は、容量が入っている商品だけ</span>
+      </div>
+
       {isLoading && <div className="msp-message">データを読み込み中...</div>}
       {!isLoading && errorMessage && <div className="msp-message msp-error">{errorMessage}</div>}
 
@@ -180,8 +204,10 @@ export default function MyStorePrices({
               expanded={Boolean(expanded[`${group.storeName}|mine`])}
               onToggle={() => toggle(`${group.storeName}|mine`)}
               onSelectReceipt={onSelectReceipt}
+              sortMode={sortMode}
             />
             <SourceCard
+              sortMode={sortMode}
               rows={group.othersRows}
               expanded={Boolean(expanded[`${group.storeName}|others`])}
               onToggle={() => toggle(`${group.storeName}|others`)}
