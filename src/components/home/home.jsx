@@ -13,6 +13,7 @@ import {
 } from '../../utils/searchUtils';
 import { fetchMyItemNames } from '../../utils/receiptDb';
 import Avatar from '../avatar/avatar';
+import ProductIcon from '../productIcon/productIcon';
 import {
   findProductPaths,
   formatPath,
@@ -636,7 +637,9 @@ export default function Home({
                   className="frequent-card"
                   onClick={() => handleSelectProductItem(toProductPath(item.path || item.name))}
                 >
-                  <div className="card-image-placeholder">{item.icon || '🛍️'}</div>
+                  <div className="card-image-placeholder">
+                    <ProductIcon product={item.path} fallback={item.icon || '🛍️'} />
+                  </div>
                   <span className="card-name">{item.name}</span>
                 </button>
               ))}
