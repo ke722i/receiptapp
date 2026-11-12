@@ -14,6 +14,7 @@ const withVolume = (itemName, volume) => [itemName, volume].filter(Boolean).join
 // product: { main, category, sub, product }（同じ名前の商品を場所で区別する）
 export default function ProductDetail({
   product,
+  initialSearchText = '',
   onBack,
   onViewAllHistory,
   onSelectReceipt,
@@ -24,7 +25,7 @@ export default function ProductDetail({
   const [historyData, setHistoryData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
-  const [searchText, setSearchText] = useState(''); // 印字名の検索
+  const [searchText, setSearchText] = useState(initialSearchText || ''); // 印字名の検索（ホームで印字名から開いたときは、その文字）
   const [showAllOthers, setShowAllOthers] = useState(false); // 「他の商品の最安値」をすべて表示中か
 
   // 自分のレシートから、この商品の購入履歴を取得

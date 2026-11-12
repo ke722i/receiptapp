@@ -2,10 +2,74 @@ import { supabase } from '../services/supabaseClient';
 import { formatPurchaseDate } from './purchaseDate';
 import { normalizeVolume } from './volume';
 
+// ---------- 自分の明細の印字名（ホームの検索で使う。読み込んだら覚えておく） ----------
+// レシートの保存・編集・削除のときは、覚えた内容を捨てて、次に使うときに読み直す
+let myItemNamesCache = null; // { userId, promise }
+const forgetMyItemNames = () => {
+  myItemNamesCache = null;
+};
+
+const ITEM_NAMES_PAGE = 1000; // Supabase が 1 回に返す行の上限に合わせる
+const ITEM_NAMES_MAX = 20000; // 読み込む明細の上限（極端に多いときの守り）
+
+/**
+ * 自分のレシートの明細の、印字名と商品の分類（商品名があるものだけ）。購入日の新しい順
+ * @returns {Promise<{ success: boolean, data?: { itemName, path, purchaseDate }[], error?: string }>}
+ */
+export const fetchMyItemNames = async () => {
+  try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData?.session?.user?.id;
+    if (!userId) throw new Error('ログインし直してください。');
+    if (myItemNamesCache && myItemNamesCache.userId === userId) return myItemNamesCache.promise;
+
+    const load = async () => {
+      const rows = [];
+      for (let from = 0; from < ITEM_NAMES_MAX; from += ITEM_NAMES_PAGE) {
+        const { data, error } = await supabase
+          .from('receipt_items')
+          .select('id, item_name, main_category, category, sub_category, product_name, receipts!inner ( purchase_date, user_id )')
+          .eq('receipts.user_id', userId)
+          .not('product_name', 'is', null)
+          .order('id', { ascending: false })
+          .range(from, from + ITEM_NAMES_PAGE - 1);
+        if (error) throw error;
+        rows.push(...(data || []));
+        if (!data || data.length < ITEM_NAMES_PAGE) break;
+      }
+      const list = rows
+        .filter((row) => row.item_name && row.product_name)
+        .map((row) => ({
+          itemName: row.item_name,
+          path: {
+            main: row.main_category,
+            category: row.category,
+            sub: row.sub_category || null,
+            product: row.product_name,
+          },
+          purchaseDate: row.receipts?.purchase_date || '',
+        }))
+        .sort((a, b) => String(b.purchaseDate).localeCompare(String(a.purchaseDate)));
+      return { success: true, data: list };
+    };
+
+    const promise = load().catch((error) => {
+      forgetMyItemNames(); // 失敗したら、次は読み直す
+      console.error('Fetch item names failed:', error);
+      return { success: false, error: '印字名を読み込めませんでした。' };
+    });
+    myItemNamesCache = { userId, promise };
+    return promise;
+  } catch (error) {
+    return { success: false, error: error.message || '印字名を読み込めませんでした。' };
+  }
+};
+
 /**
  * レシート本体と明細を Supabase DB に一括保存するユーティリティ
  */
 export const saveReceiptToDatabase = async (receiptData, itemsData) => {
+  forgetMyItemNames();
   try {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
@@ -73,6 +137,7 @@ export const saveReceiptToDatabase = async (receiptData, itemsData) => {
  * @param {{ id, item_name, main_category, category, sub_category, product_name, price, is_discount, volume }[]} itemUpdates
  */
 export const updateReceiptInDatabase = async (receiptId, receiptFields, itemUpdates = []) => {
+  forgetMyItemNames();
   try {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
@@ -274,6 +339,7 @@ export const fetchReceiptById = async (receiptId) => {
  * 指定レシートの削除
  */
 export const deleteReceiptFromDatabase = async (receiptId) => {
+  forgetMyItemNames();
   try {
     const { error } = await supabase
       .from('receipts')
@@ -296,6 +362,7 @@ export const deleteReceiptFromDatabase = async (receiptId) => {
  * ログイン中ユーザーの全レシートデータを削除する
  */
 export const deleteAllReceiptsFromDatabase = async () => {
+  forgetMyItemNames();
   try {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) throw new Error('ユーザー情報の取得に失敗しました。');

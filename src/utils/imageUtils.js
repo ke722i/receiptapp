@@ -62,3 +62,42 @@ export const compressImage = async (imageInput, maxWidth = 1200, maxHeight = 120
   // リサイズ処理を実行して返却
   return await resizeImage(dataUrl, maxWidth, maxHeight, quality);
 };
+
+/**
+ * 画像を、時計まわりに degrees 度（90 の倍数）回転した、新しい画像（データ URL）を返す。
+ *  0 度（360 度）のときは、元の画像をそのまま返す（作り直さないので、画質が落ちない）
+ * @param {string} src 元の画像（データ URL）
+ * @param {number} degrees 時計まわりの角度（0・90・180・270。負の値も可）
+ */
+export const rotateImage = (src, degrees) => {
+  const turns = (((Math.round(degrees / 90) % 4) + 4) % 4);
+  if (turns === 0) return Promise.resolve(src);
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const sideways = turns % 2 === 1; // 90・270 度は、縦と横が入れ替わる
+      const canvas = document.createElement('canvas');
+      canvas.width = sideways ? img.naturalHeight : img.naturalWidth;
+      canvas.height = sideways ? img.naturalWidth : img.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate((turns * Math.PI) / 2);
+      ctx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
+      resolve(canvas.toDataURL('image/jpeg', 0.92));
+    };
+    img.onerror = reject;
+    img.src = src;
+  });
+};
+
+/**
+ * 画像を 90 度回したときの、トリミング枠（画像に対する %）の新しい位置。枠は、画像といっしょに回る
+ * @param {{ top, left, width, height }} box
+ * @param {'cw' | 'ccw'} direction cw: 右（時計まわり）／ ccw: 左（反時計まわり）
+ */
+export const rotateCropBox = (box, direction) => {
+  const { top, left, width, height } = box;
+  return direction === 'cw'
+    ? { top: left, left: 100 - (top + height), width: height, height: width }
+    : { top: 100 - (left + width), left: top, width: height, height: width };
+};

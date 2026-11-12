@@ -33,6 +33,7 @@ function App() {
   // マイ店舗の画面から「戻る」で帰る画面（ホームのメニュー / 商品詳細）
   const [myStoresBackScreen, setMyStoresBackScreen] = useState('home');
   const [proposalBackScreen, setProposalBackScreen] = useState('settings'); // カテゴリの提案から戻る画面
+  const [productSearchText, setProductSearchText] = useState(''); // 商品詳細を開いたときの、印字名の検索の文字
   // 選択中の商品（{ main, category, sub, product }。同名の商品を場所で区別する）
   const [selectedProduct, setSelectedProduct] = useState(null);
 
@@ -87,9 +88,11 @@ function App() {
 
   // 商品選択時のハンドラー（閲覧履歴追加 ＆ 詳細画面遷移）
   //  path: { main, category, sub, product }
-  const handleSelectProduct = (path) => {
+  //  options.itemSearch: ホームの検索で、印字名から開いたときの文字（商品詳細の、印字名の検索に入れておく）
+  const handleSelectProduct = (path, options = {}) => {
     if (!path || !path.product) return;
     setSelectedProduct(path);
+    setProductSearchText(options.itemSearch || '');
     const key = productKey(path);
     setViewHistory((prev) => {
       // 以前の履歴（path を持たない）は名前で比較
@@ -176,6 +179,7 @@ function App() {
       {currentScreen === 'productDetail' && (
         <ProductDetail
           product={selectedProduct}
+          initialSearchText={productSearchText}
           onBack={() => setCurrentScreen('home')}
           onViewAllHistory={() => setCurrentScreen('productHistoryList')}
           onSelectReceipt={(id) => handleOpenReceiptFromProduct(id, 'productDetail')}

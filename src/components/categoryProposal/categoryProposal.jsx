@@ -17,7 +17,6 @@ import { formatPurchaseDate } from '../../utils/purchaseDate';
 import ConfirmDialog from '../confirmDialog/confirmDialog';
 
 const EMPTY_FORM = { kind: 'category', main: '', category: '', sub: '', note: '' };
-const EXISTING_PREVIEW = 8; // 「今ある分類」を、最初に見せる数
 
 // DB の日時（UTC）を、日本時間の日付（YYYY-MM-DD）に
 const toJstDate = (value) => {
@@ -25,21 +24,18 @@ const toJstDate = (value) => {
   return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' });
 };
 
-/** 今ある分類の一覧（重ねて提案しないための参考） */
+/** 今ある分類の一覧（重ねて提案しないための参考）。最初は 1 行だけ。ボタンを押すと、中身が出る */
 function ExistingList({ title, names }) {
-  const [showAll, setShowAll] = useState(false);
-  const visible = showAll ? names : names.slice(0, EXISTING_PREVIEW);
+  const [open, setOpen] = useState(false);
   return (
     <div className="proposal-existing">
-      <span className="proposal-existing-title">
-        {title}（{names.length}）
-      </span>
-      <p className="proposal-existing-list">{visible.join('、') || 'まだありません'}</p>
-      {names.length > EXISTING_PREVIEW && (
-        <button type="button" className="proposal-link" onClick={() => setShowAll((v) => !v)}>
-          {showAll ? '閉じる' : `すべて見る（${names.length}）`}
-        </button>
-      )}
+      <button type="button" className="proposal-existing-toggle" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
+        <span>{open ? `${title}（${names.length}）` : `${title}を表示する`}</span>
+        <span className="proposal-existing-arrow" aria-hidden="true">
+          {open ? '▲' : '▼'}
+        </span>
+      </button>
+      {open && <p className="proposal-existing-list">{names.join('、') || 'まだありません'}</p>}
     </div>
   );
 }
@@ -243,7 +239,7 @@ export default function CategoryProposal({ onBack }) {
                 <input
                   type="text"
                   className="proposal-input"
-                  placeholder="例: ペット用品"
+                  placeholder="例: 園芸用品"
                   maxLength={PROPOSAL_NAME_MAX + 10}
                   value={form.category}
                   onChange={(e) => update('category', e.target.value)}
@@ -258,7 +254,7 @@ export default function CategoryProposal({ onBack }) {
                 <input
                   type="text"
                   className="proposal-input"
-                  placeholder="例: ペットフード"
+                  placeholder="例: 肥料・土"
                   maxLength={PROPOSAL_NAME_MAX + 10}
                   value={form.sub}
                   onChange={(e) => update('sub', e.target.value)}
@@ -274,7 +270,7 @@ export default function CategoryProposal({ onBack }) {
             </span>
             <textarea
               className="proposal-input proposal-textarea"
-              placeholder="例: ドッグフード、キャットフード、猫砂"
+              placeholder="例: 培養土、肥料、園芸用のはさみ"
               maxLength={PROPOSAL_NOTE_MAX + 20}
               rows={3}
               value={form.note}
