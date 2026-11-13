@@ -223,7 +223,7 @@ export default function Settings({
             </button>
             <div className="settings-note settings-note-last">
               <p>
-                ぴったりの分類が無いときに、新しい中分類・小分類を提案できます。管理者が確認して、承認したものは、次の更新で、すべてのユーザーの表に追加されます。
+                ぴったりの分類が無いときに、新しい中分類・小分類・商品名を提案できます。管理者が確認して、承認したものは、次の更新で、すべてのユーザーの表に追加されます。
               </p>
             </div>
           </div>

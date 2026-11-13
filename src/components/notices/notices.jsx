@@ -23,7 +23,7 @@ export default function Notices({ notices = [], unreadIds = [], status = 'ready'
         {status === 'loading' && <p className="notices-message">読み込み中...</p>}
         {status === 'error' && <p className="notices-message notices-error">通知を読み込めませんでした。</p>}
         {status === 'ready' && notices.length === 0 && (
-          <p className="notices-message">通知はありません。<br />提案したカテゴリの結果（承認・見送り）が出ると、ここにお知らせします。</p>
+          <p className="notices-message">通知はありません。<br />提案（カテゴリ・商品名）の結果（承認・見送り）が出ると、ここにお知らせします。</p>
         )}
 
         {status === 'ready' && notices.length > 0 && (
@@ -40,7 +40,7 @@ export default function Notices({ notices = [], unreadIds = [], status = 'ready'
                       <span className={`notice-result ${isApproved ? 'is-approved' : 'is-rejected'}`}>
                         {isApproved ? '承認' : '見送り'}
                       </span>
-                      {isApproved ? '提案したカテゴリが承認されました' : '提案したカテゴリは、見送りになりました'}
+                      {isApproved ? '提案が承認されました' : '提案は、見送りになりました'}
                     </p>
                     <p className="notice-place">{noticePlace(n)}</p>
                     {n.admin_note && <p className="notice-note">管理者より: {n.admin_note}</p>}
