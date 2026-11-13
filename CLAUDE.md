@@ -10,7 +10,8 @@
 - レシート解析（Edge Function・Gemini・回数上限・デプロイ）→ docs/spec-parse.md
 - 店舗名（正規化・入力欄・「!」の吹き出し）→ docs/spec-store.md
 - マイ店舗・価格比較・共有・容量と単価・利用規約 → docs/spec-mystore.md
-- 作業手順: 「カテゴリ表を更新して」「提案を確認して」「承認したものを追加して」「店名を追加して」→ docs/procedures.md
+- 提案の承認・見送り・表への反映（「提案を確認して」「承認したものを追加して」、承認のやり方の質問）→ docs/proposal-approval.md
+- 作業手順: 「カテゴリ表を更新して」「店名を追加して」→ docs/procedures.md
 - テスト項目書（TEST_ITEMS.md、Excel への変換、書き方）→ docs/test-items-rules.md
 - 「アイコン」と指示されたとき（商品のアイコン。tools/categoryIcon.xlsx、tools/parse_category_icons.py）→ docs/icons.md
 - 仕様を変えたら、該当する docs のファイルを短く直す（この CLAUDE.md には書き足さない）。
