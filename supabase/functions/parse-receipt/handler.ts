@@ -122,6 +122,14 @@ const callGemini = async (apiKey: string, base64Image: string, model: string, ti
   }
 
   const data = await res.json();
+  // 使用量の記録（数字だけ。画像・商品名・個人の情報は出さない）。どこが重いかを調べるため
+  //  prompt = 入力（指示文＋カテゴリ表＋画像）、output = 答えの文字、thoughts = 考えた分（モデルによる）
+  const usage = data?.usageMetadata;
+  if (usage) {
+    console.log(
+      `receipt parse usage (${model}) prompt=${usage.promptTokenCount ?? '-'} output=${usage.candidatesTokenCount ?? '-'} thoughts=${usage.thoughtsTokenCount ?? '-'} total=${usage.totalTokenCount ?? '-'} imageBase64Chars=${base64Image.length}`
+    );
+  }
   // 考えるタイプのモデルは、要素が複数に分かれることがある。考えた過程（thought）を除いて text をつなぐ
   const parts: { text?: unknown; thought?: unknown }[] = data?.candidates?.[0]?.content?.parts ?? [];
   const text = parts
