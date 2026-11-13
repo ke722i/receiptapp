@@ -49,4 +49,5 @@ tools/receipt_json/*
 
 # 提案の反映の前の Excel の控え（tools/apply_proposals.py）
 tools/categoryTable.backup.xlsx
-tools/proposals*.csv
+tools/proposals/*
+!tools/proposals/.gitkeep
