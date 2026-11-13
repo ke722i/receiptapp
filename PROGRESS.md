@@ -43,7 +43,8 @@
 - DB: `supabase/migrations/20261113000000_category_proposals_product.sql`（`submit_category_proposal` を 6 つの引数に入れ替え）。**ユーザーが SQL Editor で実行済み**。PGlite のテスト 21 項目 OK。
 - 画面（`categoryProposal.jsx`）: 3 つめの種類。大 → 中 → 小を選んで、商品名を入れる。`categoryProposal.js`（確認）、`categoryProposalDb.js`（`p_product`）、`notices.js`（以前の自動の見送りだけを通知から除く。商品名の提案の承認・見送りも通知に出る）。案内文も「商品名」を含む形に。
 - 不具合の修正: 中分類の名前に全角かっこがあると（例: 冷凍野菜・フルーツ・素材（未調理））、小分類の提案が送れなかった（選んだ名前を NFKC でそろえて、表と合わなくなっていた）。表から選んだ名前は、そろえずに送る。
-- **承認した提案を Excel に足す半自動のスクリプト**: `tools/apply_proposals.py`（提案の CSV → `categoryTable.xlsx`。`--apply` で足す、`--rebuild` で `categoryData.js` の作成と sync）。CSV は `tools/proposals/` に置く（Git に入れない）。手順は **docs/procedures.md「カテゴリの提案の承認手順」**。承認・見送りは、Supabase の Table Editor（または SQL）で、`status` と `admin_note` を直す。
+- **承認した提案を Excel に足す半自動のスクリプト**: `tools/apply_proposals.py`（提案の CSV → `categoryTable.xlsx`。`--apply` で足す、`--rebuild` で `categoryData.js` の作成と sync）。CSV は `tools/proposals/` に置く（Git に入れない）。手順は **docs/proposal-approval.md**。承認・見送りは、Supabase の Table Editor（または SQL）で、`status` と `admin_note` を直す。
+- **承認のやり方は、docs/proposal-approval.md に、新しいファイルとしてまとめた**（承認待ちの一覧 → 採否 → Table Editor / SQL で `status` と `admin_note` を直す → 承認した提案の CSV → `apply_proposals.py` → `--rebuild` → デプロイ）。`docs/procedures.md` の承認手順は、その案内だけにした。
 - 実際に使った: ユーザーが 2 件を承認・見送りにした。承認の 1 件（冷凍 > 冷凍野菜・フルーツ・素材（未調理） > 冷凍フルーツ > **冷凍白ぶどう**）を、Excel・`categoryData.js`・`readings.tsv`（れいとうしろぶどう…）に反映し、sync・build まで済み。**`npm run deploy-functions` は、まだ**（AI の解析に反映するため）。
 - 実機の確認は、まだ（UT-P-26〜32、IT-66・67）。
 
