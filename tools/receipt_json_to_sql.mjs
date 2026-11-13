@@ -49,7 +49,7 @@ for (const file of files) {
       if (!i.main_category) unselected += 1;
     });
     if (r.total != null && sum !== r.total) {
-      warnings.push(`${label}: 商品の合計 ${sum} 円 ≠ レシートの合計 ${r.total} 円（値引き・税の分か、読み違い・読み落としの可能性）`);
+      warnings.push(`${label}: 商品の合計 ${sum} 円 ≠ レシートの合計 ${r.total} 円（参考: 単品価格・値引き・外税のため、合わないのが普通。差が大きいときだけ、読み落としを疑う）`);
     }
     const items = resolved
       .map((i) => `      (v_id, ${qOrEmpty(i.item_name)}, ${q(i.main_category)}, ${q(i.category || '未選択')}, ${q(i.sub_category)}, ${q(i.product_name)}, ${Number(i.price) || 0}, ${i.is_discount ? 'true' : 'false'}, ${q(i.volume)})`)

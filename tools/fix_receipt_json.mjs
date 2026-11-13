@@ -51,6 +51,6 @@ writeFileSync(file, `${JSON.stringify({ receipts }, null, 1)}\n`, 'utf8');
 console.log(`${file}: ブロック ${blocks.length} 個 → レシート ${receipts.length} 枚`);
 for (const r of receipts) {
   const sum = r.items.reduce((s, i) => s + Number(i.price || 0), 0);
-  const note = sum === r.total ? '' : '  ★商品の合計とレシートの合計が合わない';
+  const note = sum === r.total ? '' : '  （参考）商品の合計とレシートの合計が違う: 単品価格・値引き・外税のため、普通';
   console.log(`  ${r.store_name} ${r.purchase_date}  商品 ${r.items.length} 件 / 合計 ${sum} / レシートの合計 ${r.total}${note}`);
 }
