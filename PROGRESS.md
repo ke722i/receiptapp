@@ -32,11 +32,20 @@
 - **二重登録**: `receipt_json_to_sql.mjs` は、同じ店名・購入日・商品の値段の合計のレシートが DB にあれば飛ばす。ただし、入れたあとにアプリで直したレシートは、同じ JSON を含む SQL を再実行すると二重になる。**入れ終わった JSON は、SQL を作るフォルダから外す**（次は新しいフォルダ。例: `aeon2`）。使い方: `node tools/receipt_json_to_sql.mjs tools/receipt_json/フォルダ名` → `tools/receipt_json/import.sql` の `ここにあなたのUID` を直して、SQL Editor で実行。画像は入らない（画像なしのレシート）。
 - 1 日 30 回の解析の上限は、この方法には、かからない（アプリの解析を通らないため）。Gemini のチャットの上限だけ。
 
-## 途中: Gemini API の使用量の調査（コミット前。デプロイが必要）
+## 途中: Gemini API の使用量の調査（コミット済み。ユーザーがデプロイ済み）
 - 問題: Gemini API の上限が、すぐに来る（ログで `gemini-3.6-flash` が 429、代わりの `gemini-3.8-flash` は 503）。無料枠の 1 日の上限は、日本時間 17 時ごろにリセットされる。キーを作り直しても、同じプロジェクトなら上限は同じ。
 - 推定: 1 回の解析で、入力の約 9 割が、毎回送る指示文＋カテゴリ表（約 16,800 文字 ≒ 1.2〜1.7 万トークン）。画像は約 1,000〜2,000、答えは約 500〜1,500。`thinkingConfig` は未指定（思考のトークンは不明）。混雑のやり直しで、1 枚が最大 3 回の呼び出しになる。
-- **やったこと**: `handler.ts` に、解析が成功するたびに使用量（`prompt` / `output` / `thoughts` / `total` / `imageBase64Chars`）をログに出す 1 行を追加。**未コミット・未デプロイ**（`npm run deploy-functions` が必要）。既存のテストは通過（1 件だけ、テストの古い数字で失敗: 「商品は 1155 件」→ 今は 1156）。
-- **次回**: デプロイ → アプリで数枚解析 → Supabase のログ（Edge Functions の `parse-receipt`）の `receipt parse usage` の行を見て、どこが重いか決める。減らす案: ① 思考を減らす設定 ② カテゴリ表を小さくする（印字名に商品名が含まれるものは文字の一致で当てはめ、残りだけ AI に任せる。または、中分類 → その中の商品の 2 段階）③ Gemini を有料プランにする。②は設計変更が大きいので、Opus（`/model`）で。
+- **やったこと**: `handler.ts` に、解析が成功するたびに使用量（`prompt` / `output` / `thoughts` / `total` / `imageBase64Chars`）をログに出す 1 行（デプロイ済み）。
+- **次回**: アプリで数枚解析 → Supabase のログ（Edge Functions の `parse-receipt`）の `receipt parse usage` の行を見て、どこが重いか決める。減らす案: ① 思考を減らす設定 ② カテゴリ表を小さくする（印字名に商品名が含まれるものは文字の一致で当てはめ、残りだけ AI に任せる。または、中分類 → その中の商品の 2 段階）③ Gemini を有料プランにする。②は設計変更が大きいので、Opus で。
+
+## やったこと（11/13・カテゴリの提案に商品名の提案を追加。Opus 5.5 で作業。`fujita` に push 済み、`main` に未マージ）
+- ユーザーの依頼: 提案を、小分類までではなく、「今ある小分類に、新しい商品名」まで出せるように（「新しい中分類」「今ある中分類に新しい小分類」は残す）。
+- DB: `supabase/migrations/20261113000000_category_proposals_product.sql`（`submit_category_proposal` を 6 つの引数に入れ替え）。**ユーザーが SQL Editor で実行済み**。PGlite のテスト 21 項目 OK。
+- 画面（`categoryProposal.jsx`）: 3 つめの種類。大 → 中 → 小を選んで、商品名を入れる。`categoryProposal.js`（確認）、`categoryProposalDb.js`（`p_product`）、`notices.js`（以前の自動の見送りだけを通知から除く。商品名の提案の承認・見送りも通知に出る）。案内文も「商品名」を含む形に。
+- 不具合の修正: 中分類の名前に全角かっこがあると（例: 冷凍野菜・フルーツ・素材（未調理））、小分類の提案が送れなかった（選んだ名前を NFKC でそろえて、表と合わなくなっていた）。表から選んだ名前は、そろえずに送る。
+- **承認した提案を Excel に足す半自動のスクリプト**: `tools/apply_proposals.py`（提案の CSV → `categoryTable.xlsx`。`--apply` で足す、`--rebuild` で `categoryData.js` の作成と sync）。CSV は `tools/proposals/` に置く（Git に入れない）。手順は **docs/procedures.md「カテゴリの提案の承認手順」**。承認・見送りは、Supabase の Table Editor（または SQL）で、`status` と `admin_note` を直す。
+- 実際に使った: ユーザーが 2 件を承認・見送りにした。承認の 1 件（冷凍 > 冷凍野菜・フルーツ・素材（未調理） > 冷凍フルーツ > **冷凍白ぶどう**）を、Excel・`categoryData.js`・`readings.tsv`（れいとうしろぶどう…）に反映し、sync・build まで済み。**`npm run deploy-functions` は、まだ**（AI の解析に反映するため）。
+- 実機の確認は、まだ（UT-P-26〜32、IT-66・67）。
 
 ## やったこと（11/12 夜・解析できないときの手動の入力。`fujita` に push 済み（f9d4011）、`main` に未マージ。DB の変更なし）
 - 依頼: 「AI が混雑しているときや上限が来たときに、手動でレシート入力できるように」。
@@ -100,7 +109,7 @@
 - 自動テストは、リポジトリに無い（開発中の確認は、一時的な作業フォルダで行ったもので、消える）。テストは、完成後に、メンバーが手動で行う方針。
 
 ## 次にやること
-1. **まず PR（11/11〜11/12 の分すべて）を GitHub で作って、マージ**（マージの前に、カテゴリの提案の SQL `20261111100000_category_proposals_categories.sql` が実行済みか確認。マージのあとは `npm run deploy-functions`）。→ 実機で確認（UT-N、UT-O、UT-F-13〜16、UT-D-23・24、UT-B-46・47、UT-C-17、UT-H-19・20、UT-M-01〜15、IT-55・56・64・65、UT-B-41〜45、UT-J-10〜15、MT-13）。
+1. **まず PR（11/11〜11/13 の分すべて）を GitHub で作って、マージ**（カテゴリの提案の SQL 2 本 `20261111100000_category_proposals_categories.sql`・`20261113000000_category_proposals_product.sql` は、ユーザーが実行済み。**`npm run deploy-functions` は、「冷凍白ぶどう」の反映のため、まだ**）。→ 実機で確認（UT-P-26〜32、IT-66・67、UT-N、UT-O、UT-F-13〜16、UT-D-23・24、UT-B-46・47、UT-C-17、UT-H-19・20、UT-M-01〜15、IT-55・56・64・65、UT-B-41〜45、UT-J-10〜15、MT-13）。
    Gemini のチャットからの取り込み（上の「途中」）の続き。
    容量を入れやすく・単価: PR・マージ → 実機で確認（UT-D-20〜22、UT-E-14〜20、UT-F2-16、UT-H-18、UT-I-22・23）。
    カテゴリ表の更新・レシート解析の混雑対策: PR・マージ → 実機で確認（UT-B-38〜40、UT-C-16）。デプロイは済み。 → 混雑時のログで、やり直し・切り替えが効いているか確認（UT-C-16）。
@@ -114,7 +123,7 @@
 
 ## 注意点
 - 作業は `fujita` ブランチで行う。作業の前に `git pull origin main` で最新にする（先に、手元の変更を `git stash` で退避して、`git pull --ff-only origin main` してから戻すと、安全）。
-- 機能を作った・変えたら、`TEST_ITEMS.md` の状態・確認項目・変更履歴を更新する。「引き継ぎして」のときも、`PROGRESS.md` と一緒に更新する（11/09 夜の分も更新済み。項目数は、単体294・結合43・見た目13・付録311）。
+- 機能を作った・変えたら、`TEST_ITEMS.md` の状態・確認項目・変更履歴を更新する。「引き継ぎして」のときも、`PROGRESS.md` と一緒に更新する（11/09 夜の分も更新済み。項目数は、単体301・結合45・見た目13・付録315）。
 - コミットメッセージは、CLAUDE.md の「コミットと push」のとおり、1 行目を `YY/MM/DD タイトル`、3 行目以降を短い詳細にする。
 - 他のユーザーのデータを読む処理は、必ず DB の関数（security definer）を通す。`receipts` / `receipt_items` の RLS を緩めない。
 - 規約の共有の内容や共有する項目を変えたら、`legal.js` の文と `LEGAL_VERSION` も更新する。
