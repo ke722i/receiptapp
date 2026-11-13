@@ -1,11 +1,13 @@
 import { CATEGORY_TREE } from '../constants/categoryData';
 import { PRODUCT_PATHS, OTHER } from './categoryUtils';
+import { LEGACY_AUTO_REJECT_NOTE } from './notices';
 
 /*
  * カテゴリの提案の、画面に依存しない処理
- *  提案できるのは、カテゴリ（中分類・小分類）だけ。商品名は AI が決めるもので、ユーザーは提案しない。
+ *  提案できるもの:
  *   ・kind 'category': 大分類を選び、新しい中分類（小分類も一緒に出してよい）
  *   ・kind 'sub':      大分類と、今ある中分類を選び、新しい小分類
+ *   ・kind 'product':  大分類・今ある中分類・今ある小分類を選び、新しい商品名（11/13 追加）
  *  大分類（常温・冷蔵・冷凍・日用品）は、選ぶだけで、提案できない。
  *  選択肢に「その他」は出さない（「その他」は表に入れない決まり。CLAUDE.md「3. カテゴリの仕組み」）。
  *  承認待ちの上限・重複の最終的な判定は、DB の関数 submit_category_proposal が行う。
@@ -19,7 +21,9 @@ export const PROPOSAL_NOTE_MAX = 200;
 export const PROPOSAL_KINDS = [
   { value: 'category', label: '新しい中分類' },
   { value: 'sub', label: '今ある中分類に、新しい小分類' },
+  { value: 'product', label: '今ある小分類に、新しい商品名' },
 ];
+const KIND_VALUES = PROPOSAL_KINDS.map((k) => k.value);
 
 export const PROPOSAL_STATUS_LABELS = {
   pending: '承認待ち',
@@ -42,6 +46,12 @@ export const getProposalMids = (main) => {
 /** その中分類にある小分類（小分類が無い、古い形式の中分類なら空） */
 export const getProposalSubs = (main, category) =>
   uniq(PRODUCT_PATHS.filter((p) => p.main === main && p.category === category && p.sub).map((p) => p.sub)).filter(
+    (n) => !RESERVED.includes(n)
+  );
+
+/** その小分類にある商品名 */
+export const getProposalProducts = (main, category, sub) =>
+  uniq(PRODUCT_PATHS.filter((p) => p.main === main && p.category === category && p.sub === sub).map((p) => p.product)).filter(
     (n) => !RESERVED.includes(n)
   );
 
@@ -73,6 +83,21 @@ const ALL_PLACES = (() => {
   return list;
 })();
 
+/** 別の場所に、同じ・似た商品名があれば、注意の文 */
+const similarProductWarning = (name, main, category, sub) => {
+  const folded = foldCategoryName(name);
+  if (folded.length < 2) return null;
+  const hits = PRODUCT_PATHS.filter((p) => {
+    if (p.main === main && p.category === category && p.sub === sub) return false;
+    const f = foldCategoryName(p.product);
+    return f === folded || f.includes(folded) || folded.includes(f);
+  }).slice(0, 3);
+  if (hits.length === 0) return null;
+  return `「${name}」に似た商品名が、すでにあります（${hits
+    .map((h) => [h.main, h.category, h.sub, h.product].filter(Boolean).join(' > '))
+    .join('、')}）。重ならないか、確かめてください。`;
+};
+
 /** 新しい名前の、共通のチェック（空・長さ・使えない名前）。問題なければ '' */
 const nameError = (name, label, required) => {
   if (!name) return required ? `${label}の名前を入れてください。` : '';
@@ -99,19 +124,23 @@ const similarWarning = (name, exceptPath) => {
 
 /**
  * 提案の入力を確かめる。
- * @param {{ kind: 'category' | 'sub', main, category, sub, note }} input
+ * @param {{ kind: 'category' | 'sub' | 'product', main, category, sub, product, note }} input
  *   kind 'category' のとき: category は新しい中分類の名前、sub は任意の新しい小分類の名前
  *   kind 'sub' のとき:      category は今ある中分類（選んだもの）、sub は新しい小分類の名前
- * @returns {{ value: { kind, main, category, sub, note }, errors: Record<string, string>, warnings: string[] }}
+ *   kind 'product' のとき:  category・sub は今ある中分類・小分類（選んだもの）、product は新しい商品名
+ * @returns {{ value: { kind, main, category, sub, product, note }, errors: Record<string, string>, warnings: string[] }}
  *   errors が空なら送れる。warnings は送れるが、知らせたいこと
  */
 export const validateProposal = (input) => {
-  const kind = input.kind === 'sub' ? 'sub' : 'category';
+  const kind = KIND_VALUES.includes(input.kind) ? input.kind : 'category';
+  // 表から選んだ名前は、そのまま使う（そろえると、「（未調理）」の全角かっこが半角になり、表の名前と合わなくなる）
+  const picked = (text) => String(text || '').trim();
   const value = {
     kind,
-    main: cleanProposalText(input.main),
-    category: cleanProposalText(input.category),
-    sub: cleanProposalText(input.sub) || null,
+    main: picked(input.main),
+    category: kind === 'category' ? cleanProposalText(input.category) : picked(input.category),
+    sub: (kind === 'product' ? picked(input.sub) : cleanProposalText(input.sub)) || null,
+    product: kind === 'product' ? cleanProposalText(input.product) || null : null,
     note: cleanProposalText(input.note) || null,
   };
   const errors = {};
@@ -140,6 +169,26 @@ export const validateProposal = (input) => {
       errors.sub = subErr;
     } else if (value.sub && foldCategoryName(value.sub) === foldCategoryName(value.category)) {
       errors.sub = '小分類の名前が、中分類と同じです。';
+    }
+  } else if (kind === 'product') {
+    // 今ある小分類に、新しい商品名
+    if (!errors.main && !getProposalMids(value.main).includes(value.category)) {
+      errors.category = '中分類を選んでください。';
+    }
+    if (!errors.main && !errors.category && !getProposalSubs(value.main, value.category).includes(value.sub)) {
+      errors.sub = '小分類を選んでください。';
+    }
+    const productErr = nameError(value.product, '商品', true);
+    if (productErr) {
+      errors.product = productErr;
+    } else if (!errors.main && !errors.category && !errors.sub) {
+      const same = findSame(value.product, getProposalProducts(value.main, value.category, value.sub));
+      if (same) {
+        errors.product = `商品名「${same}」は、この小分類に、すでにあります。`;
+      } else {
+        const w = similarProductWarning(value.product, value.main, value.category, value.sub);
+        if (w) warnings.push(w);
+      }
     }
   } else {
     // 今ある中分類に、新しい小分類
@@ -175,11 +224,17 @@ export const describeProposal = (p) => {
   if (p.kind === 'sub') {
     return { title: `小分類「${p.sub_category}」`, place: `${p.main_category} > ${p.category} に追加` };
   }
-  if (p.kind === 'product') {
-    // 以前の形式（商品名の提案）
+  if (p.kind === 'product' && p.admin_note === LEGACY_AUTO_REJECT_NOTE) {
+    // 以前の形式（11/11 より前の商品名の提案。自動で見送りにしたもの）
     return {
       title: `商品名「${p.product_name}」（以前の形式）`,
       place: [p.main_category, p.category, p.sub_category].filter(Boolean).join(' > '),
+    };
+  }
+  if (p.kind === 'product') {
+    return {
+      title: `商品名「${p.product_name}」`,
+      place: `${[p.main_category, p.category, p.sub_category].filter(Boolean).join(' > ')} に追加`,
     };
   }
   return {

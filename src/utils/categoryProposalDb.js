@@ -33,7 +33,7 @@ export const fetchMyProposals = async () => {
 
 /**
  * 提案する
- * @param {{ kind, main, category, sub, note }} value validateProposal で、そろえた値
+ * @param {{ kind, main, category, sub, product, note }} value validateProposal で、そろえた値
  */
 export const submitCategoryProposal = async (value) => {
   const { data, error } = await supabase.rpc('submit_category_proposal', {
@@ -42,6 +42,7 @@ export const submitCategoryProposal = async (value) => {
     p_category: value.category,
     p_sub: value.sub || null,
     p_note: value.note || null,
+    p_product: value.product || null,
   });
   if (error) return { success: false, error: toMessage(error, '提案を送れませんでした。') };
   return { success: true, data };

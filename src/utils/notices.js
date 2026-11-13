@@ -3,14 +3,18 @@
 
 const storageKey = (userId) => `receipt_app_read_notices_${userId}`;
 
-/** 結果が出た提案（承認・見送り）を、通知として、新しい順（確認した日時 → 提案した日時）に並べる。承認待ちと、以前の形式（商品名の提案）は除く */
+// 11/11 に、以前の形式（商品名の提案）の承認待ちを、自動で見送りにしたときのメモ（DB の移行の SQL と同じ文）。この行は通知に出さない
+export const LEGACY_AUTO_REJECT_NOTE =
+  '提案の対象が「カテゴリ（中分類・小分類）」に変わりました。お手数ですが、もう一度提案してください。';
+
+/** 結果が出た提案（承認・見送り）を、通知として、新しい順（確認した日時 → 提案した日時）に並べる。承認待ちと、以前の形式の自動の見送りは除く */
 export const decidedNotices = (proposals) =>
   (proposals || [])
-    .filter((p) => (p.status === 'approved' || p.status === 'rejected') && p.kind !== 'product')
+    .filter((p) => (p.status === 'approved' || p.status === 'rejected') && p.admin_note !== LEGACY_AUTO_REJECT_NOTE)
     .sort((a, b) => String(b.reviewed_at || b.created_at || '').localeCompare(String(a.reviewed_at || a.created_at || '')));
 
 /** 提案の場所の表示（例: 常温 > 菓子 > ゼリー） */
-export const noticePlace = (p) => [p.main_category, p.category, p.sub_category].filter(Boolean).join(' > ');
+export const noticePlace = (p) => [p.main_category, p.category, p.sub_category, p.product_name].filter(Boolean).join(' > ');
 
 export const loadReadIds = (userId) => {
   try {

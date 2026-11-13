@@ -667,7 +667,7 @@ export default function Home({
             <div className="proposal-tip-body">
               <p className="proposal-tip-title">カテゴリを提案できます</p>
               <p className="proposal-tip-text">
-                ぴったりの分類が無くて「その他」になる商品があれば、新しい中分類・小分類を提案してください。承認されると、みんなの表に追加されます。
+                ぴったりの分類が無くて「その他」になる商品があれば、新しい中分類・小分類・商品名を提案してください。承認されると、みんなの表に追加されます。
               </p>
               <button type="button" className="proposal-tip-open" onClick={onOpenCategoryProposal}>
                 提案する ›

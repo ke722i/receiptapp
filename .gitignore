@@ -46,3 +46,7 @@ tools/gemini_chat_prompt.txt
 # Gemini のチャットで作ったレシートの JSON（個人のデータ。Git に入れない）
 tools/receipt_json/*
 !tools/receipt_json/.gitkeep
+
+# 提案の反映の前の Excel の控え（tools/apply_proposals.py）
+tools/categoryTable.backup.xlsx
+tools/proposals*.csv

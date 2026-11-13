@@ -9,6 +9,7 @@ import {
   getProposalMains,
   getProposalMids,
   getProposalSubs,
+  getProposalProducts,
   validateProposal,
   describeProposal,
 } from '../../utils/categoryProposal';
@@ -16,7 +17,7 @@ import { fetchMyProposals, submitCategoryProposal, withdrawCategoryProposal } fr
 import { formatPurchaseDate } from '../../utils/purchaseDate';
 import ConfirmDialog from '../confirmDialog/confirmDialog';
 
-const EMPTY_FORM = { kind: 'category', main: '', category: '', sub: '', note: '' };
+const EMPTY_FORM = { kind: 'category', main: '', category: '', sub: '', product: '', note: '' };
 
 // DB の日時（UTC）を、日本時間の日付（YYYY-MM-DD）に
 const toJstDate = (value) => {
@@ -42,8 +43,8 @@ function ExistingList({ title, names }) {
 
 /**
  * カテゴリの提案（設定画面・ホームのお知らせ・商品の編集画面の案内から開く）
- *  ・提案できるのは、カテゴリ（新しい中分類／今ある中分類に新しい小分類）だけ。商品名は AI が決めるので、提案しない
- *  ・管理者が確認して、承認したものは、管理者が商品名を決めて、次の表の更新で、全員の画面と AI の解析に追加される
+ *  ・提案できるのは、新しい中分類／今ある中分類に新しい小分類／今ある小分類に新しい商品名
+ *  ・管理者が確認して、承認したものは、次の表の更新で、全員の画面と AI の解析に追加される
  *  ・自分の提案の状況（承認待ち／承認／見送り）を見られる。承認待ちは取り下げられる
  */
 export default function CategoryProposal({ onBack }) {
@@ -83,11 +84,17 @@ export default function CategoryProposal({ onBack }) {
   }, []);
 
   const isSubKind = form.kind === 'sub';
+  const isProductKind = form.kind === 'product';
+  const picksMid = isSubKind || isProductKind; // 今ある中分類を選ぶ種類
   const mains = useMemo(() => getProposalMains(), []);
   const mids = useMemo(() => getProposalMids(form.main), [form.main]);
   const subs = useMemo(
-    () => (isSubKind && form.category ? getProposalSubs(form.main, form.category) : []),
-    [isSubKind, form.main, form.category]
+    () => (picksMid && form.category ? getProposalSubs(form.main, form.category) : []),
+    [picksMid, form.main, form.category]
+  );
+  const products = useMemo(
+    () => (isProductKind && form.sub ? getProposalProducts(form.main, form.category, form.sub) : []),
+    [isProductKind, form.main, form.category, form.sub]
   );
   const check = useMemo(() => validateProposal(form), [form]);
   const pendingCount = proposals.filter((p) => p.status === 'pending').length;
@@ -97,10 +104,11 @@ export default function CategoryProposal({ onBack }) {
   const update = (field, value) => {
     setMessage(null);
     setForm((prev) => {
-      const subKind = prev.kind === 'sub';
-      if (field === 'kind') return { ...prev, kind: value, category: '', sub: '' };
-      if (field === 'main' && subKind) return { ...prev, main: value, category: '', sub: '' };
-      if (field === 'category' && subKind) return { ...prev, category: value, sub: '' };
+      const picks = prev.kind === 'sub' || prev.kind === 'product';
+      if (field === 'kind') return { ...prev, kind: value, category: '', sub: '', product: '' };
+      if (field === 'main' && picks) return { ...prev, main: value, category: '', sub: '', product: '' };
+      if (field === 'category' && picks) return { ...prev, category: value, sub: '', product: '' };
+      if (field === 'sub' && prev.kind === 'product') return { ...prev, sub: value, product: '' };
       return { ...prev, [field]: value };
     });
   };
@@ -122,10 +130,12 @@ export default function CategoryProposal({ onBack }) {
       main_category: check.value.main,
       category: check.value.category,
       sub_category: check.value.sub,
+      product_name: check.value.product,
     });
     setMessage({ type: 'success', text: `${title}を提案しました。管理者が確認します。` });
     // 種類と大分類は残し、続けて提案しやすくする
-    setForm((prev) => ({ ...prev, category: '', sub: '', note: '' }));
+    //  商品名の提案は、中分類・小分類も残す（同じ小分類に、続けて足しやすい）
+    setForm((prev) => (prev.kind === 'product' ? { ...prev, product: '', note: '' } : { ...prev, category: '', sub: '', note: '' }));
     setTouched(false);
     loadProposals();
   };
@@ -155,14 +165,13 @@ export default function CategoryProposal({ onBack }) {
 
       <main className="proposal-main">
         <p className="proposal-intro">
-          ぴったりの分類が無くて「その他」になる商品があるときに、新しい中分類・小分類を提案してください。
-          管理者が確認して、承認したものは、管理者が商品名を決めて、次の更新で、すべてのユーザーの表に追加します（すぐには追加されません）。
-          商品名は、AI が決めるので、提案できません。
+          ぴったりの分類や商品名が無くて「その他」になる商品があるときに、新しい中分類・小分類・商品名を提案してください。
+          管理者が確認して、承認したものは、次の更新で、すべてのユーザーの表に追加します（すぐには追加されません）。
         </p>
 
         {/* 提案の入力 */}
         <form className="proposal-card" onSubmit={handleSubmit} noValidate>
-          <h2 className="proposal-section-title">新しいカテゴリを提案する</h2>
+          <h2 className="proposal-section-title">新しいカテゴリ・商品名を提案する</h2>
 
           <fieldset className="proposal-kinds">
             <legend className="proposal-label">何を追加しますか</legend>
@@ -193,7 +202,66 @@ export default function CategoryProposal({ onBack }) {
             {errorOf('main') && <span className="proposal-error">{errorOf('main')}</span>}
           </label>
 
-          {isSubKind ? (
+          {isProductKind ? (
+            <>
+              <label className="proposal-field">
+                <span className="proposal-label">中分類（今あるもの）</span>
+                <select
+                  className="proposal-input"
+                  value={form.category}
+                  disabled={!form.main}
+                  onChange={(e) => update('category', e.target.value)}
+                >
+                  <option value="">{form.main ? '選んでください' : '先に大分類を選んでください'}</option>
+                  {mids.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+                {errorOf('category') && <span className="proposal-error">{errorOf('category')}</span>}
+              </label>
+
+              <label className="proposal-field">
+                <span className="proposal-label">小分類（今あるもの）</span>
+                <select
+                  className="proposal-input"
+                  value={form.sub}
+                  disabled={!form.category}
+                  onChange={(e) => update('sub', e.target.value)}
+                >
+                  <option value="">{form.category ? '選んでください' : '先に中分類を選んでください'}</option>
+                  {subs.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+                {errorOf('sub') && <span className="proposal-error">{errorOf('sub')}</span>}
+              </label>
+
+              {form.sub && (
+                <ExistingList
+                  key={`${form.main}>${form.category}>${form.sub}`}
+                  title="この小分類に、今ある商品名"
+                  names={products}
+                />
+              )}
+
+              <label className="proposal-field">
+                <span className="proposal-label">新しい商品名</span>
+                <input
+                  type="text"
+                  className="proposal-input"
+                  placeholder="例: 冷凍ライチ"
+                  maxLength={PROPOSAL_NAME_MAX + 10}
+                  value={form.product}
+                  onChange={(e) => update('product', e.target.value)}
+                />
+                {errorOf('product') && <span className="proposal-error">{errorOf('product')}</span>}
+              </label>
+            </>
+          ) : isSubKind ? (
             <>
               <label className="proposal-field">
                 <span className="proposal-label">中分類（今あるもの）</span>
