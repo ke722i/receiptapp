@@ -1,4 +1,4 @@
-# 承認したカテゴリの提案を、tools/categoryTable.xlsx に足す（半自動。手順は docs/procedures.md「承認した提案の反映」）
+# 承認したカテゴリの提案を、tools/categoryTable.xlsx に足す（半自動。手順は docs/claude/procedures.md「承認した提案の反映」）
 #
 # 使い方（プロジェクトの直下で）:
 #   python tools/apply_proposals.py 提案.csv            # 何を足すかを表示するだけ（Excel は変えない）
@@ -206,7 +206,7 @@ def plan_and_apply(xlsx, items, apply):
 
 
 def rebuild():
-    """Excel から categoryData.js を作り直し、Edge Function 用のコピーを更新する（docs/procedures.md「カテゴリ表の更新手順」の 2〜3, 8）"""
+    """Excel から categoryData.js を作り直し、Edge Function 用のコピーを更新する（docs/claude/procedures.md「カテゴリ表の更新手順」の 2〜3, 8）"""
     work = os.path.join(ROOT, 'tools')
     tmp = os.path.join(work, '.parsed_tree_tmp')
     os.makedirs(tmp, exist_ok=True)

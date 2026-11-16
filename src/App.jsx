@@ -16,6 +16,7 @@ import StoreList from './components/storeList/storeList';
 import MyStores from './components/myStores/myStores';
 import CategoryProposal from './components/categoryProposal/categoryProposal';
 import Notices from './components/notices/notices';
+import AdminProposals from './components/adminProposals/adminProposals';
 import { fetchReceiptById } from './utils/receiptDb';
 import { isOpenablePath } from './utils/categoryUtils';
 import { createManualReceiptData } from './utils/manualReceipt';
@@ -225,8 +226,10 @@ function App() {
             setProposalBackScreen('settings');
             setCurrentScreen('categoryProposal');
           }}
+          onOpenAdminProposals={() => setCurrentScreen('adminProposals')}
         />
       )}
+      {currentScreen === 'adminProposals' && <AdminProposals onBack={() => setCurrentScreen('settings')} />}
       {currentScreen === 'notices' && (
         <Notices
           notices={notices.list}
