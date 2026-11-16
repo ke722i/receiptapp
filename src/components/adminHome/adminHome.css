@@ -1,0 +1,281 @@
+/* 管理者ホーム・お知らせの配信・アカウントの管理（カードやボタンは adminProposals.css と同じ） */
+.admin-home-account {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 15px;
+  font-weight: bold;
+  color: #333333;
+}
+
+.admin-home-account .admin-badge,
+.admin-user-badges .admin-badge {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 10px;
+  background-color: #ffeb3b;
+  color: #b71c1c;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.admin-home-section {
+  margin-bottom: 18px;
+}
+
+.admin-home-section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.admin-home-reload {
+  padding: 4px 12px;
+  border: 1px solid #dddddd;
+  border-radius: 14px;
+  background-color: #ffffff;
+  color: #555555;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+/* 利用状況の数字（2 列のタイル） */
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.admin-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px;
+  background-color: #ffffff;
+  border: 1px solid #eeeeee;
+  border-radius: 12px;
+  text-align: left;
+}
+
+.admin-stat-label {
+  font-size: 12px;
+  color: #777777;
+}
+
+.admin-stat-value {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333333;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-stat-sub {
+  font-size: 11px;
+  color: #999999;
+}
+
+/* 管理者の機能の入口 */
+.admin-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.admin-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px;
+  background-color: #ffffff;
+  border: 1px solid #eeeeee;
+  border-radius: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.admin-menu-icon {
+  font-size: 22px;
+}
+
+.admin-menu-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-menu-title {
+  font-size: 15px;
+  font-weight: bold;
+  color: #333333;
+}
+
+.admin-menu-sub {
+  font-size: 12px;
+  color: #777777;
+}
+
+.admin-menu-count {
+  min-width: 22px;
+  padding: 2px 7px;
+  box-sizing: border-box;
+  border-radius: 11px;
+  background-color: #e53935;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.admin-menu-arrow {
+  font-size: 20px;
+  color: #bbbbbb;
+}
+
+.admin-home-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.admin-home-general,
+.admin-home-logout {
+  width: 100%;
+  padding: 12px 0;
+  border-radius: 22px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.admin-home-general {
+  border: 1.5px solid #e53935;
+  background-color: #ffffff;
+  color: #e53935;
+}
+
+.admin-home-logout {
+  border: 1.5px solid #bbbbbb;
+  background-color: #ffffff;
+  color: #555555;
+}
+
+/* チェック（スイッチの代わり） */
+.admin-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #333333;
+  cursor: pointer;
+}
+
+.admin-check input {
+  width: 18px;
+  height: 18px;
+}
+
+.admin-check.is-disabled {
+  color: #999999;
+}
+
+.admin-delete {
+  flex: 1;
+  padding: 10px 0;
+  border: 1.5px solid #c62828;
+  border-radius: 22px;
+  background-color: #ffffff;
+  color: #c62828;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.announcement-body {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* アカウントの管理 */
+.admin-users-tools {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.admin-users-tools .proposal-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-users-sort {
+  flex: 0 0 auto !important;
+  width: auto;
+}
+
+.admin-users-count {
+  margin: 0 0 6px;
+  font-size: 12px;
+  color: #888888;
+}
+
+.admin-self {
+  margin-left: 4px;
+  font-size: 12px;
+  font-weight: normal;
+  color: #888888;
+}
+
+.admin-user-badges {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.admin-test-badge {
+  padding: 1px 8px;
+  border-radius: 10px;
+  background-color: #e3f2fd;
+  color: #1565c0;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.admin-parses {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.admin-parse {
+  padding: 3px 10px;
+  border-radius: 12px;
+  background-color: #f5f5f5;
+  color: #555555;
+  font-size: 12px;
+}
+
+.admin-parse b {
+  font-size: 14px;
+  color: #333333;
+}
+
+/* 今日の解析が上限（30 回）に達した */
+.admin-parse.is-limit {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.admin-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #f0f0f0;
+}

@@ -10,6 +10,7 @@
 | ファイル | 内容 |
 |---|---|
 | `release-flow.md` | 公開までの流れ（コミット・PR・マージ・デプロイ） |
+| `admin.md` | 管理者の画面の使い方（利用状況・お知らせ・アカウントの管理） |
 | `proposal-approval.md` | カテゴリの提案の承認のしかた（管理者画面・CSV・表への反映） |
 | `receipt-import.md` | Gemini のチャットで、レシートを入力する方法 |
 | `category-table.md` | カテゴリ表（Excel）の更新、店名の追加 |
