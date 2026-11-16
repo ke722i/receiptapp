@@ -146,6 +146,8 @@ export const validateProposal = (input) => {
   const errors = {};
   const warnings = [];
 
+  if (!KIND_VALUES.includes(input.kind)) errors.kind = '追加するものを選んでください。';
+
   if (!getProposalMains().includes(value.main)) {
     errors.main = '大分類を選んでください。';
   }
