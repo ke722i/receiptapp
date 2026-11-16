@@ -362,3 +362,18 @@
   color: #666666;
   cursor: pointer;
 }
+
+/* 種類を選ぶ前の案内 */
+.proposal-hint {
+  margin: 0;
+  padding: 10px 2px 2px;
+  font-size: 13px;
+  color: #888888;
+}
+
+/* 必須の印（赤い「＊」） */
+.proposal-required {
+  margin-left: 3px;
+  color: #e53935;
+  font-weight: bold;
+}

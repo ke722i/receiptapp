@@ -17,7 +17,7 @@ import { fetchMyProposals, submitCategoryProposal, withdrawCategoryProposal } fr
 import { formatPurchaseDate } from '../../utils/purchaseDate';
 import ConfirmDialog from '../confirmDialog/confirmDialog';
 
-const EMPTY_FORM = { kind: 'category', main: '', category: '', sub: '', product: '', note: '' };
+const EMPTY_FORM = { kind: '', main: '', category: '', sub: '', product: '', note: '' };
 
 // DB の日時（UTC）を、日本時間の日付（YYYY-MM-DD）に
 const toJstDate = (value) => {
@@ -174,7 +174,7 @@ export default function CategoryProposal({ onBack }) {
           <h2 className="proposal-section-title">新しいカテゴリ・商品名を提案する</h2>
 
           <fieldset className="proposal-kinds">
-            <legend className="proposal-label">何を追加しますか</legend>
+            <legend className="proposal-label">何を追加しますか<span className="proposal-required" aria-label="必須">＊</span></legend>
             {PROPOSAL_KINDS.map((k) => (
               <label key={k.value} className={`proposal-kind ${form.kind === k.value ? 'is-selected' : ''}`}>
                 <input
@@ -189,8 +189,12 @@ export default function CategoryProposal({ onBack }) {
             ))}
           </fieldset>
 
+          {!form.kind && <p className="proposal-hint">追加するものを選んでください。</p>}
+
+          {form.kind && (
+          <>
           <label className="proposal-field">
-            <span className="proposal-label">大分類</span>
+            <span className="proposal-label">大分類<span className="proposal-required" aria-label="必須">＊</span></span>
             <select className="proposal-input" value={form.main} onChange={(e) => update('main', e.target.value)}>
               <option value="">選んでください</option>
               {mains.map((name) => (
@@ -205,7 +209,7 @@ export default function CategoryProposal({ onBack }) {
           {isProductKind ? (
             <>
               <label className="proposal-field">
-                <span className="proposal-label">中分類（今あるもの）</span>
+                <span className="proposal-label">中分類（今あるもの）<span className="proposal-required" aria-label="必須">＊</span></span>
                 <select
                   className="proposal-input"
                   value={form.category}
@@ -223,7 +227,7 @@ export default function CategoryProposal({ onBack }) {
               </label>
 
               <label className="proposal-field">
-                <span className="proposal-label">小分類（今あるもの）</span>
+                <span className="proposal-label">小分類（今あるもの）<span className="proposal-required" aria-label="必須">＊</span></span>
                 <select
                   className="proposal-input"
                   value={form.sub}
@@ -249,7 +253,7 @@ export default function CategoryProposal({ onBack }) {
               )}
 
               <label className="proposal-field">
-                <span className="proposal-label">新しい商品名</span>
+                <span className="proposal-label">新しい商品名<span className="proposal-required" aria-label="必須">＊</span></span>
                 <input
                   type="text"
                   className="proposal-input"
@@ -264,7 +268,7 @@ export default function CategoryProposal({ onBack }) {
           ) : isSubKind ? (
             <>
               <label className="proposal-field">
-                <span className="proposal-label">中分類（今あるもの）</span>
+                <span className="proposal-label">中分類（今あるもの）<span className="proposal-required" aria-label="必須">＊</span></span>
                 <select
                   className="proposal-input"
                   value={form.category}
@@ -286,7 +290,7 @@ export default function CategoryProposal({ onBack }) {
               )}
 
               <label className="proposal-field">
-                <span className="proposal-label">新しい小分類の名前</span>
+                <span className="proposal-label">新しい小分類の名前<span className="proposal-required" aria-label="必須">＊</span></span>
                 <input
                   type="text"
                   className="proposal-input"
@@ -303,7 +307,7 @@ export default function CategoryProposal({ onBack }) {
               {form.main && <ExistingList key={form.main} title={`${form.main}に、今ある中分類`} names={mids} />}
 
               <label className="proposal-field">
-                <span className="proposal-label">新しい中分類の名前</span>
+                <span className="proposal-label">新しい中分類の名前<span className="proposal-required" aria-label="必須">＊</span></span>
                 <input
                   type="text"
                   className="proposal-input"
@@ -317,7 +321,7 @@ export default function CategoryProposal({ onBack }) {
 
               <label className="proposal-field">
                 <span className="proposal-label">
-                  小分類の名前（任意<span className="proposal-label-gap" />中分類の中に作りたいものがあれば）
+                  小分類の名前（中分類の中に作りたいものがあれば）
                 </span>
                 <input
                   type="text"
@@ -334,7 +338,7 @@ export default function CategoryProposal({ onBack }) {
 
           <label className="proposal-field">
             <span className="proposal-label">
-              どんな商品が入るか（任意<span className="proposal-label-gap" />例を書くと、承認のときの参考になります）
+              どんな商品が入るか（例を書くと、承認のときの参考になります）
             </span>
             <textarea
               className="proposal-input proposal-textarea"
@@ -366,6 +370,8 @@ export default function CategoryProposal({ onBack }) {
             承認待ち: {pendingCount} / {PROPOSAL_PENDING_LIMIT}件
             {atLimit && '（上限です。結果が出るまで、お待ちください）'}
           </p>
+          </>
+          )}
         </form>
 
         {/* 自分の提案 */}
