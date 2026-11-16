@@ -243,3 +243,13 @@
   position: relative;
   touch-action: pan-y; /* 縦のスクロールはそのまま。横の動きは、スワイプに使う */
 }
+
+/* 運営からのお知らせ（重要度 小・中） */
+.notice-result.is-announcement {
+  background-color: #1976d2;
+}
+
+.notice-announcement-body {
+  white-space: pre-wrap;
+  word-break: break-word;
+}

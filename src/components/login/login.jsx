@@ -1,13 +1,25 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../../services/supabaseClient';
 import './login.css';
 import appLogo from '../../assets/logo.png';
+import { fetchLoginAnnouncements, formatDateTime } from '../../utils/announcements';
 
 export default function Login({ onNavigateToRegister, onLoginSuccess }) {
   const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  // ログイン画面のお知らせ（管理者が「ログイン画面にも出す」にしたもの。ログインしていなくても読める）
+  const [notes, setNotes] = useState([]);
+  useEffect(() => {
+    let cancelled = false;
+    fetchLoginAnnouncements().then((list) => {
+      if (!cancelled) setNotes(list);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -45,6 +57,21 @@ export default function Login({ onNavigateToRegister, onLoginSuccess }) {
         <div className="logo-section">
           <img src={appLogo} alt="レシート即！メモ" className="app-logo" />
         </div>
+
+        {notes.length > 0 && (
+          <div className="login-notices">
+            {notes.map((a) => (
+              <div key={a.id} className={`login-notice ${a.level === 'high' ? 'is-high' : ''}`} role="note">
+                <p className="login-notice-title">
+                  <span aria-hidden="true">{a.level === 'high' ? '⚠️ ' : '📢 '}</span>
+                  {a.title}
+                </p>
+                {a.body && <p className="login-notice-body">{a.body}</p>}
+                {a.ends_at && <p className="login-notice-ends">{formatDateTime(a.ends_at)} まで</p>}
+              </div>
+            ))}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="login-form">
           {errorMessage && (

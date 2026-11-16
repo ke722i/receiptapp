@@ -3,6 +3,12 @@ import './notices.css';
 import { noticePlace } from '../../utils/notices';
 import { formatPurchaseDate } from '../../utils/purchaseDate';
 
+// DB の日時（UTC）を、日本時間の日付に
+const toJstDate = (value) => {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? '' : formatPurchaseDate(date.toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' }));
+};
+
 const ACTION_WIDTH = 84; // スワイプで出るボタンの幅（px）
 
 // 1 件の通知。左にスワイプすると、右にボタンが出る。縦のスクロールは、そのまま通す
@@ -10,9 +16,12 @@ function NoticeRow({ notice: n, isUnread, isOpen, onOpen, onMarkRead, onMarkUnre
   const [drag, setDrag] = useState(null); // 指で動かしている間の位置（px。0〜-ACTION_WIDTH）
   const start = useRef(null); // { x, y, base, axis }
   const isApproved = n.status === 'approved';
+  const isAnnouncement = n.kind === 'announcement';
+  const canSwipe = !n.noRead; // 中のお知らせ（ホームに出るもの）は、既読・未読の切り替えをしない
   const offset = drag ?? (isOpen ? -ACTION_WIDTH : 0);
 
   const onTouchStart = (e) => {
+    if (!canSwipe) return;
     const t = e.touches[0];
     start.current = { x: t.clientX, y: t.clientY, base: isOpen ? -ACTION_WIDTH : 0, axis: null };
   };
@@ -37,16 +46,17 @@ function NoticeRow({ notice: n, isUnread, isOpen, onOpen, onMarkRead, onMarkUnre
     }
     const open = (drag ?? s.base) < -ACTION_WIDTH / 2;
     setDrag(null);
-    onOpen(open ? n.id : null);
+    onOpen(open ? n.key : null);
   };
 
   const handleAction = () => {
-    (isUnread ? onMarkRead : onMarkUnread)([n.id]);
+    (isUnread ? onMarkRead : onMarkUnread)([n.key]);
     onOpen(null);
   };
 
   return (
     <li className="notice-swipe">
+      {canSwipe && (
       <button
         type="button"
         className={`notice-swipe-action ${isUnread ? 'is-read' : 'is-unread'}`}
@@ -56,6 +66,7 @@ function NoticeRow({ notice: n, isUnread, isOpen, onOpen, onMarkRead, onMarkUnre
       >
         {isUnread ? '既読' : '未読に戻す'}
       </button>
+      )}
       <div
         className={`notice-item ${isUnread ? 'is-unread' : ''}`}
         style={{ transform: `translateX(${offset}px)`, transition: drag === null ? 'transform 0.2s' : 'none' }}
@@ -65,21 +76,36 @@ function NoticeRow({ notice: n, isUnread, isOpen, onOpen, onMarkRead, onMarkUnre
         onTouchCancel={onTouchEnd}
         onClick={() => isOpen && onOpen(null)}
       >
-        <span className="notice-mail" aria-hidden="true">{isUnread ? '✉️' : '📭'}</span>
+        <span className="notice-mail" aria-hidden="true">{isAnnouncement ? '📢' : isUnread ? '✉️' : '📭'}</span>
         <div className="notice-body">
-          <p className="notice-title">
-            {isUnread && <span className="notice-new">未読</span>}
-            <span className={`notice-result ${isApproved ? 'is-approved' : 'is-rejected'}`}>
-              {isApproved ? '承認' : '見送り'}
-            </span>
-            {isApproved ? '提案が承認されました' : '提案は、見送りになりました'}
-          </p>
-          <p className="notice-place">{noticePlace(n)}</p>
-          {n.admin_note && <p className="notice-note">管理者より: {n.admin_note}</p>}
+          {isAnnouncement ? (
+            <>
+              <p className="notice-title">
+                {isUnread && <span className="notice-new">未読</span>}
+                <span className="notice-result is-announcement">お知らせ</span>
+                {n.title}
+              </p>
+              {n.body && <p className="notice-note notice-announcement-body">{n.body}</p>}
+            </>
+          ) : (
+            <>
+              <p className="notice-title">
+                {isUnread && <span className="notice-new">未読</span>}
+                <span className={`notice-result ${isApproved ? 'is-approved' : 'is-rejected'}`}>
+                  {isApproved ? '承認' : '見送り'}
+                </span>
+                {isApproved ? '提案が承認されました' : '提案は、見送りになりました'}
+              </p>
+              <p className="notice-place">{noticePlace(n)}</p>
+              {n.admin_note && <p className="notice-note">管理者より: {n.admin_note}</p>}
+            </>
+          )}
           <div className="notice-foot">
-            <p className="notice-date">{formatPurchaseDate((n.reviewed_at || n.created_at || '').slice(0, 10))}</p>
-            {isUnread ? (
-              <button type="button" className="notice-read-button" onClick={() => onMarkRead([n.id])}>
+            <p className="notice-date">{toJstDate(n.sortAt)}</p>
+            {n.noRead ? (
+              <span className="notice-read-label">ホームのお知らせ</span>
+            ) : isUnread ? (
+              <button type="button" className="notice-read-button" onClick={() => onMarkRead([n.key])}>
                 既読にする
               </button>
             ) : (
@@ -93,11 +119,11 @@ function NoticeRow({ notice: n, isUnread, isOpen, onOpen, onMarkRead, onMarkUnre
 }
 
 /**
- * 通知の一覧（結果が出たカテゴリの提案: 承認・見送り）
- * @param {object[]} notices 結果が出た提案（新しい順）
- * @param {number[]} unreadIds まだ読んでいない通知の id（目印を付ける。画面を開いただけでは、既読にならない）
- * @param {(ids: number[]) => void} onMarkRead 指定した通知を既読にする
- * @param {(ids: number[]) => void} onMarkUnread 指定した通知を未読に戻す
+ * 通知の一覧（結果が出たカテゴリの提案: 承認・見送り ＋ お知らせの小・中。utils/notices.js の buildNoticeItems）
+ * @param {object[]} notices 並べるもの（新しい順。key・kind を持つ）
+ * @param {(number|string)[]} unreadIds まだ読んでいない通知の key（目印を付ける。画面を開いただけでは、既読にならない）
+ * @param {(keys: (number|string)[]) => void} onMarkRead 指定した通知を既読にする
+ * @param {(keys: (number|string)[]) => void} onMarkUnread 指定した通知を未読に戻す
  * ・通知を左にスワイプすると、「既読」（既読の通知は「未読に戻す」）のボタンが出る（LINE のように）
  * @param {'loading'|'error'|'ready'} status
  */
@@ -117,7 +143,7 @@ export default function Notices({ notices = [], unreadIds = [], status = 'ready'
         {status === 'loading' && <p className="notices-message">読み込み中...</p>}
         {status === 'error' && <p className="notices-message notices-error">通知を読み込めませんでした。</p>}
         {status === 'ready' && notices.length === 0 && (
-          <p className="notices-message">通知はありません。<br />提案（カテゴリ・商品名）の結果（承認・見送り）が出ると、ここにお知らせします。</p>
+          <p className="notices-message">通知はありません。<br />提案（カテゴリ・商品名）の結果（承認・見送り）と、運営からのお知らせが、ここに届きます。</p>
         )}
 
         {status === 'ready' && notices.length > 0 && (
@@ -133,10 +159,10 @@ export default function Notices({ notices = [], unreadIds = [], status = 'ready'
           <ul className="notices-list">
             {notices.map((n) => (
               <NoticeRow
-                key={n.id}
+                key={n.key}
                 notice={n}
-                isUnread={unreadIds.includes(n.id)}
-                isOpen={openId === n.id}
+                isUnread={unreadIds.includes(n.key)}
+                isOpen={openId === n.key}
                 onOpen={setOpenId}
                 onMarkRead={onMarkRead}
                 onMarkUnread={onMarkUnread}
