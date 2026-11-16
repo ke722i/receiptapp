@@ -90,22 +90,21 @@ function App() {
   };
 
   // 通知（承認されたカテゴリの提案）。ホームを開くたびに、自分の提案を 1 回読む（軽い問い合わせ）。
-  //  「読んだ」は端末に覚える。通知の画面を開いたとき、開く前の「読んだ」を控えて、未読の目印に使う
+  //  「読んだ」は端末に覚える。通知の画面を開いただけでは、既読にならない（通知ごとの「既読にする」か、「すべて既読にする」）
   const [notices, setNotices] = useState({ status: 'loading', list: [] });
   const [readVersion, setReadVersion] = useState(0);
   const readIds = useMemo(() => loadReadIds(userId), [userId, readVersion]); // eslint-disable-line react-hooks/exhaustive-deps
-  const [readIdsOnOpen, setReadIdsOnOpen] = useState([]);
   const unreadList = unreadIds(notices.list, readIds);
-  // 通知を、読んだことにする（端末に覚える）
-  const markNoticesRead = (list) => {
-    const all = list.map((n) => n.id);
-    saveReadIds(userId, [...new Set([...loadReadIds(userId), ...all])]);
+  // 通知を、読んだことにする（端末に覚える）。ids は、既読にする通知の id
+  const markNoticesRead = (ids) => {
+    saveReadIds(userId, [...new Set([...loadReadIds(userId), ...ids])]);
     setReadVersion((v) => v + 1);
   };
-  const screenRef = useRef(currentScreen);
-  useEffect(() => {
-    screenRef.current = currentScreen;
-  }, [currentScreen]);
+  // 通知を、未読に戻す
+  const markNoticesUnread = (ids) => {
+    saveReadIds(userId, loadReadIds(userId).filter((id) => !ids.includes(id)));
+    setReadVersion((v) => v + 1);
+  };
   const noticeRequest = useRef(0);
   useEffect(() => {
     if (currentScreen !== 'home') return;
@@ -118,10 +117,8 @@ function App() {
       }
       const list = decidedNotices(result.data);
       setNotices({ status: 'ready', list });
-      // 読み込み中に通知の画面を開いていたときは、そのまま読んだことにする
-      if (screenRef.current === 'notices') markNoticesRead(list);
     });
-  }, [currentScreen]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [currentScreen]);
 
   // 管理者が配信したお知らせ（ホームを開くたびに読む。「✕」で閉じたものは、端末に覚えて出さない）
   const [announcements, setAnnouncements] = useState([]);
@@ -243,8 +240,6 @@ function App() {
           onCloseAnnouncement={closeAnnouncement}
           unreadCount={notices.status === 'ready' ? unreadList.length : 0}
           onOpenNotices={() => {
-            setReadIdsOnOpen(readIds);
-            if (notices.status === 'ready') markNoticesRead(notices.list);
             setCurrentScreen('notices');
           }}
           onLogout={() => setCurrentScreen('login')}
@@ -296,7 +291,9 @@ function App() {
       {currentScreen === 'notices' && (
         <Notices
           notices={notices.list}
-          unreadIds={unreadIds(notices.list, readIdsOnOpen)}
+          unreadIds={unreadList}
+          onMarkRead={(ids) => markNoticesRead(ids)}
+          onMarkUnread={(ids) => markNoticesUnread(ids)}
           status={notices.status}
           onBack={() => setCurrentScreen('home')}
         />

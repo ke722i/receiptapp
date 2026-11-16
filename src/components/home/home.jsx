@@ -98,6 +98,13 @@ export default function Home({
   const [itemNames, setItemNames] = useState(null); // null: まだ / { index } / { error }
 
   // カテゴリの提案のお知らせ（「×」で閉じたら、この端末では、もう出さない）
+  // お知らせのスライド（管理者のお知らせ + 提案のお知らせ）
+  const [slideIndex, setSlideIndex] = useState(0);
+  const carouselRef = useRef(null);
+  const handleCarouselScroll = (e) => {
+    const el = e.currentTarget;
+    setSlideIndex(Math.round(el.scrollLeft / (el.clientWidth || 1)));
+  };
   const [showProposalTip, setShowProposalTip] = useState(() => {
     try {
       return localStorage.getItem(STORAGE_KEY_PROPOSAL_TIP) !== '1';
@@ -113,6 +120,8 @@ export default function Home({
       // 保存できなくても、この画面では閉じる
     }
   };
+
+  const noticeSlideCount = announcements.length + (showProposalTip && onOpenCategoryProposal ? 1 : 0);
 
   // 検索タグ履歴の初期化
   const [searchHistory, setSearchHistory] = useState(() => {
@@ -674,39 +683,50 @@ export default function Home({
           )}
         </div>
 
-        {/* 管理者が配信したお知らせ（「✕」で閉じると、この端末では出ない。内容が直されると、もう一度出る） */}
-        {announcements.map((a) => (
-          <aside key={`${a.id}:${a.updated_at}`} className="proposal-tip announcement-card" aria-label="運営からのお知らせ">
-            <span className="proposal-tip-icon" aria-hidden="true">📢</span>
-            <div className="proposal-tip-body">
-              <p className="proposal-tip-title">{a.title}</p>
-              {a.body && <p className="proposal-tip-text announcement-text">{a.body}</p>}
-            </div>
-            {onCloseAnnouncement && (
-              <button type="button" className="proposal-tip-close" onClick={() => onCloseAnnouncement(a)} aria-label="お知らせを閉じる">
-                ✕
-              </button>
+        {/* お知らせ（管理者のお知らせ・カテゴリの提案）。横にスライドして見る。「✕」で閉じると、この端末では出ない */}
+        {noticeSlideCount > 0 && (
+          <div className="notice-carousel-wrap">
+            <div className="notice-carousel" ref={carouselRef} onScroll={handleCarouselScroll}>
+            {announcements.map((a) => (
+              <aside key={`${a.id}:${a.updated_at}`} className="proposal-tip announcement-card" aria-label="運営からのお知らせ">
+                <span className="proposal-tip-icon" aria-hidden="true">📢</span>
+                <div className="proposal-tip-body">
+                  <p className="proposal-tip-title">{a.title}</p>
+                  {a.body && <p className="proposal-tip-text announcement-text">{a.body}</p>}
+                </div>
+                {onCloseAnnouncement && (
+                  <button type="button" className="proposal-tip-close" onClick={() => onCloseAnnouncement(a)} aria-label="お知らせを閉じる">
+                    ✕
+                  </button>
+                )}
+              </aside>
+            ))}
+                {showProposalTip && onOpenCategoryProposal && (
+              <aside className="proposal-tip" aria-label="お知らせ">
+                <span className="proposal-tip-icon" aria-hidden="true">💡</span>
+                <div className="proposal-tip-body">
+                  <p className="proposal-tip-title">カテゴリを提案できます</p>
+                  <p className="proposal-tip-text">
+                    ぴったりの分類が無くて「その他」になる商品があれば、新しい中分類・小分類・商品名を提案してください。承認されると、みんなの表に追加されます。
+                  </p>
+                  <button type="button" className="proposal-tip-open" onClick={onOpenCategoryProposal}>
+                    提案する ›
+                  </button>
+                </div>
+                <button type="button" className="proposal-tip-close" onClick={dismissProposalTip} aria-label="お知らせを閉じる">
+                  ✕
+                </button>
+              </aside>
             )}
-          </aside>
-        ))}
-
-        {/* お知らせ: カテゴリの提案ができること */}
-        {showProposalTip && onOpenCategoryProposal && (
-          <aside className="proposal-tip" aria-label="お知らせ">
-            <span className="proposal-tip-icon" aria-hidden="true">💡</span>
-            <div className="proposal-tip-body">
-              <p className="proposal-tip-title">カテゴリを提案できます</p>
-              <p className="proposal-tip-text">
-                ぴったりの分類が無くて「その他」になる商品があれば、新しい中分類・小分類・商品名を提案してください。承認されると、みんなの表に追加されます。
-              </p>
-              <button type="button" className="proposal-tip-open" onClick={onOpenCategoryProposal}>
-                提案する ›
-              </button>
             </div>
-            <button type="button" className="proposal-tip-close" onClick={dismissProposalTip} aria-label="お知らせを閉じる">
-              ✕
-            </button>
-          </aside>
+            {noticeSlideCount > 1 && (
+              <div className="notice-dots" aria-hidden="true">
+                {Array.from({ length: noticeSlideCount }, (_, i) => (
+                  <span key={i} className={`notice-dot ${i === Math.min(slideIndex, noticeSlideCount - 1) ? 'is-active' : ''}`} />
+                ))}
+              </div>
+            )}
+          </div>
         )}
 
         {/* お気に入り（商品詳細の ☆ で入れた商品） */}

@@ -832,3 +832,46 @@
   white-space: pre-wrap; /* 改行をそのまま出す */
   word-break: break-word;
 }
+
+/* お知らせのスライド（横にスワイプ。1 枚ずつ止まる） */
+.notice-carousel-wrap {
+  margin-bottom: 20px;
+}
+
+.notice-carousel {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.notice-carousel::-webkit-scrollbar {
+  display: none;
+}
+
+.notice-carousel > .proposal-tip {
+  flex: 0 0 100%;
+  box-sizing: border-box;
+  margin-bottom: 0;
+  scroll-snap-align: start;
+}
+
+.notice-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.notice-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #d0d0d0;
+}
+
+.notice-dot.is-active {
+  background-color: #e53935;
+}
