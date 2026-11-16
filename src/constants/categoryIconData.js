@@ -1,5 +1,5 @@
 // 商品ごとのアイコン（大分類 → 商品名 → アイコンのファイル名。拡張子なし）
-// ※ tools/categoryIcon.xlsx から tools/parse_category_icons.py で自動生成。直接編集しない（docs/icons.md）
+// ※ tools/categoryIcon.xlsx から tools/parse_category_icons.py で自動生成。直接編集しない（docs/claude/icons.md）
 export const CATEGORY_ICON_MAP = {
   "冷凍": {
     "アイスクリーム類": "アイス",

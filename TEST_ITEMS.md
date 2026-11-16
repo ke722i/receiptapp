@@ -1113,7 +1113,7 @@
 ### 8-18. 商品のアイコン（`tools/parse_category_icons.py`・`categoryIconData.js`・`productIcon.jsx`）
 - [ ] DV-ICN-01 `parse_category_icons.py`: Excel（B 列 = ファイル名、G 列 = 商品名「、」区切り）を読み、商品名の文字の色（緑＝常温、青＝冷蔵、オレンジ＝冷凍、赤＝日用品）で大分類を決める。色なしは、その名前がある大分類すべて。表に無い名前・色が合わない・名前の重複を報告（🔧 11/12）　○
 - [ ] DV-ICN-02 `ProductIcon`: `CATEGORY_ICON_MAP[大分類][商品名]` の SVG（`src/assets/categoryIcons/`）。無ければ、元の表示（「画像」／★）。画像は選択・長押し・ドラッグ不可（🔧 11/12）　○
-- [ ] DV-ICN-03 SVG の軽量化（svgo）: 273 個 18MB → 2.5MB。手順は docs/icons.md（🔧 11/12）
+- [ ] DV-ICN-03 SVG の軽量化（svgo）: 273 個 18MB → 2.5MB。手順は docs/claude/icons.md（🔧 11/12）
 
 ### 8-19. Gemini のチャットからの取り込み（`tools/export_gemini_prompt.mjs`・`fix_receipt_json.mjs`・`receipt_json_to_sql.mjs`）
 - [ ] DV-IMP-01 `export_gemini_prompt.mjs`: アプリと同じ指示文＋番号つきのカテゴリ表＋出力形式を、`tools/gemini_chat_prompt.txt` に書き出す（🔧 11/12）　○

@@ -1,7 +1,7 @@
 # 使い方（プロジェクトの直下で）: python tools/parse_category_icons.py
 #  tools/categoryIcon.xlsx を読んで、アイコン（ファイル名）と商品名の対応を調べ、
 #  src/constants/categoryIconData.js を作る（生成物。直接編集しない）。問題点は画面に出す。
-#  詳しい手順は docs/icons.md
+#  詳しい手順は docs/claude/icons.md
 import difflib, json, os, subprocess, sys
 import openpyxl
 from openpyxl.cell.rich_text import CellRichText, TextBlock
@@ -100,7 +100,7 @@ for icon, name, main in entries:
     data.setdefault(main, {})[name] = icon
 with open(OUT, 'w', encoding='utf-8', newline='\n') as f:
     f.write('// 商品ごとのアイコン（大分類 → 商品名 → アイコンのファイル名。拡張子なし）\n')
-    f.write('// ※ tools/categoryIcon.xlsx から tools/parse_category_icons.py で自動生成。直接編集しない（docs/icons.md）\n')
+    f.write('// ※ tools/categoryIcon.xlsx から tools/parse_category_icons.py で自動生成。直接編集しない（docs/claude/icons.md）\n')
     f.write('export const CATEGORY_ICON_MAP = ' + json.dumps(data, ensure_ascii=False, indent=2) + ';\n')
 
 icons = sorted(set(seen_icon))

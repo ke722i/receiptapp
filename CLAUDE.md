@@ -6,14 +6,18 @@
 - 一部ファイル（categoryData.js の readings 部分など）は生成物。直接大きく編集せず、元のExcelから作り直す。
 
 # 3〜7, 11. 詳しい仕様・手順（該当する作業をするときだけ、そのファイルを読む。全部は読まない）
-- カテゴリ（4 階層・「その他」・検索・カテゴリの提案）、ユーザーアイコン → docs/spec-category.md
-- レシート解析（Edge Function・Gemini・回数上限・デプロイ）→ docs/spec-parse.md
-- 店舗名（正規化・入力欄・「!」の吹き出し）→ docs/spec-store.md
-- マイ店舗・価格比較・共有・容量と単価・利用規約 → docs/spec-mystore.md
-- 作業手順: 「カテゴリ表を更新して」「提案を確認して」「承認したものを追加して」「店名を追加して」→ docs/procedures.md
-- テスト項目書（TEST_ITEMS.md、Excel への変換、書き方）→ docs/test-items-rules.md
-- 「アイコン」と指示されたとき（商品のアイコン。tools/categoryIcon.xlsx、tools/parse_category_icons.py）→ docs/icons.md
-- 仕様を変えたら、該当する docs のファイルを短く直す（この CLAUDE.md には書き足さない）。
+- カテゴリ（4 階層・「その他」・検索・カテゴリの提案）、ユーザーアイコン → docs/claude/spec-category.md
+- レシート解析（Edge Function・Gemini・回数上限・デプロイ）→ docs/claude/spec-parse.md
+- 店舗名（正規化・入力欄・「!」の吹き出し）→ docs/claude/spec-store.md
+- マイ店舗・価格比較・共有・容量と単価・利用規約 → docs/claude/spec-mystore.md
+- 提案の承認・見送り・表への反映（「提案を確認して」「承認したものを追加して」、承認のやり方の質問）→ docs/claude/proposal-approval.md
+- 作業手順: 「カテゴリ表を更新して」「店名を追加して」→ docs/claude/procedures.md
+- テスト項目書（TEST_ITEMS.md、Excel への変換、書き方）→ docs/claude/test-items-rules.md
+- 「アイコン」と指示されたとき（商品のアイコン。tools/categoryIcon.xlsx、tools/parse_category_icons.py）→ docs/claude/icons.md
+- docs は 2 種類（入口は docs/README.md）:
+  - docs/claude/ = Claude が読む。正確さ優先（条件・コマンド・ファイル名を省かない）。上の一覧は、すべてここ。
+  - docs/manual/ = 人間（管理者・開発者）が読む。表・番号つきの手順・短い文で、分かりやすく書く（release-flow／proposal-approval／receipt-import／category-table／icons）。
+- 仕様・手順を変えたら、該当する docs のファイルを短く直す（両方に関係するなら、manual と claude の両方）。この CLAUDE.md には書き足さない。
 - 変えてはいけない基本ルール: .env を読まない／API キーとプロンプトをブラウザに出さない／categoryData.js は生成物（直接編集しない）／他のユーザーのデータは DB の関数経由だけ（RLS を緩めない）／「その他」は Excel に入れない。
 
 # 8. モデルの使い分け
@@ -34,7 +38,7 @@
 # 9. 作業の引き継ぎ
 「引き継ぎして」と頼まれたら、ここまでの作業の状況（やったこと、途中のこと、次にやること、注意点）を
 プロジェクトの PROGRESS.md に書く。すでにあれば最新に更新する。
-あわせて、TEST_ITEMS.md も更新する（変更点のテスト・確認項目、作成途中の機能。ルールは docs/test-items-rules.md）。
+あわせて、TEST_ITEMS.md も更新する（変更点のテスト・確認項目、作成途中の機能。ルールは docs/claude/test-items-rules.md）。
 作業を始めるときに PROGRESS.md があれば、「現在の状態」「途中のこと」「次にやること」だけを読んで、続きから進める（全体は読まない）。TEST_ITEMS.md は、項目を直すときに、その章だけを読む。
 
 # 10. コミットと push

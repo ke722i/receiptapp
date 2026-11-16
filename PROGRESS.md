@@ -14,7 +14,7 @@
 - **完成までの流れ**: アプリの完成後に、別のメンバーが、`TEST_ITEMS.md`（Excel にもできる）の、単体テスト・結合テストを、手動で行う。見つけた不具合は、まとめて私に送ってもらい、私が、デバッグ・修正する。直ったら、再テストして、すべて OK になったら完成。
 
 ## やったこと（11/12 夜・最後。`fujita` に push 済み（362d6c0 まで）、`main` に未マージ。DB・SQL の変更なし。Sonnet 5.5 で作業）
-- **商品のアイコン**: `tools/categoryIcon.xlsx`（B 列 = SVG のファイル名、G 列 = 商品名。商品名の文字の色 = 大分類）から、`python tools/parse_category_icons.py` で対応表（`src/constants/categoryIconData.js`）を作る。SVG は `src/assets/categoryIcons/`（273 個。svgo で 18MB → 2.5MB）。商品詳細の画像の枠とホームのお気に入りに出る。色なしの名前は、その名前がある大分類すべてに付く。手順は **docs/icons.md**。
+- **商品のアイコン**: `tools/categoryIcon.xlsx`（B 列 = SVG のファイル名、G 列 = 商品名。商品名の文字の色 = 大分類）から、`python tools/parse_category_icons.py` で対応表（`src/constants/categoryIconData.js`）を作る。SVG は `src/assets/categoryIcons/`（273 個。svgo で 18MB → 2.5MB）。商品詳細の画像の枠とホームのお気に入りに出る。色なしの名前は、その名前がある大分類すべてに付く。手順は **docs/claude/icons.md**。
   Excel と SVG のファイル名が違うものが一部ある（ユーザーが「コーヒー」は置いておく、と指示）。表に無い商品名（表記ゆれ 9 件）も残っている。
 - **通知**: ホームの手紙（未読は黄色の丸・ゆれる）→ 通知画面。承認・見送りの両方（見送りは管理者のメモつき）。「読んだ」は端末（ユーザーごと）。
 - **お気に入り**: 商品詳細の ☆ → ホームの「お気に入り」（閲覧履歴は廃止。端末に保存、30 件まで）。
@@ -43,7 +43,8 @@
 - DB: `supabase/migrations/20261113000000_category_proposals_product.sql`（`submit_category_proposal` を 6 つの引数に入れ替え）。**ユーザーが SQL Editor で実行済み**。PGlite のテスト 21 項目 OK。
 - 画面（`categoryProposal.jsx`）: 3 つめの種類。大 → 中 → 小を選んで、商品名を入れる。`categoryProposal.js`（確認）、`categoryProposalDb.js`（`p_product`）、`notices.js`（以前の自動の見送りだけを通知から除く。商品名の提案の承認・見送りも通知に出る）。案内文も「商品名」を含む形に。
 - 不具合の修正: 中分類の名前に全角かっこがあると（例: 冷凍野菜・フルーツ・素材（未調理））、小分類の提案が送れなかった（選んだ名前を NFKC でそろえて、表と合わなくなっていた）。表から選んだ名前は、そろえずに送る。
-- **承認した提案を Excel に足す半自動のスクリプト**: `tools/apply_proposals.py`（提案の CSV → `categoryTable.xlsx`。`--apply` で足す、`--rebuild` で `categoryData.js` の作成と sync）。CSV は `tools/proposals/` に置く（Git に入れない）。手順は **docs/procedures.md「カテゴリの提案の承認手順」**。承認・見送りは、Supabase の Table Editor（または SQL）で、`status` と `admin_note` を直す。
+- **承認した提案を Excel に足す半自動のスクリプト**: `tools/apply_proposals.py`（提案の CSV → `categoryTable.xlsx`。`--apply` で足す、`--rebuild` で `categoryData.js` の作成と sync）。CSV は `tools/proposals/` に置く（Git に入れない）。手順は **docs/claude/proposal-approval.md**。承認・見送りは、Supabase の Table Editor（または SQL）で、`status` と `admin_note` を直す。
+- **承認のやり方は、docs/claude/proposal-approval.md に、新しいファイルとしてまとめた**（承認待ちの一覧 → 採否 → Table Editor / SQL で `status` と `admin_note` を直す → 承認した提案の CSV → `apply_proposals.py` → `--rebuild` → デプロイ）。`docs/claude/procedures.md` の承認手順は、その案内だけにした。
 - 実際に使った: ユーザーが 2 件を承認・見送りにした。承認の 1 件（冷凍 > 冷凍野菜・フルーツ・素材（未調理） > 冷凍フルーツ > **冷凍白ぶどう**）を、Excel・`categoryData.js`・`readings.tsv`（れいとうしろぶどう…）に反映し、sync・build まで済み。**`npm run deploy-functions` は、まだ**（AI の解析に反映するため）。
 - 実機の確認は、まだ（UT-P-26〜32、IT-66・67）。
 
@@ -114,7 +115,7 @@
    容量を入れやすく・単価: PR・マージ → 実機で確認（UT-D-20〜22、UT-E-14〜20、UT-F2-16、UT-H-18、UT-I-22・23）。
    カテゴリ表の更新・レシート解析の混雑対策: PR・マージ → 実機で確認（UT-B-38〜40、UT-C-16）。デプロイは済み。 → 混雑時のログで、やり直し・切り替えが効いているか確認（UT-C-16）。
    ホームの検索の切り替え・分類名の読み仮名・回転ボタン: PR・マージ → 実機で確認（UT-B-26〜37、UT-C-12〜15、UT-P）。
-   カテゴリの提案: 新しい SQL を実行したか確認 → 実機で確認（UT-P、IT-60〜63）。提案が届いたら、docs/procedures.md の「カテゴリの提案の承認手順」で進める。
+   カテゴリの提案: 新しい SQL を実行したか確認 → 実機で確認（UT-P、IT-60〜63）。提案が届いたら、docs/claude/procedures.md の「カテゴリの提案の承認手順」で進める。
 2. 「カードの統一」の範囲を、ユーザーに確認する（上の「途中のこと」）。
 3. 残りの機能の作成・修正（あれば）。
 4. 作り終えたら、`TEST_ITEMS.md` を最新にして、Excel を作り、メンバーに、単体・結合テストを依頼する。
