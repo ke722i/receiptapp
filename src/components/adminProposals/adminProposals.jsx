@@ -49,6 +49,7 @@ export default function AdminProposals({ onBack }) {
   const [drafts, setDrafts] = useState({}); // カードごとのメモ
   const [busyKey, setBusyKey] = useState(null);
   const [message, setMessage] = useState(null); // { type, text }
+  const [csvBusy, setCsvBusy] = useState(false);
 
   const load = useCallback(async (which) => {
     const result = await fetchAdminProposals(which);
@@ -83,6 +84,23 @@ export default function AdminProposals({ onBack }) {
     setStatus('loading');
     setMessage(null);
     setTab(value);
+  };
+
+  // どのタブにいても、承認した提案を取り直して、CSV で保存する
+  const saveCsv = async () => {
+    setCsvBusy(true);
+    const result = await fetchAdminProposals('approved');
+    setCsvBusy(false);
+    if (!result.success) {
+      setMessage({ type: 'error', text: result.error });
+      return;
+    }
+    if (result.data.length === 0) {
+      setMessage({ type: 'error', text: '承認した提案がまだありません。' });
+      return;
+    }
+    downloadCsv(buildApprovedCsv(result.data));
+    setMessage({ type: 'success', text: `承認した提案 ${result.data.length} 件を、CSV で保存しました。` });
   };
 
   const decide = async (group, nextStatus) => {
@@ -144,17 +162,15 @@ export default function AdminProposals({ onBack }) {
           </p>
         )}
 
-        {tab === 'approved' && status === 'ready' && groups.length > 0 && (
-          <div className="admin-csv">
-            <button type="button" className="admin-csv-button" onClick={() => downloadCsv(buildApprovedCsv(groups))}>
-              承認した提案を CSV で保存
-            </button>
-            <p className="admin-csv-note">
-              保存した CSV を、パソコンの tools/proposals/ に置いて、「承認したものを追加して」と伝えると、表に足します。
-              新しい中分類・小分類は、products の列に商品名（「、」区切り）を書き足してください。
-            </p>
-          </div>
-        )}
+        <div className="admin-csv">
+          <button type="button" className="admin-csv-button" disabled={csvBusy} onClick={saveCsv}>
+            {csvBusy ? '準備中...' : '⬇ 承認した提案を CSV で保存'}
+          </button>
+          <p className="admin-csv-note">
+            保存した CSV を、パソコンの tools/proposals/ に置いて、「承認したものを追加して」と伝えると、表に足します。
+            新しい中分類・小分類は、products の列に商品名（「、」区切り）を書き足してください。
+          </p>
+        </div>
 
         {status === 'loading' && <p className="proposal-message">読み込み中...</p>}
         {status === 'error' && <p className="proposal-error">{error}</p>}
