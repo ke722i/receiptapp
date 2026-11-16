@@ -62,6 +62,38 @@
   font-weight: bold;
 }
 
+.admin-templates {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.admin-templates-label {
+  font-size: 12px;
+  color: #6b7280;
+  min-width: 44px;
+}
+
+.admin-template {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.admin-template.is-approve {
+  border-color: #2e7d32;
+  color: #2e7d32;
+}
+
+.admin-template.is-reject {
+  color: #4b5563;
+}
+
 .admin-note-input {
   margin-top: 6px;
 }
