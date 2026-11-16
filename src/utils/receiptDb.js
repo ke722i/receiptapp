@@ -66,6 +66,73 @@ export const fetchMyItemNames = async () => {
   }
 };
 
+// ---------- 「その他」の明細を、あとから増えたカテゴリへ移す（utils/reassignOther.js） ----------
+
+/**
+ * 自分の明細のうち、どこかの階層が「その他」のもの（大分類が「その他」のものは除く）
+ * @returns {Promise<{ success: boolean, data?: { id, item_name, main_category, category, sub_category, product_name }[], error?: string }>}
+ */
+export const fetchMyOtherItems = async () => {
+  try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData?.session?.user?.id;
+    if (!userId) throw new Error('ログインし直してください。');
+    const rows = [];
+    for (let from = 0; from < ITEM_NAMES_MAX; from += ITEM_NAMES_PAGE) {
+      const { data, error } = await supabase
+        .from('receipt_items')
+        .select('id, item_name, main_category, category, sub_category, product_name, receipts!inner ( user_id )')
+        .eq('receipts.user_id', userId)
+        .or('category.eq.その他,sub_category.eq.その他,product_name.eq.その他')
+        .order('id', { ascending: true })
+        .range(from, from + ITEM_NAMES_PAGE - 1);
+      if (error) throw error;
+      rows.push(...(data || []));
+      if (!data || data.length < ITEM_NAMES_PAGE) break;
+    }
+    return {
+      success: true,
+      data: rows
+        .filter((row) => row.item_name && row.main_category && row.main_category !== 'その他')
+        .map(({ id, item_name, main_category, category, sub_category, product_name }) => ({
+          id, item_name, main_category, category, sub_category, product_name,
+        })),
+    };
+  } catch (error) {
+    console.error('Fetch other items failed:', error);
+    return { success: false, error: '「その他」の商品を読み込めませんでした。' };
+  }
+};
+
+/**
+ * 明細の分類（大・中・小・商品名）だけを、まとめて書き換える（印字名・値段などは変えない）
+ * @param {{ id, main, category, sub, product }[]} changes
+ * @returns {Promise<{ success: boolean, doneIds: (number|string)[], failedIds: (number|string)[] }>}
+ */
+export const applyItemCategories = async (changes) => {
+  forgetMyItemNames();
+  const doneIds = [];
+  const failedIds = [];
+  await Promise.all(
+    (changes || []).map(async (c) => {
+      const { data, error } = await supabase
+        .from('receipt_items')
+        .update({
+          main_category: c.main || null,
+          category: c.category || '未選択',
+          sub_category: c.sub || null,
+          product_name: c.product || null,
+        })
+        .eq('id', c.id)
+        .select('id');
+      // RLS で対象外の行は、エラーにならず 0 件になる
+      if (error || !data || data.length === 0) failedIds.push(c.id);
+      else doneIds.push(c.id);
+    })
+  );
+  return { success: failedIds.length === 0, doneIds, failedIds };
+};
+
 /**
  * レシート本体と明細を Supabase DB に一括保存するユーティリティ
  */

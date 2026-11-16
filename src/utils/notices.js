@@ -36,14 +36,17 @@ export const saveReadIds = (userId, ids) => {
 /**
  * 通知の画面に並べるもの（新しい順）
  *  ・提案の結果: key は提案の id（数。以前から端末に覚えている「読んだ」と同じ）
+ *  ・「その他」の自動の移動: key は「r:記録の id」
  *  ・お知らせの小・中: key は「a:id:更新日時」（直すと、もう一度未読になる）。中は、ホームに出るので、未読に数えない（noRead）
  */
-export const buildNoticeItems = (proposals, announcements) => {
+export const buildNoticeItems = (proposals, announcements, reassignRuns = []) => {
   const items = [
     ...(proposals || []).map((p) => ({ ...p, kind: 'proposal', key: p.id, sortAt: p.reviewed_at || p.created_at || '' })),
     ...(announcements || [])
       .filter((a) => a.level === 'low' || a.level === 'mid')
       .map((a) => ({ ...a, kind: 'announcement', key: `a:${a.id}:${a.updated_at}`, sortAt: a.updated_at || '', noRead: a.level === 'mid' })),
+    // 「その他」の商品を、新しいカテゴリへ自動で移した記録（utils/reassignRun.js）。key は「r:記録の id」
+    ...(reassignRuns || []).map((r) => ({ ...r, kind: 'reassign', key: `r:${r.id}`, sortAt: r.at || '' })),
   ];
   return items.sort((x, y) => String(y.sortAt).localeCompare(String(x.sortAt)));
 };

@@ -15,6 +15,7 @@ export default function Settings({
   onDeleteReceiptData,
   onDeleteAccount,
   onOpenCategoryProposal,
+  onOpenReassign,
   isAdmin = false,
 }) {
   const [retentionPeriod, setRetentionPeriod] = useState('90');
@@ -223,9 +224,15 @@ export default function Settings({
             <button type="button" className="action-button proposal-open-button" onClick={onOpenCategoryProposal}>
               カテゴリを提案する ›
             </button>
+            {onOpenReassign && (
+              <button type="button" className="action-button proposal-open-button" onClick={onOpenReassign}>
+                「その他」の商品を見直す ›
+              </button>
+            )}
             <div className="settings-note settings-note-last">
               <p>
                 ぴったりの分類が無いときに、新しい中分類・小分類・商品名を提案できます。管理者が確認して、承認したものは、次の更新で、すべてのユーザーの表に追加されます。
+                新しい商品名が増えたとき、「その他」で登録した商品のうち、レシートの印字名で決められるものは、自動で移します。決められないものは、「見直す」で選べます。
               </p>
             </div>
           </div>

@@ -7,7 +7,7 @@
 - DB: テーブル `category_proposals`。登録は関数 `submit_category_proposal`（6 引数）だけ。`status` を変えられるのは管理者だけ（関数 `admin_decide_proposals`、判定 `is_app_admin`、表 `app_admins`）。
 - 管理者画面: `src/components/adminProposals/adminProposals.jsx`、呼び出し `src/utils/adminDb.js`、CSV `src/utils/proposalCsv.js`。migrations: `20261113000000_category_proposals_product.sql`、`20261116000000_admin_proposals.sql`。
 - 承認しただけでは、画面にも AI にも出ない。`tools/categoryTable.xlsx` に足し、`categoryData.js` を作り直し、ユーザーが `npm run deploy-functions` を実行するまで反映されない。
-- 「その他」は Excel に入れない。既に「その他」で登録済みのレシートは自動では移らない。
+- 「その他」は Excel に入れない。既に「その他」で登録済みの明細は、ユーザーの端末が、表の変更を見つけたときに、確実なものだけ自動で移す（`src/utils/reassignOther.js`・`reassignRun.js`。AI は使わない）。管理者の作業は不要。「元に戻す」と「その他の商品を見直す」の画面あり。
 
 ## 依頼を受けたときの手順
 1. **提案の確認を頼まれたとき**（「提案を確認して」）

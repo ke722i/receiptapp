@@ -1,0 +1,15 @@
+.reassign-select {
+  margin-top: 8px;
+}
+
+.reassign-footer {
+  position: sticky;
+  bottom: 0;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  background-color: #ffffff;
+  border-top: 1px solid #eeeeee;
+}
+
+.reassign-apply {
+  width: 100%;
+}

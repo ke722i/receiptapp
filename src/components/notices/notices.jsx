@@ -12,11 +12,20 @@ const toJstDate = (value) => {
 const ACTION_WIDTH = 84; // スワイプで出るボタンの幅（px）
 
 // 1 件の通知。左にスワイプすると、右にボタンが出る。縦のスクロールは、そのまま通す
-function NoticeRow({ notice: n, isUnread, isOpen, onOpen, onMarkRead, onMarkUnread }) {
+function NoticeRow({ notice: n, isUnread, isOpen, onOpen, onMarkRead, onMarkUnread, onUndoReassign, onOpenReassign }) {
   const [drag, setDrag] = useState(null); // 指で動かしている間の位置（px。0〜-ACTION_WIDTH）
   const start = useRef(null); // { x, y, base, axis }
   const isApproved = n.status === 'approved';
   const isAnnouncement = n.kind === 'announcement';
+  const isReassign = n.kind === 'reassign';
+  const [undoing, setUndoing] = useState(false);
+  const [undoError, setUndoError] = useState('');
+  const handleUndo = async () => {
+    setUndoing(true);
+    const result = await onUndoReassign(n);
+    setUndoing(false);
+    setUndoError(result?.success ? '' : result?.error || '元に戻せませんでした。');
+  };
   const canSwipe = !n.noRead; // 中のお知らせ（ホームに出るもの）は、既読・未読の切り替えをしない
   const offset = drag ?? (isOpen ? -ACTION_WIDTH : 0);
 
@@ -76,9 +85,40 @@ function NoticeRow({ notice: n, isUnread, isOpen, onOpen, onMarkRead, onMarkUnre
         onTouchCancel={onTouchEnd}
         onClick={() => isOpen && onOpen(null)}
       >
-        <span className="notice-mail" aria-hidden="true">{isAnnouncement ? '📢' : isUnread ? '✉️' : '📭'}</span>
+        <span className="notice-mail" aria-hidden="true">{isReassign ? '🔄' : isAnnouncement ? '📢' : isUnread ? '✉️' : '📭'}</span>
         <div className="notice-body">
-          {isAnnouncement ? (
+          {isReassign ? (
+            <>
+              <p className="notice-title">
+                {isUnread && <span className="notice-new">未読</span>}
+                <span className="notice-result is-announcement">自動で移動</span>
+                「その他」の商品 {n.moves.length} 件を、新しいカテゴリに移しました
+              </p>
+              <ul className="notice-moves">
+                {n.moves.slice(0, 5).map((m) => (
+                  <li key={m.id}>
+                    {m.name} → {m.to.product}（{[m.to.category, m.to.sub].filter(Boolean).join(' > ')}）
+                  </li>
+                ))}
+                {n.moves.length > 5 && <li>ほか {n.moves.length - 5} 件</li>}
+              </ul>
+              {n.undone ? (
+                <p className="notice-note">元に戻しました（この商品は、もう自動では移しません）。</p>
+              ) : (
+                <div className="notice-reassign-actions">
+                  <button type="button" className="notice-undo-button" disabled={undoing} onClick={handleUndo}>
+                    {undoing ? '戻しています...' : '元に戻す'}
+                  </button>
+                </div>
+              )}
+              {undoError && <p className="notice-note notice-error">{undoError}</p>}
+              {n.reviewCount > 0 && (
+                <button type="button" className="notice-review-link" onClick={onOpenReassign}>
+                  決められなかった商品 {n.reviewCount} 件を、見直す ›
+                </button>
+              )}
+            </>
+          ) : isAnnouncement ? (
             <>
               <p className="notice-title">
                 {isUnread && <span className="notice-new">未読</span>}
@@ -127,7 +167,7 @@ function NoticeRow({ notice: n, isUnread, isOpen, onOpen, onMarkRead, onMarkUnre
  * ・通知を左にスワイプすると、「既読」（既読の通知は「未読に戻す」）のボタンが出る（LINE のように）
  * @param {'loading'|'error'|'ready'} status
  */
-export default function Notices({ notices = [], unreadIds = [], status = 'ready', onMarkRead, onMarkUnread, onBack }) {
+export default function Notices({ notices = [], unreadIds = [], status = 'ready', onMarkRead, onMarkUnread, onUndoReassign, onOpenReassign, onBack }) {
   const [openId, setOpenId] = useState(null); // 左にスワイプして、ボタンを出している通知
   return (
     <div className="notices-container">
@@ -166,6 +206,8 @@ export default function Notices({ notices = [], unreadIds = [], status = 'ready'
                 onOpen={setOpenId}
                 onMarkRead={onMarkRead}
                 onMarkUnread={onMarkUnread}
+                onUndoReassign={onUndoReassign}
+                onOpenReassign={onOpenReassign}
               />
             ))}
           </ul>
