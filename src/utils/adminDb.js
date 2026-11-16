@@ -55,6 +55,8 @@ const adminMessage = (error, fallback) => {
   if (text.includes('not_admin')) return '管理者のアカウントではありません。';
   if (text.includes('admin_self')) return '自分自身の管理者の権限は外せません（別の管理者が外してください）。';
   if (text.includes('announcement_invalid')) return 'タイトル（60 文字まで）と本文（500 文字まで）を確認してください。';
+  if (text.includes('announcement_ends_required')) return '重要度「高」のお知らせには、期限を入れてください。';
+  if (text.includes('announcement_expired')) return '期限が過ぎています。今より後の日時にしてください。';
   if (text.includes('user_invalid')) return 'アカウントが見つかりません。';
   console.error(fallback, error);
   return fallback;
@@ -91,7 +93,11 @@ export const fetchAdminAnnouncements = async () => {
 };
 
 /** お知らせを作る（id が null）・直す */
-export const saveAnnouncement = ({ id = null, title, body, active }) =>
-  rpc('admin_save_announcement', { p_id: id, p_title: title, p_body: body, p_active: active }, 'お知らせを保存できませんでした。');
+export const saveAnnouncement = ({ id = null, title, body, active, level = 'mid', endsAt = null, showOnLogin = false }) =>
+  rpc(
+    'admin_save_announcement',
+    { p_id: id, p_title: title, p_body: body, p_active: active, p_level: level, p_ends_at: endsAt, p_show_on_login: showOnLogin },
+    'お知らせを保存できませんでした。'
+  );
 
 export const deleteAnnouncement = (id) => rpc('admin_delete_announcement', { p_id: id }, 'お知らせを消せませんでした。');

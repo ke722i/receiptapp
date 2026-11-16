@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Login from './components/login/login';
 import Register from './components/register/register';
 import Home from './components/home/home';
@@ -20,17 +20,26 @@ import AdminProposals from './components/adminProposals/adminProposals';
 import AdminHome from './components/adminHome/adminHome';
 import AdminAnnouncements from './components/adminHome/adminAnnouncements';
 import AdminUsers from './components/adminHome/adminUsers';
-import { fetchAnnouncements, announcementKey, loadClosedAnnouncements, saveClosedAnnouncements } from './utils/announcements';
+import {
+  fetchAnnouncements,
+  announcementKey,
+  loadClosedAnnouncements,
+  saveClosedAnnouncements,
+  loadConfirmedAnnouncements,
+  saveConfirmedAnnouncements,
+} from './utils/announcements';
+import AnnouncementPopup from './components/announcementPopup/announcementPopup';
 import { checkIsAdmin } from './utils/adminDb';
 import { fetchReceiptById } from './utils/receiptDb';
 import { isOpenablePath } from './utils/categoryUtils';
 import { createManualReceiptData } from './utils/manualReceipt';
 import { loadFavorites, saveFavorites, toggleFavorite, isFavorite } from './utils/favorites';
-import { decidedNotices, loadReadIds, saveReadIds, unreadIds } from './utils/notices';
+import { decidedNotices, buildNoticeItems, loadReadIds, saveReadIds, unreadIds } from './utils/notices';
 import { fetchMyProposals } from './utils/categoryProposalDb';
 
 const STORAGE_KEY_VIEW_HISTORY = 'receipt_app_view_history'; // 閲覧履歴は廃止（お気に入りに変えた）。以前の保存だけを消す
 const STORAGE_KEY_USER_ID = 'receipt_app_user_id';
+const ANNOUNCEMENT_POLL_MS = 30000; // お知らせを読み直す間隔（ログインしている間）
 const STORAGE_KEY_AVATAR = 'receipt_app_avatar'; // 選んだアイコン（すぐ表示するための控え。本体は、アカウントの情報）
 
 function App() {
@@ -89,20 +98,70 @@ function App() {
     setFavVersion((v) => v + 1);
   };
 
-  // 通知（承認されたカテゴリの提案）。ホームを開くたびに、自分の提案を 1 回読む（軽い問い合わせ）。
+  // 管理者が配信したお知らせ（小・中・高）。ログインしている間は、30 秒ごと・アプリに戻ったとき・ホームを開いたときに読む（軽い問い合わせ）
+  //  小 = 通知の画面 / 中 = ホームのスライド（「✕」で閉じても、通知の画面に残る） / 高 = ポップアップ（「OK」を押すまで）
+  const loggedIn = currentScreen !== 'login' && currentScreen !== 'register';
+  const [announcements, setAnnouncements] = useState([]);
+  const announcementRequest = useRef(0);
+  const refreshAnnouncements = useCallback(() => {
+    const requestId = ++announcementRequest.current;
+    fetchAnnouncements().then((list) => {
+      if (requestId === announcementRequest.current) setAnnouncements(list); // 古い問い合わせの結果は使わない
+    });
+  }, []);
+  useEffect(() => {
+    if (!loggedIn) return undefined;
+    refreshAnnouncements();
+    const timer = setInterval(() => {
+      if (document.visibilityState === 'visible') refreshAnnouncements();
+    }, ANNOUNCEMENT_POLL_MS);
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') refreshAnnouncements();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [loggedIn, refreshAnnouncements]);
+  useEffect(() => {
+    if (currentScreen === 'home') refreshAnnouncements();
+  }, [currentScreen, refreshAnnouncements]);
+
+  const [closedVersion, setClosedVersion] = useState(0);
+  const closedAnnouncements = useMemo(() => loadClosedAnnouncements(userId), [userId, closedVersion]); // eslint-disable-line react-hooks/exhaustive-deps
+  const homeAnnouncements = announcements.filter((a) => a.level === 'mid' && !closedAnnouncements.includes(announcementKey(a)));
+  const closeAnnouncement = (a) => {
+    saveClosedAnnouncements(userId, [...closedAnnouncements, announcementKey(a)]);
+    setClosedVersion((v) => v + 1);
+  };
+  // 高: 「OK」を押していない、いちばん新しいものを、ポップアップで出す
+  const [confirmedVersion, setConfirmedVersion] = useState(0);
+  const confirmedAnnouncements = useMemo(() => loadConfirmedAnnouncements(userId), [userId, confirmedVersion]); // eslint-disable-line react-hooks/exhaustive-deps
+  const popupAnnouncement = loggedIn
+    ? announcements.find((a) => a.level === 'high' && !confirmedAnnouncements.includes(announcementKey(a)))
+    : null;
+  const confirmAnnouncement = (a) => {
+    saveConfirmedAnnouncements(userId, [...confirmedAnnouncements, announcementKey(a)]);
+    setConfirmedVersion((v) => v + 1);
+  };
+
+  // 通知の画面（結果が出たカテゴリの提案 + お知らせの小・中）。ホームを開くたびに、自分の提案を 1 回読む（軽い問い合わせ）。
   //  「読んだ」は端末に覚える。通知の画面を開いただけでは、既読にならない（通知ごとの「既読にする」か、「すべて既読にする」）
+  //  中のお知らせは、ホームに出るので、未読に数えない（通知の画面では、履歴として出す）
   const [notices, setNotices] = useState({ status: 'loading', list: [] });
   const [readVersion, setReadVersion] = useState(0);
   const readIds = useMemo(() => loadReadIds(userId), [userId, readVersion]); // eslint-disable-line react-hooks/exhaustive-deps
-  const unreadList = unreadIds(notices.list, readIds);
-  // 通知を、読んだことにする（端末に覚える）。ids は、既読にする通知の id
-  const markNoticesRead = (ids) => {
-    saveReadIds(userId, [...new Set([...loadReadIds(userId), ...ids])]);
+  const noticeItems = buildNoticeItems(notices.list, announcements);
+  const unreadList = unreadIds(noticeItems, readIds);
+  // 通知を、読んだことにする（端末に覚える）。keys は、既読にする通知の key
+  const markNoticesRead = (keys) => {
+    saveReadIds(userId, [...new Set([...loadReadIds(userId), ...keys])]);
     setReadVersion((v) => v + 1);
   };
   // 通知を、未読に戻す
-  const markNoticesUnread = (ids) => {
-    saveReadIds(userId, loadReadIds(userId).filter((id) => !ids.includes(id)));
+  const markNoticesUnread = (keys) => {
+    saveReadIds(userId, loadReadIds(userId).filter((key) => !keys.includes(key)));
     setReadVersion((v) => v + 1);
   };
   const noticeRequest = useRef(0);
@@ -119,26 +178,6 @@ function App() {
       setNotices({ status: 'ready', list });
     });
   }, [currentScreen]);
-
-  // 管理者が配信したお知らせ（ホームを開くたびに読む。「✕」で閉じたものは、端末に覚えて出さない）
-  const [announcements, setAnnouncements] = useState([]);
-  const [closedVersion, setClosedVersion] = useState(0);
-  const closedAnnouncements = useMemo(() => loadClosedAnnouncements(userId), [userId, closedVersion]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    if (currentScreen !== 'home') return undefined;
-    let cancelled = false;
-    fetchAnnouncements().then((list) => {
-      if (!cancelled) setAnnouncements(list);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [currentScreen]);
-  const visibleAnnouncements = announcements.filter((a) => !closedAnnouncements.includes(announcementKey(a)));
-  const closeAnnouncement = (a) => {
-    saveClosedAnnouncements(userId, [...closedAnnouncements, announcementKey(a)]);
-    setClosedVersion((v) => v + 1);
-  };
 
   // 管理者のアカウントか（ホームを開くたびに確かめる。実際の権限は、DB の関数が確かめる）
   const [isAdmin, setIsAdmin] = useState(false);
@@ -236,9 +275,9 @@ function App() {
           favorites={favorites}
           isAdmin={isAdmin}
           onOpenAdminHome={() => setCurrentScreen('adminHome')}
-          announcements={visibleAnnouncements}
+          announcements={homeAnnouncements}
           onCloseAnnouncement={closeAnnouncement}
-          unreadCount={notices.status === 'ready' ? unreadList.length : 0}
+          unreadCount={unreadList.length}
           onOpenNotices={() => {
             setCurrentScreen('notices');
           }}
@@ -290,11 +329,11 @@ function App() {
       {currentScreen === 'adminUsers' && <AdminUsers currentLoginId={userId} onBack={() => setCurrentScreen('adminHome')} />}
       {currentScreen === 'notices' && (
         <Notices
-          notices={notices.list}
+          notices={noticeItems}
           unreadIds={unreadList}
           onMarkRead={(ids) => markNoticesRead(ids)}
           onMarkUnread={(ids) => markNoticesUnread(ids)}
-          status={notices.status}
+          status={noticeItems.length > 0 ? 'ready' : notices.status}
           onBack={() => setCurrentScreen('home')}
         />
       )}
@@ -422,6 +461,8 @@ function App() {
           onUpdate={setSelectedReceipt} // 編集して保存した内容を、親が持つレシートにも反映
         />
       )}
+      {/* 重要度「高」のお知らせ（ログインしている間、どの画面でも出す） */}
+      {popupAnnouncement && <AnnouncementPopup announcement={popupAnnouncement} onConfirm={() => confirmAnnouncement(popupAnnouncement)} />}
     </div>
   );
 }
