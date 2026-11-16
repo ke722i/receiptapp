@@ -12,6 +12,19 @@ const TABS = [
   { value: 'rejected', label: '見送り' },
 ];
 const APPROVE_DEFAULT_NOTE = '次の更新で追加します';
+// ワンボタンで、メモの欄に入れる定型文（入れたあとも、自由に直せる）
+const NOTE_TEMPLATES = {
+  approve: [
+    { label: '追加します', text: 'ご提案ありがとうございます。次の更新で追加します。' },
+    { label: '近い形で追加', text: 'ご提案ありがとうございます。近い名前にそろえて、次の更新で追加します。' },
+  ],
+  reject: [
+    { label: 'すでにある', text: 'すでに同じ内容がありますので、見送りました。' },
+    { label: '分け方に合わない', text: '今のカテゴリの分け方に合わないため、見送りました。' },
+    { label: '内容が不明', text: '内容を確認できなかったため、見送りました。' },
+    { label: '今回は見送り', text: 'ご提案ありがとうございます。今回は見送りました。' },
+  ],
+};
 
 // DB の日時（UTC）を、日本時間の日付に
 const toJstDate = (value) => {
@@ -171,6 +184,21 @@ export default function AdminProposals({ onBack }) {
 
                   {tab === 'pending' ? (
                     <>
+                      {['approve', 'reject'].map((kind) => (
+                        <div key={kind} className="admin-templates" role="group" aria-label={kind === 'approve' ? '承認の定型文' : '見送りの定型文'}>
+                          <span className="admin-templates-label">{kind === 'approve' ? '承認' : '見送り'}</span>
+                          {NOTE_TEMPLATES[kind].map((t) => (
+                            <button
+                              key={t.label}
+                              type="button"
+                              className={`admin-template is-${kind}`}
+                              onClick={() => setDrafts((prev) => ({ ...prev, [key]: t.text }))}
+                            >
+                              {t.label}
+                            </button>
+                          ))}
+                        </div>
+                      ))}
                       <textarea
                         className="proposal-input proposal-textarea admin-note-input"
                         rows={2}
