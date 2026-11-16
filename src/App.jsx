@@ -29,6 +29,9 @@ import {
   saveConfirmedAnnouncements,
 } from './utils/announcements';
 import AnnouncementPopup from './components/announcementPopup/announcementPopup';
+import ReassignOther from './components/reassignOther/reassignOther';
+import { runAutoReassign, undoAutoReassign } from './utils/reassignRun';
+import { loadRuns } from './utils/reassignOther';
 import { checkIsAdmin } from './utils/adminDb';
 import { fetchReceiptById } from './utils/receiptDb';
 import { isOpenablePath } from './utils/categoryUtils';
@@ -152,7 +155,10 @@ function App() {
   const [notices, setNotices] = useState({ status: 'loading', list: [] });
   const [readVersion, setReadVersion] = useState(0);
   const readIds = useMemo(() => loadReadIds(userId), [userId, readVersion]); // eslint-disable-line react-hooks/exhaustive-deps
-  const noticeItems = buildNoticeItems(notices.list, announcements);
+  // 「その他」の商品を、増えたカテゴリへ自動で移した記録（端末に覚える。通知の画面に出す）
+  const [runsVersion, setRunsVersion] = useState(0);
+  const reassignRuns = useMemo(() => loadRuns(userId), [userId, runsVersion]); // eslint-disable-line react-hooks/exhaustive-deps
+  const noticeItems = buildNoticeItems(notices.list, announcements, reassignRuns);
   const unreadList = unreadIds(noticeItems, readIds);
   // 通知を、読んだことにする（端末に覚える）。keys は、既読にする通知の key
   const markNoticesRead = (keys) => {
@@ -164,6 +170,21 @@ function App() {
     saveReadIds(userId, loadReadIds(userId).filter((key) => !keys.includes(key)));
     setReadVersion((v) => v + 1);
   };
+  // ホームを開いたとき、カテゴリ表の商品が増えていれば、「その他」の商品を、確実なものだけ自動で移す（1 つの端末で、変わった直後の 1 回）
+  const reassignChecked = useRef('');
+  useEffect(() => {
+    if (currentScreen !== 'home' || !userId || reassignChecked.current === userId) return;
+    reassignChecked.current = userId;
+    runAutoReassign(userId).then((result) => {
+      if (result.moved > 0) setRunsVersion((v) => v + 1);
+    });
+  }, [currentScreen, userId]);
+  const handleUndoReassign = async (run) => {
+    const result = await undoAutoReassign(userId, run);
+    setRunsVersion((v) => v + 1);
+    return result;
+  };
+  const [reassignBackScreen, setReassignBackScreen] = useState('settings');
   const noticeRequest = useRef(0);
   useEffect(() => {
     if (currentScreen !== 'home') return;
@@ -310,6 +331,10 @@ function App() {
             setProposalBackScreen('settings');
             setCurrentScreen('categoryProposal');
           }}
+          onOpenReassign={() => {
+            setReassignBackScreen('settings');
+            setCurrentScreen('reassignOther');
+          }}
           isAdmin={isAdmin}
         />
       )}
@@ -333,10 +358,16 @@ function App() {
           unreadIds={unreadList}
           onMarkRead={(ids) => markNoticesRead(ids)}
           onMarkUnread={(ids) => markNoticesUnread(ids)}
+          onUndoReassign={handleUndoReassign}
+          onOpenReassign={() => {
+            setReassignBackScreen('notices');
+            setCurrentScreen('reassignOther');
+          }}
           status={noticeItems.length > 0 ? 'ready' : notices.status}
           onBack={() => setCurrentScreen('home')}
         />
       )}
+      {currentScreen === 'reassignOther' && <ReassignOther userId={userId} onBack={() => setCurrentScreen(reassignBackScreen)} />}
       {currentScreen === 'categoryProposal' && (
         <CategoryProposal onBack={() => setCurrentScreen(proposalBackScreen)} />
       )}

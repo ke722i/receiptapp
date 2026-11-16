@@ -253,3 +253,48 @@
   white-space: pre-wrap;
   word-break: break-word;
 }
+
+/* 「その他」の商品を、自動で移した通知 */
+.notice-moves {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  font-size: 12px;
+  color: #444444;
+  line-height: 1.6;
+}
+
+.notice-reassign-actions {
+  margin-top: 8px;
+}
+
+.notice-undo-button {
+  padding: 6px 14px;
+  border: 1.5px solid #e53935;
+  border-radius: 16px;
+  background-color: #ffffff;
+  color: #e53935;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.notice-undo-button:disabled {
+  opacity: 0.6;
+}
+
+.notice-review-link {
+  display: block;
+  margin-top: 8px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #1565c0;
+  font-size: 12px;
+  font-weight: bold;
+  text-align: left;
+  cursor: pointer;
+}
+
+.notice-error {
+  color: #c62828;
+}
