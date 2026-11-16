@@ -793,3 +793,42 @@
 @media (prefers-reduced-motion: reduce) {
   .notice-bell.has-unread svg { animation: none; }
 }
+
+/* 管理者のアカウントの印（ハンバーガーメニューのユーザー欄・設定のユーザー情報） */
+.admin-badge {
+  display: inline-block;
+  align-self: flex-start;
+  margin-top: 3px;
+  padding: 1px 8px;
+  border-radius: 10px;
+  background-color: #ffeb3b;
+  color: #b71c1c;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+/* ハンバーガーメニューの「管理者」の区切り */
+.drawer-section-label {
+  margin: 10px 20px 2px;
+  padding-top: 10px;
+  border-top: 1px solid #eeeeee;
+  font-size: 11px;
+  font-weight: bold;
+  color: #e65100;
+}
+
+/* 管理者が配信したお知らせ（提案のお知らせと同じ形で、青系） */
+.announcement-card {
+  background-color: #e3f2fd;
+  border-color: #90caf9;
+}
+
+.announcement-card .proposal-tip-title {
+  color: #0d47a1;
+}
+
+.announcement-card .announcement-text {
+  color: #1e3a5f;
+  white-space: pre-wrap; /* 改行をそのまま出す */
+  word-break: break-word;
+}

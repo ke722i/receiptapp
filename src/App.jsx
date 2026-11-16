@@ -17,6 +17,11 @@ import MyStores from './components/myStores/myStores';
 import CategoryProposal from './components/categoryProposal/categoryProposal';
 import Notices from './components/notices/notices';
 import AdminProposals from './components/adminProposals/adminProposals';
+import AdminHome from './components/adminHome/adminHome';
+import AdminAnnouncements from './components/adminHome/adminAnnouncements';
+import AdminUsers from './components/adminHome/adminUsers';
+import { fetchAnnouncements, announcementKey, loadClosedAnnouncements, saveClosedAnnouncements } from './utils/announcements';
+import { checkIsAdmin } from './utils/adminDb';
 import { fetchReceiptById } from './utils/receiptDb';
 import { isOpenablePath } from './utils/categoryUtils';
 import { createManualReceiptData } from './utils/manualReceipt';
@@ -118,6 +123,39 @@ function App() {
     });
   }, [currentScreen]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // 管理者が配信したお知らせ（ホームを開くたびに読む。「✕」で閉じたものは、端末に覚えて出さない）
+  const [announcements, setAnnouncements] = useState([]);
+  const [closedVersion, setClosedVersion] = useState(0);
+  const closedAnnouncements = useMemo(() => loadClosedAnnouncements(userId), [userId, closedVersion]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (currentScreen !== 'home') return undefined;
+    let cancelled = false;
+    fetchAnnouncements().then((list) => {
+      if (!cancelled) setAnnouncements(list);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [currentScreen]);
+  const visibleAnnouncements = announcements.filter((a) => !closedAnnouncements.includes(announcementKey(a)));
+  const closeAnnouncement = (a) => {
+    saveClosedAnnouncements(userId, [...closedAnnouncements, announcementKey(a)]);
+    setClosedVersion((v) => v + 1);
+  };
+
+  // 管理者のアカウントか（ホームを開くたびに確かめる。実際の権限は、DB の関数が確かめる）
+  const [isAdmin, setIsAdmin] = useState(false);
+  useEffect(() => {
+    if (currentScreen !== 'home') return undefined;
+    let cancelled = false;
+    checkIsAdmin().then((v) => {
+      if (!cancelled) setIsAdmin(v);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [currentScreen]);
+
   // ログイン成功ハンドラー
   const handleLoginSuccess = (userObj, rawInputUserId) => {
     const extractedId =
@@ -127,9 +165,16 @@ function App() {
       'User_12345';
 
     setUserId(extractedId);
+    setIsAdmin(false); // 前のアカウントの印を残さない
     localStorage.setItem(STORAGE_KEY_USER_ID, extractedId);
     changeAvatar(userObj?.user_metadata?.avatar || ''); // 別の端末で選んだアイコンも出る
-    setCurrentScreen('home');
+    // 管理者のアカウントなら、管理者ホームを最初に開く（確かめられなかったときは、一般のホーム）
+    checkIsAdmin()
+      .catch(() => false)
+      .then((admin) => {
+        setIsAdmin(admin);
+        setCurrentScreen(admin ? 'adminHome' : 'home');
+      });
   };
 
   // 新規登録成功ハンドラー
@@ -141,6 +186,7 @@ function App() {
       'User_12345';
 
     setUserId(extractedId);
+    setIsAdmin(false);
     localStorage.setItem(STORAGE_KEY_USER_ID, extractedId);
     changeAvatar(userObj?.user_metadata?.avatar || ''); // 新しいアカウントは、まだ選んでいない（前のアカウントの控えを消す）
     setCurrentScreen('home');
@@ -191,6 +237,10 @@ function App() {
           userId={userId}
           avatarId={avatarId}
           favorites={favorites}
+          isAdmin={isAdmin}
+          onOpenAdminHome={() => setCurrentScreen('adminHome')}
+          announcements={visibleAnnouncements}
+          onCloseAnnouncement={closeAnnouncement}
           unreadCount={notices.status === 'ready' ? unreadList.length : 0}
           onOpenNotices={() => {
             setReadIdsOnOpen(readIds);
@@ -226,10 +276,23 @@ function App() {
             setProposalBackScreen('settings');
             setCurrentScreen('categoryProposal');
           }}
-          onOpenAdminProposals={() => setCurrentScreen('adminProposals')}
+          isAdmin={isAdmin}
         />
       )}
-      {currentScreen === 'adminProposals' && <AdminProposals onBack={() => setCurrentScreen('settings')} />}
+      {/* 管理者の画面（管理者のアカウントでログインすると、管理者ホームから始まる） */}
+      {currentScreen === 'adminHome' && (
+        <AdminHome
+          userId={userId}
+          onOpenProposals={() => setCurrentScreen('adminProposals')}
+          onOpenAnnouncements={() => setCurrentScreen('adminAnnouncements')}
+          onOpenUsers={() => setCurrentScreen('adminUsers')}
+          onOpenGeneralHome={() => setCurrentScreen('home')}
+          onLogout={() => setCurrentScreen('login')}
+        />
+      )}
+      {currentScreen === 'adminProposals' && <AdminProposals onBack={() => setCurrentScreen('adminHome')} />}
+      {currentScreen === 'adminAnnouncements' && <AdminAnnouncements onBack={() => setCurrentScreen('adminHome')} />}
+      {currentScreen === 'adminUsers' && <AdminUsers currentLoginId={userId} onBack={() => setCurrentScreen('adminHome')} />}
       {currentScreen === 'notices' && (
         <Notices
           notices={notices.list}

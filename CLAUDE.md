@@ -10,13 +10,14 @@
 - レシート解析（Edge Function・Gemini・回数上限・デプロイ）→ docs/claude/spec-parse.md
 - 店舗名（正規化・入力欄・「!」の吹き出し）→ docs/claude/spec-store.md
 - マイ店舗・価格比較・共有・容量と単価・利用規約 → docs/claude/spec-mystore.md
+- 管理者の機能（管理者ホーム・お知らせ・利用状況・アカウントの管理・権限）→ docs/claude/spec-admin.md
 - 提案の承認・見送り・表への反映（「提案を確認して」「承認したものを追加して」、承認のやり方の質問）→ docs/claude/proposal-approval.md
 - 作業手順: 「カテゴリ表を更新して」「店名を追加して」→ docs/claude/procedures.md
 - テスト項目書（TEST_ITEMS.md、Excel への変換、書き方）→ docs/claude/test-items-rules.md
 - 「アイコン」と指示されたとき（商品のアイコン。tools/categoryIcon.xlsx、tools/parse_category_icons.py）→ docs/claude/icons.md
 - docs は 2 種類（入口は docs/README.md）:
   - docs/claude/ = Claude が読む。正確さ優先（条件・コマンド・ファイル名を省かない）。上の一覧は、すべてここ。
-  - docs/manual/ = 人間（管理者・開発者）が読む。表・番号つきの手順・短い文で、分かりやすく書く（release-flow／proposal-approval／receipt-import／category-table／icons）。
+  - docs/manual/ = 人間（管理者・開発者）が読む。表・番号つきの手順・短い文で、分かりやすく書く（release-flow／admin／proposal-approval／receipt-import／category-table／icons）。
 - 仕様・手順を変えたら、該当する docs のファイルを短く直す（両方に関係するなら、manual と claude の両方）。この CLAUDE.md には書き足さない。
 - 変えてはいけない基本ルール: .env を読まない／API キーとプロンプトをブラウザに出さない／categoryData.js は生成物（直接編集しない）／他のユーザーのデータは DB の関数経由だけ（RLS を緩めない）／「その他」は Excel に入れない。
 

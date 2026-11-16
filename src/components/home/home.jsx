@@ -60,6 +60,10 @@ export default function Home({
   onNavigateToSettings,
   onOpenCategoryProposal,
   onOpenNotices,
+  isAdmin = false,
+  onOpenAdminHome,
+  announcements = [],
+  onCloseAnnouncement,
   onSelectProduct,
   favorites = [],
   unreadCount = 0,
@@ -438,6 +442,7 @@ export default function Home({
           <div className="user-details">
             <span className="user-label">ログインユーザー</span>
             <span className="user-id">{userId}</span>
+            {isAdmin && <span className="admin-badge">管理者</span>}
           </div>
         </div>
         <nav className="drawer-nav">
@@ -459,6 +464,15 @@ export default function Home({
           <button type="button" className="drawer-item" onClick={() => handleMenuClick(onNavigateToSettings)}>
             <span className="drawer-icon">⚙️</span><span>設定</span>
           </button>
+          {/* 管理者のアカウントだけに出る */}
+          {isAdmin && onOpenAdminHome && (
+            <>
+              <div className="drawer-section-label">管理者</div>
+              <button type="button" className="drawer-item" onClick={() => handleMenuClick(onOpenAdminHome)}>
+                <span className="drawer-icon">🛠️</span><span>管理者ホーム</span>
+              </button>
+            </>
+          )}
         </nav>
         <div className="drawer-footer">
           <button type="button" className="drawer-item logout-item" onClick={() => handleMenuClick(onLogout)}>
@@ -659,6 +673,22 @@ export default function Home({
             </div>
           )}
         </div>
+
+        {/* 管理者が配信したお知らせ（「✕」で閉じると、この端末では出ない。内容が直されると、もう一度出る） */}
+        {announcements.map((a) => (
+          <aside key={`${a.id}:${a.updated_at}`} className="proposal-tip announcement-card" aria-label="運営からのお知らせ">
+            <span className="proposal-tip-icon" aria-hidden="true">📢</span>
+            <div className="proposal-tip-body">
+              <p className="proposal-tip-title">{a.title}</p>
+              {a.body && <p className="proposal-tip-text announcement-text">{a.body}</p>}
+            </div>
+            {onCloseAnnouncement && (
+              <button type="button" className="proposal-tip-close" onClick={() => onCloseAnnouncement(a)} aria-label="お知らせを閉じる">
+                ✕
+              </button>
+            )}
+          </aside>
+        ))}
 
         {/* お知らせ: カテゴリの提案ができること */}
         {showProposalTip && onOpenCategoryProposal && (

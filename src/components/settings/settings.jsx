@@ -6,7 +6,6 @@ import { TERMS, PRIVACY, SHARING_SUMMARY } from '../../constants/legal';
 import LegalModal from '../legalModal/legalModal';
 import Avatar from '../avatar/avatar';
 import { AVATARS } from '../../constants/avatars';
-import { checkIsAdmin } from '../../utils/adminDb';
 import './settings.css';
 
 export default function Settings({
@@ -16,19 +15,8 @@ export default function Settings({
   onDeleteReceiptData,
   onDeleteAccount,
   onOpenCategoryProposal,
-  onOpenAdminProposals,
+  isAdmin = false,
 }) {
-  // 管理者のアカウントなら、管理者メニューを出す（実際の権限は、DB の関数が確かめる）
-  const [isAdmin, setIsAdmin] = useState(false);
-  useEffect(() => {
-    let cancelled = false;
-    checkIsAdmin().then((v) => {
-      if (!cancelled) setIsAdmin(v);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
   const [retentionPeriod, setRetentionPeriod] = useState('90');
   const [userInfo, setUserInfo] = useState({ displayName: '読み込み中...' });
   // 価格データの匿名提供（オプトイン。初期はオフ）
@@ -151,6 +139,7 @@ export default function Settings({
               <span className="settings-user">
                 <Avatar avatarId={avatarId} size={36} />
                 <span className="row-value">{userInfo.displayName}</span>
+                {isAdmin && <span className="admin-badge">管理者</span>}
               </span>
             </div>
 
@@ -241,21 +230,6 @@ export default function Settings({
             </div>
           </div>
         </section>
-
-        {/* 管理者メニュー（管理者のアカウントだけに出る） */}
-        {isAdmin && onOpenAdminProposals && (
-          <section className="settings-section">
-            <h2 className="section-header">管理者メニュー</h2>
-            <div className="settings-card">
-              <button type="button" className="action-button proposal-open-button" onClick={onOpenAdminProposals}>
-                カテゴリの提案の承認 ›
-              </button>
-              <div className="settings-note settings-note-last">
-                <p>提案を、ボタン 1 つで承認・見送りにできます。メモは、提案した人の通知に出ます。</p>
-              </div>
-            </div>
-          </section>
-        )}
 
         {/* 3. データ設定 */}
         <section className="settings-section">

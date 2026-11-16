@@ -47,3 +47,51 @@ export const decideProposals = async (ids, status, note) => {
   if (error) return { success: false, error: toMessage(error, '変更できませんでした。') };
   return { success: true, count: data ?? 0 };
 };
+
+// ---------- 利用状況・アカウント・お知らせ（管理者だけ。migrations/20261116100000_admin_tools.sql） ----------
+
+const adminMessage = (error, fallback) => {
+  const text = String(error?.message || '');
+  if (text.includes('not_admin')) return '管理者のアカウントではありません。';
+  if (text.includes('admin_self')) return '自分自身の管理者の権限は外せません（別の管理者が外してください）。';
+  if (text.includes('announcement_invalid')) return 'タイトル（60 文字まで）と本文（500 文字まで）を確認してください。';
+  if (text.includes('user_invalid')) return 'アカウントが見つかりません。';
+  console.error(fallback, error);
+  return fallback;
+};
+
+const rpc = async (name, args, fallback) => {
+  const { data, error } = await supabase.rpc(name, args);
+  if (error) return { success: false, error: adminMessage(error, fallback) };
+  return { success: true, data };
+};
+
+/** 利用状況の数字（1 行） */
+export const fetchAdminStats = async () => {
+  const result = await rpc('admin_stats', {}, '利用状況を読み込めませんでした。');
+  return result.success ? { success: true, data: (result.data || [])[0] || null } : result;
+};
+
+/** アカウントの一覧（ログイン ID・管理者・テスト用・共有・レシート数・解析の回数） */
+export const fetchAdminUsers = async () => {
+  const result = await rpc('admin_list_users', {}, 'アカウントの一覧を読み込めませんでした。');
+  return result.success ? { success: true, data: result.data || [] } : result;
+};
+
+export const setTestAccount = (userId, value) =>
+  rpc('admin_set_test_account', { p_user: userId, p_value: value }, 'テスト用の設定を変えられませんでした。');
+
+export const setAdminRole = (userId, value) =>
+  rpc('admin_set_admin', { p_user: userId, p_value: value }, '管理者の権限を変えられませんでした。');
+
+/** お知らせ（下書き・公開終了も） */
+export const fetchAdminAnnouncements = async () => {
+  const result = await rpc('admin_list_announcements', {}, 'お知らせを読み込めませんでした。');
+  return result.success ? { success: true, data: result.data || [] } : result;
+};
+
+/** お知らせを作る（id が null）・直す */
+export const saveAnnouncement = ({ id = null, title, body, active }) =>
+  rpc('admin_save_announcement', { p_id: id, p_title: title, p_body: body, p_active: active }, 'お知らせを保存できませんでした。');
+
+export const deleteAnnouncement = (id) => rpc('admin_delete_announcement', { p_id: id }, 'お知らせを消せませんでした。');

@@ -20,7 +20,7 @@
     承認した中分類・小分類に入れる商品名は、管理者が決める（Claude に指示して、Claude が Excel に足してもよい）。商品名の提案は、その名前を使う。
   - DB は category_proposals（migrations の 20261111000000_category_proposals.sql、20261111100000_category_proposals_categories.sql、20261113000000_category_proposals_product.sql）。
     kind は category／sub／product（product は、小分類・商品名が必須）。11/11 より前の以前の形式の product は、自動で見送りにしてあり、admin_note（notices.js の LEGACY_AUTO_REJECT_NOTE）で見分ける（「以前の形式」と表示し、通知には出さない）。登録は関数 submit_category_proposal からだけ。本人は自分の提案だけ読め、承認待ちだけ取り下げられる。status（pending／approved／rejected）は管理者だけが変える。
-  - 承認・見送りは、管理者画面（設定 → 管理者メニュー。表 app_admins に登録したアカウントだけ。migrations の 20261116000000_admin_proposals.sql）で行う。手順は docs/claude/proposal-approval.md。
+  - 承認・見送りは、管理者画面（管理者ホーム →「提案の承認」。docs/claude/spec-admin.md。表 app_admins に登録したアカウントだけ。管理者のアカウントには、メニューのユーザー欄と設定のユーザー情報に、黄色の「管理者」の印が出る。migrations の 20261116000000_admin_proposals.sql）で行う。手順は docs/claude/proposal-approval.md。
   - 承認待ちは 1 人 20 件まで。同じ人の同じ提案は重ねて出せない（別の人の同じ提案は、要望の多さとして数える）。
   - 位置の選択肢に「その他」は出さない。表から選んだ名前（中分類・小分類）は、そろえずにそのまま送る（NFKC でそろえると「（未調理）」の全角かっこが変わり、表と合わなくなる）。今の表と同じ名前（空白・カナの違いをそろえて比べる）はエラー、似た名前は注意。画面側の検証は src/utils/categoryProposal.js。
   - 知らせ方: ホームのお知らせ（「✕」で閉じると、その端末では出ない）と、商品の編集画面で「その他」を選んだときの案内。
