@@ -64,21 +64,41 @@
 
 .admin-templates {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
+  align-items: flex-start;
+  gap: 10px;
   margin-top: 8px;
 }
 
 .admin-templates-label {
-  font-size: 12px;
-  color: #6b7280;
-  min-width: 44px;
+  flex: 0 0 64px;
+  box-sizing: border-box;
+  padding: 8px 0;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.admin-templates-label.is-approve {
+  background: #2e7d32;
+}
+
+.admin-templates-label.is-reject {
+  background: #6b7280;
+}
+
+.admin-templates-chips {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
 }
 
 .admin-template {
-  padding: 6px 12px;
-  border-radius: 999px;
+  padding: 8px 6px;
+  border-radius: 8px;
   border: 1px solid #d1d5db;
   background: #fff;
   font-size: 13px;
@@ -91,6 +111,7 @@
 }
 
 .admin-template.is-reject {
+  border-color: #6b7280;
   color: #4b5563;
 }
 

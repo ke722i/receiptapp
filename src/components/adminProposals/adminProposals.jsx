@@ -186,17 +186,19 @@ export default function AdminProposals({ onBack }) {
                     <>
                       {['approve', 'reject'].map((kind) => (
                         <div key={kind} className="admin-templates" role="group" aria-label={kind === 'approve' ? '承認の定型文' : '見送りの定型文'}>
-                          <span className="admin-templates-label">{kind === 'approve' ? '承認' : '見送り'}</span>
-                          {NOTE_TEMPLATES[kind].map((t) => (
-                            <button
-                              key={t.label}
-                              type="button"
-                              className={`admin-template is-${kind}`}
-                              onClick={() => setDrafts((prev) => ({ ...prev, [key]: t.text }))}
-                            >
-                              {t.label}
-                            </button>
-                          ))}
+                          <span className={`admin-templates-label is-${kind}`}>{kind === 'approve' ? '承認' : '見送り'}</span>
+                          <div className="admin-templates-chips">
+                            {NOTE_TEMPLATES[kind].map((t) => (
+                              <button
+                                key={t.label}
+                                type="button"
+                                className={`admin-template is-${kind}`}
+                                onClick={() => setDrafts((prev) => ({ ...prev, [key]: t.text }))}
+                              >
+                                {t.label}
+                              </button>
+                            ))}
+                          </div>
                         </div>
                       ))}
                       <textarea
