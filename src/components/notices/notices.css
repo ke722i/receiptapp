@@ -203,7 +203,12 @@
 
 .notice-item:not(.is-unread) {
   background-color: #f7f7f7;
-  opacity: 0.8;
+}
+
+.notice-item:not(.is-unread) .notice-title,
+.notice-item:not(.is-unread) .notice-place,
+.notice-item:not(.is-unread) .notice-note {
+  color: #777777;
 }
 
 /* 左にスワイプして出すボタン（LINE のように） */
