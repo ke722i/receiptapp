@@ -167,11 +167,11 @@
 
 .admin-csv-button {
   width: 100%;
-  padding: 10px 0;
-  border: 1.5px solid #1565c0;
+  padding: 14px 0;
+  border: none;
   border-radius: 22px;
-  background-color: #ffffff;
-  color: #1565c0;
+  background-color: #1565c0;
+  color: #ffffff;
   font-size: 14px;
   font-weight: bold;
   cursor: pointer;
