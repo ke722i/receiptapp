@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import './receiptHistoryList.css';
 import { fetchReceiptHistory } from '../../utils/receiptDb';
-import { formatPurchaseDate } from '../../utils/purchaseDate';
+import ReceiptRowCard from '../receiptRowCard/receiptRowCard';
 import { RECEIPT_SORT_OPTIONS, DEFAULT_RECEIPT_SORT, sortReceipts } from '../../utils/receiptSort';
 import { RECEIPT_PERIOD_OPTIONS, filterReceipts } from '../../utils/receiptFilter';
 
@@ -115,36 +115,15 @@ export default function ReceiptHistoryList({ onBack, onSelectReceiptDetail }) {
         )}
 
         {!loading && receipts.length > 0 && (
-          <div className="receipt-grid">
-            {sortedReceipts.map((receipt) => {
-              // Supabase から取得したデータのキーマッピング
-              const storeName = receipt.store_name || '店舗名未登録';
-              const purchaseDate = receipt.purchase_date || '';
-              const imageSrc = receipt.image_url || receipt.imageSrc || null;
-
-              return (
-                <div
-                  key={receipt.id}
-                  className="receipt-card"
-                  onClick={() => onSelectReceiptDetail && onSelectReceiptDetail(receipt)}
-                >
-                  {/* サムネイル画像 */}
-                  <div className="receipt-card-image-box">
-                    {imageSrc ? (
-                      <img src={imageSrc} alt="レシート写真" className="receipt-card-image" />
-                    ) : (
-                      <div className="receipt-placeholder-icon">📄</div>
-                    )}
-                  </div>
-
-                  {/* 店舗名・日付 */}
-                  <div className="receipt-card-info">
-                    <span className="receipt-card-date">{formatPurchaseDate(purchaseDate)}</span>
-                    <span className="receipt-card-store">{storeName}</span>
-                  </div>
-                </div>
-              );
-            })}
+          <div className="receipt-row-list">
+            {sortedReceipts.map((receipt) => (
+              <ReceiptRowCard
+                key={receipt.id}
+                receipt={receipt}
+                showStore
+                onClick={() => onSelectReceiptDetail && onSelectReceiptDetail(receipt)}
+              />
+            ))}
           </div>
         )}
       </main>

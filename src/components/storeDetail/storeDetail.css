@@ -1,0 +1,132 @@
+/* 店舗詳細（店舗別一覧と同じ配色・サイズ） */
+.store-detail-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  width: 100%;
+  background-color: #f8f9fa;
+  box-sizing: border-box;
+}
+
+.store-detail-header {
+  height: 60px;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px;
+  background-color: #e53935;
+  color: #ffffff;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-sizing: border-box;
+}
+
+.store-detail-header .back-button {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 32px;
+  font-weight: 300;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 8px;
+}
+
+.store-detail-header .header-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.store-detail-header .header-right-spacer {
+  width: 32px;
+}
+
+.store-detail-main {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.store-detail-message {
+  text-align: center;
+  color: #888888;
+  margin-top: 40px;
+  font-size: 14px;
+}
+
+.store-info-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 14px 16px;
+  margin-bottom: 20px;
+}
+
+.store-info-name {
+  margin: 0 0 10px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #333333;
+  word-break: break-word;
+}
+
+.store-info-row {
+  display: flex;
+  gap: 12px;
+  padding: 8px 0;
+  border-top: 1px solid #f0f0f0;
+  font-size: 13px;
+}
+
+.store-info-label {
+  width: 72px;
+  flex-shrink: 0;
+  color: #888888;
+}
+
+.store-info-value {
+  flex: 1;
+  min-width: 0;
+  color: #333333;
+  word-break: break-word;
+}
+
+.store-info-link {
+  color: #1565c0;
+  text-decoration: none;
+}
+
+.store-detail-section-title {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #333333;
+}
+
+.store-detail-sort-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.store-detail-sort-row .store-detail-section-title {
+  margin: 0;
+}
+
+.store-detail-sort {
+  padding: 6px 10px;
+  font-size: 13px;
+  border: 1px solid #cccccc;
+  border-radius: 8px;
+  background-color: #ffffff;
+  color: #333333;
+  outline: none;
+}

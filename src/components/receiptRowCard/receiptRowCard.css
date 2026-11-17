@@ -1,0 +1,87 @@
+/* レシート 1 枚の行（レシート一覧・店舗詳細で共通） */
+.receipt-row-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.receipt-row-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px;
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.receipt-row-card:active {
+  transform: scale(0.99);
+}
+
+.receipt-row-thumb {
+  width: 72px;
+  height: 96px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background-color: #f0f0f0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+}
+
+.receipt-row-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.receipt-row-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.receipt-row-date {
+  font-size: 14px;
+  font-weight: bold;
+  color: #333333;
+}
+
+.receipt-row-store {
+  font-size: 13px;
+  font-weight: bold;
+  color: #333333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.receipt-row-meta {
+  font-size: 12px;
+  color: #888888;
+}
+
+.receipt-row-items {
+  font-size: 12px;
+  color: #666666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.receipt-row-arrow {
+  font-size: 22px;
+  color: #888888;
+  flex-shrink: 0;
+}

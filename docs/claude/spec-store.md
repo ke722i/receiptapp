@@ -3,6 +3,8 @@
 - store_name は「チェーン名 支店名」の形で保存する（例: 「ディオ 和泉店」）。正規化は storeNameNormalizer.js の normalizeStoreName。
 - チェーン別の集計は、DB に列を足さず、読み出すときに getChainName(store_name) でチェーン名を割り出して行う（店舗別画面 storeList）。
 - 以前に保存したデータはチェーン名だけだが、そのまま同じチェーンとして集計される。
+- 店舗別一覧（storeList）: チェーンを押すと、店舗（store_name ごと。支店名つき）が開く（レシートごとではない）。店舗を押すと、店舗詳細（storeDetail。App の `selectedStoreName`）へ。開いたチェーンは App が持つ（`storeListOpenChain`。詳細から戻っても開いたまま）。
+- 店舗詳細（`components/storeDetail`）: `fetchReceiptHistory` を店舗名で絞る。住所（`receipts.store_address`）・電話番号（`store_number`）は、新しいレシートから、空でない最初の値。**読み取れていなければ、その行ごと出さない**。電話番号は `tel:` のリンク。「店名」の行は無い。レシートは共通の行の部品（`components/receiptRowCard`。画像・購入日・点数・商品名の例。レシート一覧も同じ）。並び替え（`STORE_RECEIPT_SORT_OPTIONS`: 購入日の新しい順・古い順・登録日。`utils/receiptSort.js`）。押すとレシート詳細（戻り先は店舗詳細）。
 - 新しいチェーンは storeNameNormalizer.js の STORE_RULES に追加する。辞書にないチェーンは、最初の空白までをチェーン名とみなす。
 - 入力画面（レシートの確認・登録、レシート詳細の編集）では、店名（チェーン）と店舗名（支店）を別の枠で、同じ行に並べる（StoreNameFields）。
   DB には今までどおり 1 つの文字列「チェーン名 支店名」で保存する。分けるのは splitStoreName、つなぐのは joinStoreName。

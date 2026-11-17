@@ -181,3 +181,17 @@
   color: #888888;
   flex-shrink: 0;
 }
+
+/* 開いたときの店舗（支店名つき）の行 */
+.store-branch-meta {
+  font-size: 11px;
+  color: #888888;
+  flex-shrink: 0;
+}
+
+.store-branch-arrow {
+  font-size: 20px;
+  color: #888888;
+  line-height: 1;
+  flex-shrink: 0;
+}

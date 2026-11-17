@@ -4,16 +4,23 @@ import { fetchReceiptHistory } from '../../utils/receiptDb';
 import { getChainName } from '../../utils/storeNameNormalizer';
 import { formatPurchaseDate } from '../../utils/purchaseDate';
 
+const UNREGISTERED = '店舗名未登録';
+
 /**
  * 店舗別の一覧
- *  同じチェーン（例: 「ディオ 和泉店」「ディオ 堺店」→「ディオ」）のレシートをまとめて表示する。
- *  チェーンをタップすると、そのチェーンのレシートが支店名つきで開く。
+ *  同じチェーン（例: 「ディオ 和泉店」「ディオ 堺店」→「ディオ」）の店舗をまとめて表示する。
+ *  チェーンをタップすると、そのチェーンの店舗（支店名つき）が開く。店舗をタップすると、その店舗の画面（店舗詳細）へ行く。
+ * @param {string|null} openChain 開いているチェーン名（店舗詳細から戻ったときも、開いたままにするため、親が持つ）
+ * @param {(name: string|null) => void} onOpenChainChange
+ * @param {(storeName: string) => void} onSelectStore 店舗を選んだとき（店舗詳細へ）
  */
-export default function StoreList({ onBack, onSelectReceiptDetail }) {
+export default function StoreList({ onBack, onSelectStore, openChain = null, onOpenChainChange }) {
   const [receipts, setReceipts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
-  const [openChain, setOpenChain] = useState(null); // 開いているチェーン名
+  const [localOpen, setLocalOpen] = useState(null); // 親が開いたチェーンを持たないときの控え
+  const openName = onOpenChainChange ? openChain : localOpen;
+  const setOpenName = onOpenChainChange || setLocalOpen;
 
   // Supabase からレシート履歴を取得
   useEffect(() => {
@@ -47,11 +54,19 @@ export default function StoreList({ onBack, onSelectReceiptDetail }) {
     });
 
     return Array.from(map.values())
-      .map((group) => ({
-        ...group,
-        // 同じチェーンの中の店舗数（支店名つきの店舗名の種類）
-        storeCount: new Set(group.receipts.map((r) => r.store_name || '')).size,
-      }))
+      .map((group) => {
+        // 同じチェーンの中の店舗（支店名つきの店舗名ごと。レシートの多い順 → 新しい順）
+        const byStore = new Map();
+        group.receipts.forEach((r) => {
+          const storeName = r.store_name || UNREGISTERED;
+          if (!byStore.has(storeName)) byStore.set(storeName, { name: storeName, count: 0, latest: '' });
+          const store = byStore.get(storeName);
+          store.count += 1;
+          if ((r.purchase_date || '') > store.latest) store.latest = r.purchase_date || '';
+        });
+        const stores = Array.from(byStore.values()).sort((a, b) => b.count - a.count || b.latest.localeCompare(a.latest));
+        return { ...group, stores, storeCount: stores.length };
+      })
       .sort((a, b) => b.receipts.length - a.receipts.length || b.latest.localeCompare(a.latest));
   }, [receipts]);
 
@@ -83,13 +98,13 @@ export default function StoreList({ onBack, onSelectReceiptDetail }) {
         {!loading && chains.length > 0 && (
           <div className="store-chain-list">
             {chains.map((chain) => {
-              const isOpen = openChain === chain.name;
+              const isOpen = openName === chain.name;
               return (
                 <section key={chain.name} className="store-chain-card">
                   <button
                     type="button"
                     className="store-chain-header"
-                    onClick={() => setOpenChain(isOpen ? null : chain.name)}
+                    onClick={() => setOpenName(isOpen ? null : chain.name)}
                     aria-expanded={isOpen}
                   >
                     <span className="store-chain-icon">🏪</span>
@@ -105,24 +120,17 @@ export default function StoreList({ onBack, onSelectReceiptDetail }) {
 
                   {isOpen && (
                     <ul className="store-receipt-list">
-                      {chain.receipts.map((receipt) => {
-                        const itemCount = (receipt.receipt_items || []).length;
-                        return (
-                          <li key={receipt.id}>
-                            <button
-                              type="button"
-                              className="store-receipt-row"
-                              onClick={() => onSelectReceiptDetail && onSelectReceiptDetail(receipt)}
-                            >
-                              <span className="store-receipt-date">{formatPurchaseDate(receipt.purchase_date)}</span>
-                              <span className="store-receipt-store">
-                                {receipt.store_name || '店舗名未登録'}
-                              </span>
-                              <span className="store-receipt-count">{itemCount}点</span>
-                            </button>
-                          </li>
-                        );
-                      })}
+                      {chain.stores.map((store) => (
+                        <li key={store.name}>
+                          <button type="button" className="store-receipt-row" onClick={() => onSelectStore && onSelectStore(store.name)}>
+                            <span className="store-receipt-store">{store.name}</span>
+                            <span className="store-branch-meta">
+                              {store.count}件{store.latest && ` ・ 最新 ${formatPurchaseDate(store.latest)}`}
+                            </span>
+                            <span className="store-branch-arrow">›</span>
+                          </button>
+                        </li>
+                      ))}
                     </ul>
                   )}
                 </section>
