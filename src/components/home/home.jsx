@@ -29,7 +29,11 @@ import {
 
 const SEARCH_INPUT_ID = 'home-search-input';
 const STORAGE_KEY_PROPOSAL_TIP = 'receipt_app_proposal_tip_dismissed'; // カテゴリの提案のお知らせを閉じたか
+// 検索履歴・お知らせを閉じた印は、ユーザーごとに覚える（別のアカウントに、前のアカウントの履歴が出ないように）
 const STORAGE_KEY_SEARCH_HISTORY = 'receipt_app_search_history';
+const STORAGE_KEY_OLD_SEARCH_HISTORY = 'receipt_app_search_history'; // 以前の、ユーザーを分けない保存（使わない。消す）
+const historyKeyOf = (userId) => `${STORAGE_KEY_SEARCH_HISTORY}_${userId}`;
+const proposalTipKeyOf = (userId) => `${STORAGE_KEY_PROPOSAL_TIP}_${userId}`;
 const STORAGE_KEY_SEARCH_FILTER = 'receipt_app_search_filter'; // 検索の切り替え（最後に選んだもの）
 
 // 検索の対象（検索バーの左のプルダウン）。すべて（カテゴリ・商品名・印字名）／カテゴリだけ／商品名だけ
@@ -107,7 +111,7 @@ export default function Home({
   };
   const [showProposalTip, setShowProposalTip] = useState(() => {
     try {
-      return localStorage.getItem(STORAGE_KEY_PROPOSAL_TIP) !== '1';
+      return localStorage.getItem(proposalTipKeyOf(userId)) !== '1';
     } catch {
       return true;
     }
@@ -115,7 +119,7 @@ export default function Home({
   const dismissProposalTip = () => {
     setShowProposalTip(false);
     try {
-      localStorage.setItem(STORAGE_KEY_PROPOSAL_TIP, '1');
+      localStorage.setItem(proposalTipKeyOf(userId), '1');
     } catch {
       // 保存できなくても、この画面では閉じる
     }
@@ -126,7 +130,7 @@ export default function Home({
   // 検索タグ履歴の初期化
   const [searchHistory, setSearchHistory] = useState(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY_SEARCH_HISTORY);
+      const saved = localStorage.getItem(historyKeyOf(userId));
       const list = saved ? JSON.parse(saved) : (INITIAL_SEARCH_HISTORY || []);
       return list.map(toProductPath).filter(Boolean);
     } catch {
@@ -210,11 +214,25 @@ export default function Home({
   // 検索キーワード履歴の永続化
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY_SEARCH_HISTORY, JSON.stringify(searchHistory));
+      localStorage.setItem(historyKeyOf(userId), JSON.stringify(searchHistory));
     } catch (err) {
       console.error('Failed to save search history:', err);
     }
-  }, [searchHistory]);
+  }, [searchHistory, userId]);
+
+  // 以前の、ユーザーを分けない検索履歴は、別のアカウントに出てしまうので、消す
+  useEffect(() => {
+    try {
+      localStorage.removeItem(STORAGE_KEY_OLD_SEARCH_HISTORY);
+      // 以前の「提案のお知らせを閉じた」印は、今ログインしているユーザーに引き継いで、消す
+      if (localStorage.getItem(STORAGE_KEY_PROPOSAL_TIP) === '1' && localStorage.getItem(proposalTipKeyOf(userId)) === null) {
+        localStorage.setItem(proposalTipKeyOf(userId), '1');
+      }
+      localStorage.removeItem(STORAGE_KEY_PROPOSAL_TIP);
+    } catch {
+      // 消せなくても、使わない
+    }
+  }, [userId]);
 
   const toggleCategory = (categoryId) => {
     setOpenCategories((prev) => ({
@@ -298,7 +316,7 @@ export default function Home({
   const saveSearchHistory = (list) => {
     setSearchHistory(list);
     try {
-      localStorage.setItem(STORAGE_KEY_SEARCH_HISTORY, JSON.stringify(list));
+      localStorage.setItem(historyKeyOf(userId), JSON.stringify(list));
     } catch (err) {
       console.error('Failed to save search history:', err);
     }
