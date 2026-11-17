@@ -37,6 +37,43 @@ const STORE_RULES = [
   { keywords: ['いかりスーパー'], normalized: 'いかりスーパー' },
   { keywords: ['kohyo', 'コーヨー'], normalized: 'KOHYO' },
   { keywords: ['成城石井'], normalized: '成城石井' },
+  // ---------- 食品スーパー（大阪府・追加分） ----------
+  // ※ 「フレンドマート」「トップワールド」「アル・プラザ」は、上に登録済み。
+  // ※ 「マックスバリュエクスプレス」は、「マックスバリュ」と同じ位置で一致するが、長い語が優先される
+  { keywords: ['デイリーカナート', 'dailycanart'], normalized: 'デイリーカナート' },
+  { keywords: ['マツゲン', '松源', 'matsugen'], normalized: 'マツゲン' },
+  { keywords: ['近商ストア', 'harves', 'ハーベス'], normalized: '近商ストア' },
+  { keywords: ['フレスコ', 'fresco'], normalized: 'フレスコ' },
+  { keywords: ['京阪ザストア', 'ザストア', 'フレスト'], normalized: '京阪ザ・ストア' },
+  { keywords: ['サタケ'], normalized: 'サタケ' },
+  { keywords: ['マルヤス'], normalized: 'マルヤス' },
+  { keywords: ['グルメシティ', 'gourmetcity'], normalized: 'グルメシティ' },
+  { keywords: ['オーケーストア', 'okストア', 'オーケー'], normalized: 'オーケー' },
+  { keywords: ['トライアル', 'trial'], normalized: 'トライアル' },
+  { keywords: ['スーパーサンコー'], normalized: 'スーパーサンコー' },
+  { keywords: ['スーパーナショナル', 'supernational'], normalized: 'スーパーナショナル' },
+  { keywords: ['マックスバリュエクスプレス', 'maxvaluexpress'], normalized: 'マックスバリュエクスプレス' },
+  { keywords: ['西友', 'seiyu', 'セイユー'], normalized: '西友' },
+  { keywords: ['イトーヨーカドー', 'イトーヨーカ堂', 'ヨーカドー', 'itoyokado'], normalized: 'イトーヨーカドー' },
+  { keywords: ['バロー', 'valor'], normalized: 'バロー' },
+  { keywords: ['megaドンキホーテ', 'megaドンキ'], normalized: 'MEGAドン・キホーテ' },
+  { keywords: ['ドンキホーテ', 'ドンキ', 'donki'], normalized: 'ドン・キホーテ' },
+  { keywords: ['コストコ', 'costco'], normalized: 'コストコ' },
+  { keywords: ['パントリー', 'pantry'], normalized: 'パントリー' },
+  { keywords: ['ラッキー', 'lucky'], normalized: 'ラッキー' },
+  { keywords: ['ビッグビーンズ', 'bigbeans'], normalized: 'ビッグビーンズ' },
+  { keywords: ['ビオラル', 'bioral'], normalized: 'ビオラル' },
+  { keywords: ['コープこうべ'], normalized: 'コープこうべ' },
+  { keywords: ['コープ', 'coop'], normalized: 'コープ' },
+  { keywords: ['スーパーマルハチ'], normalized: 'スーパーマルハチ' },
+  // ※ 「たこ一」は、漢字の「一」と、長音の「ー」が、どちらも使われやすいので、両方書く。前に付く「生鮮スーパー」は、取り除く
+  { keywords: ['たこ一', 'たこー', 'たこいち'], normalized: 'たこ一' },
+  { keywords: ['シェフカワカミ', 'chefkawakami'], normalized: 'シェフカワカミ' },
+  { keywords: ['ミートモリタ屋', 'meatmoritaya'], normalized: 'ミートモリタ屋' },
+  { keywords: ['スーパーサンエー'], normalized: 'スーパーサンエー' },
+  { keywords: ['エバグリーン', 'エバーグリーン'], normalized: 'エバグリーン' },
+  { keywords: ['スーパーマルシゲ'], normalized: 'スーパーマルシゲ' },
+  { keywords: ['よってって', 'ヨッテッテ'], normalized: 'よってって' },
 
   // ---------- コンビニ ----------
   // ※ 「ローソンストア100」「ナチュラルローソン」は別のお店として分ける
@@ -61,6 +98,19 @@ const STORE_RULES = [
   { keywords: ['ダックス'], normalized: 'ダックス' },
   { keywords: ['ドラッグセガミ', 'セガミ'], normalized: 'ドラッグセガミ' },
   { keywords: ['ドラッグユタカ'], normalized: 'ドラッグユタカ' },
+
+  // ---------- ホームセンター（大阪府） ----------
+  // ※ 「ホームセンターコーナン」のように、チェーン名の前に付く言葉は、取り除いて統一名にする
+  // ※ 「アヤハディオ」は、名前に「ディオ」（食品スーパー）を含むが、別の店。店名の先頭に近い位置で一致するこの行が、優先される
+  { keywords: ['コーナン', 'konan'], normalized: 'コーナン' },
+  { keywords: ['ロイヤルホームセンター'], normalized: 'ロイヤルホームセンター' },
+  { keywords: ['dcm', 'ディーシーエム'], normalized: 'DCM' },
+  { keywords: ['カインズ', 'cainz'], normalized: 'カインズ' },
+  { keywords: ['ビバホーム', 'vivahome'], normalized: 'ビバホーム' },
+  { keywords: ['ナフコ', 'nafco'], normalized: 'ナフコ' },
+  { keywords: ['ケーヨーデイツー', 'keiyod2', 'ケーヨーd2'], normalized: 'ケーヨーデイツー' },
+  { keywords: ['ホームワイド'], normalized: 'ホームワイド' },
+  { keywords: ['アヤハディオ'], normalized: 'アヤハディオ' },
 ];
 
 const UNREGISTERED = '店舗名未登録';
