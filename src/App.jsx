@@ -12,6 +12,7 @@ import ReceiptConfirm from './components/receiptConfirm/receiptConfirm';
 import ReceiptSuccess from './components/receiptSuccess/receiptSuccess';
 import ReceiptHistoryList from './components/receiptHistoryList/receiptHistoryList';
 import ReceiptHistoryDetail from './components/receiptHistoryDetail/receiptHistoryDetail';
+import StoreDetail from './components/storeDetail/storeDetail';
 import StoreList from './components/storeList/storeList';
 import MyStores from './components/myStores/myStores';
 import CategoryProposal from './components/categoryProposal/categoryProposal';
@@ -52,6 +53,8 @@ function App() {
   const [cropReturnScreen, setCropReturnScreen] = useState('receiptScanner');
   const [parsedReceiptData, setParsedReceiptData] = useState(null); // AI解析データ用
   const [selectedReceipt, setSelectedReceipt] = useState(null);
+  const [selectedStoreName, setSelectedStoreName] = useState(''); // 店舗詳細で開く店舗（「チェーン名 支店名」）
+  const [storeListOpenChain, setStoreListOpenChain] = useState(null); // 店舗別一覧で開いているチェーン（詳細から戻っても、開いたまま）
   // レシート詳細から「戻る」で帰る画面（レシート一覧 / 商品詳細 / 購入履歴一覧）
   const [receiptDetailBackScreen, setReceiptDetailBackScreen] = useState('receiptHistoryList');
   // マイ店舗の画面から「戻る」で帰る画面（ホームのメニュー / 商品詳細）
@@ -478,9 +481,22 @@ function App() {
       {currentScreen === 'storeList' && (
         <StoreList
           onBack={() => setCurrentScreen('home')}
+          openChain={storeListOpenChain}
+          onOpenChainChange={setStoreListOpenChain}
+          onSelectStore={(name) => {
+            setSelectedStoreName(name);
+            setCurrentScreen('storeDetail');
+          }}
+        />
+      )}
+      {/* 店舗詳細（店舗の情報と、その店舗のレシート） */}
+      {currentScreen === 'storeDetail' && (
+        <StoreDetail
+          storeName={selectedStoreName}
+          onBack={() => setCurrentScreen('storeList')}
           onSelectReceiptDetail={(receipt) => {
             setSelectedReceipt(receipt);
-            setReceiptDetailBackScreen('storeList');
+            setReceiptDetailBackScreen('storeDetail');
             setCurrentScreen('receiptHistoryDetail');
           }}
         />

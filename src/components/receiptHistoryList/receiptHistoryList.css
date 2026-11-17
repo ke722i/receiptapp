@@ -63,13 +63,6 @@
   font-size: 14px;
 }
 
-/* 2 列は、同じ幅にする。minmax(0, 1fr) にしないと、長い店名の側の列が広がって、左右の大きさが変わる */
-.receipt-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-}
-
 /* 並び替え */
 .receipt-sort-row {
   display: flex;
@@ -94,67 +87,6 @@
   outline: none;
 }
 
-.receipt-card {
-  min-width: 0; /* 長い店名で、カードが広がらないように */
-  position: relative;
-  background-color: #ffffff;
-  border-radius: 12px;
-  padding: 12px;
-  border: 1px solid #e0e0e0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  cursor: pointer;
-  transition: transform 0.1s, box-shadow 0.2s;
-}
-
-.receipt-card:active {
-  transform: scale(0.98);
-}
-
-.receipt-card-image-box {
-  width: 100%;
-  height: 140px;
-  background-color: #f0f0f0;
-  border-radius: 8px;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 8px;
-}
-
-.receipt-card-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.receipt-placeholder-icon {
-  font-size: 40px;
-}
-
-.receipt-card-info {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.receipt-card-date {
-  font-size: 11px;
-  color: #888888;
-}
-
-.receipt-card-store {
-  font-size: 13px;
-  font-weight: bold;
-  color: #333333;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
 /* 絞り込み（店名・商品名、期間） */
 .receipt-filter-row {
   display: flex;
