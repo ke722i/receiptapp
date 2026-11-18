@@ -33,6 +33,7 @@ import AnnouncementPopup from './components/announcementPopup/announcementPopup'
 import ReassignOther from './components/reassignOther/reassignOther';
 import { runAutoReassign, undoAutoReassign } from './utils/reassignRun';
 import { loadRuns } from './utils/reassignOther';
+import { clearReceiptCache } from './utils/receiptCache';
 import { checkIsAdmin } from './utils/adminDb';
 import { fetchReceiptById } from './utils/receiptDb';
 import { isOpenablePath } from './utils/categoryUtils';
@@ -218,6 +219,7 @@ function App() {
 
   // ログイン成功ハンドラー
   const handleLoginSuccess = (userObj, rawInputUserId) => {
+    clearReceiptCache(); // 前のアカウントのレシート（覚えた一覧・画像）を出さない
     const extractedId =
       rawInputUserId ||
       userObj?.user_metadata?.user_id ||
@@ -239,6 +241,7 @@ function App() {
 
   // 新規登録成功ハンドラー
   const handleRegisterSuccess = (userObj, rawInputUserId) => {
+    clearReceiptCache(); // 前のアカウントのレシート（覚えた一覧・画像）を出さない
     const extractedId =
       rawInputUserId ||
       userObj?.user_metadata?.user_id ||
@@ -305,7 +308,10 @@ function App() {
           onOpenNotices={() => {
             setCurrentScreen('notices');
           }}
-          onLogout={() => setCurrentScreen('login')}
+          onLogout={() => {
+            clearReceiptCache();
+            setCurrentScreen('login');
+          }}
           onNavigateToSettings={() => setCurrentScreen('settings')}
           onOpenCategoryProposal={() => {
             setProposalBackScreen('home');
@@ -349,7 +355,10 @@ function App() {
           onOpenAnnouncements={() => setCurrentScreen('adminAnnouncements')}
           onOpenUsers={() => setCurrentScreen('adminUsers')}
           onOpenGeneralHome={() => setCurrentScreen('home')}
-          onLogout={() => setCurrentScreen('login')}
+          onLogout={() => {
+            clearReceiptCache();
+            setCurrentScreen('login');
+          }}
         />
       )}
       {currentScreen === 'adminProposals' && <AdminProposals onBack={() => setCurrentScreen('adminHome')} />}

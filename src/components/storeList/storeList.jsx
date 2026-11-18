@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import './storeList.css';
-import { fetchReceiptHistory } from '../../utils/receiptDb';
+import { useReceiptHistory } from '../../utils/receiptCache';
 import { getChainName } from '../../utils/storeNameNormalizer';
 import { formatPurchaseDate } from '../../utils/purchaseDate';
 
@@ -15,31 +15,10 @@ const UNREGISTERED = '店舗名未登録';
  * @param {(storeName: string) => void} onSelectStore 店舗を選んだとき（店舗詳細へ）
  */
 export default function StoreList({ onBack, onSelectStore, openChain = null, onOpenChainChange }) {
-  const [receipts, setReceipts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState('');
+  const { receipts, loading, errorMessage } = useReceiptHistory(); // 覚えた一覧を使う（画像は読まない。utils/receiptCache.js）
   const [localOpen, setLocalOpen] = useState(null); // 親が開いたチェーンを持たないときの控え
   const openName = onOpenChainChange ? openChain : localOpen;
   const setOpenName = onOpenChainChange || setLocalOpen;
-
-  // Supabase からレシート履歴を取得
-  useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      setErrorMessage('');
-
-      const result = await fetchReceiptHistory();
-      setLoading(false);
-
-      if (result.success) {
-        setReceipts(result.data);
-      } else {
-        setErrorMessage(result.error);
-      }
-    };
-
-    load();
-  }, []);
 
   // チェーンごとにまとめる（レシートの多い順 → 新しい順）
   const chains = useMemo(() => {

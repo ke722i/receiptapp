@@ -2,6 +2,7 @@ import { supabase } from '../services/supabaseClient';
 import { formatPurchaseDate } from './purchaseDate';
 import { normalizeVolume } from './volume';
 import { isOpenablePath } from './categoryUtils';
+import { notifyReceiptsChanged } from './receiptChanges';
 
 // ---------- 自分の明細の印字名（ホームの検索で使う。読み込んだら覚えておく） ----------
 // レシートの保存・編集・削除のときは、覚えた内容を捨てて、次に使うときに読み直す
@@ -111,6 +112,7 @@ export const fetchMyOtherItems = async () => {
  */
 export const applyItemCategories = async (changes) => {
   forgetMyItemNames();
+  notifyReceiptsChanged();
   const doneIds = [];
   const failedIds = [];
   await Promise.all(
@@ -138,6 +140,7 @@ export const applyItemCategories = async (changes) => {
  */
 export const saveReceiptToDatabase = async (receiptData, itemsData) => {
   forgetMyItemNames();
+  notifyReceiptsChanged();
   try {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
@@ -206,6 +209,7 @@ export const saveReceiptToDatabase = async (receiptData, itemsData) => {
  */
 export const updateReceiptInDatabase = async (receiptId, receiptFields, itemUpdates = []) => {
   forgetMyItemNames();
+  notifyReceiptsChanged();
   try {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
@@ -289,19 +293,23 @@ export const hasDuplicateReceipt = async (receipt, total) => {
 };
 
 /**
- * ログイン中ユーザーのレシート履歴を取得する
+ * ログイン中ユーザーのレシート履歴を取得する（明細つき。画像 image_url は含めない）
+ *  ・画像は 1 枚 100〜300KB あり、全件を読むと遅くなるので、画面に見えた分だけ fetchReceiptImages で読む（utils/receiptCache.js）
+ *  ・ユーザーは、端末にあるログイン情報（getSession）から取る。他の人のレシートは、DB の RLS で返らない
+ * @returns {Promise<{ success: boolean, data?: object[], ownerId?: string, error?: string }>}
  */
 export const fetchReceiptHistory = async () => {
   try {
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    const user = session?.user;
+    if (sessionError || !user) {
       throw new Error('ユーザー情報の取得に失敗しました。');
     }
 
     const { data, error } = await supabase
       .from('receipts')
       .select(`
-        *,
+        id, user_id, store_name, store_address, store_number, purchase_date, created_at,
         receipt_items (*)
       `)
       .eq('user_id', user.id)
@@ -312,6 +320,7 @@ export const fetchReceiptHistory = async () => {
     return {
       success: true,
       data: data || [],
+      ownerId: user.id,
     };
   } catch (error) {
     console.error('Fetch history failed:', error);
@@ -322,6 +331,23 @@ export const fetchReceiptHistory = async () => {
   }
 };
 
+
+/**
+ * レシートの画像（image_url）だけを、まとめて取得する（一覧で、画面に見えた行の分）
+ * @param {(string|number)[]} receiptIds
+ * @returns {Promise<{ success: boolean, data?: { id, image_url }[], error?: string }>}
+ */
+export const fetchReceiptImages = async (receiptIds) => {
+  try {
+    if (!receiptIds || receiptIds.length === 0) return { success: true, data: [] };
+    const { data, error } = await supabase.from('receipts').select('id, image_url').in('id', receiptIds);
+    if (error) throw error;
+    return { success: true, data: data || [] };
+  } catch (error) {
+    console.error('Fetch receipt images failed:', error);
+    return { success: false, error: error.message || '画像の取得に失敗しました。' };
+  }
+};
 
 /**
  * 指定した商品（4階層のパス）の、自分のレシートの購入履歴を取得する
@@ -431,6 +457,7 @@ export const fetchReceiptById = async (receiptId) => {
  */
 export const deleteReceiptFromDatabase = async (receiptId) => {
   forgetMyItemNames();
+  notifyReceiptsChanged({ deletedIds: [receiptId] });
   try {
     const { error } = await supabase
       .from('receipts')
@@ -454,6 +481,7 @@ export const deleteReceiptFromDatabase = async (receiptId) => {
  */
 export const deleteAllReceiptsFromDatabase = async () => {
   forgetMyItemNames();
+  notifyReceiptsChanged({ all: true });
   try {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) throw new Error('ユーザー情報の取得に失敗しました。');
