@@ -1,8 +1,9 @@
 """取り扱い店舗（店名の辞書）の一覧を、Excel にする
 使い方（プロジェクトの直下で）:
-    python tools/export_stores.py 取り扱い店舗一覧.xlsx
+    python tools/export_stores.py            → misc/excel/取り扱い店舗一覧.xlsx（出力先を、引数で変えてもよい）
 元は、src/utils/storeNameNormalizer.js の STORE_RULES（店を足したら、ここを直して、もう一度実行する）。
 """
+import os
 import re
 import sys
 from openpyxl import Workbook
@@ -10,7 +11,8 @@ from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
 SRC = 'src/utils/storeNameNormalizer.js'
-OUT = sys.argv[1] if len(sys.argv) > 1 else '取り扱い店舗一覧.xlsx'
+OUT = sys.argv[1] if len(sys.argv) > 1 else 'misc/excel/取り扱い店舗一覧.xlsx'
+os.makedirs(os.path.dirname(OUT) or '.', exist_ok=True)
 
 text = open(SRC, encoding='utf-8').read()
 body = text[text.index('const STORE_RULES = ['):]
