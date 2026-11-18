@@ -19,7 +19,7 @@ export default function ReceiptRowCard({ receipt, showStore = false, onClick }) 
     .join('、');
 
   return (
-    <button type="button" className="receipt-row-card" onClick={onClick}>
+    <button type="button" className="receipt-row-card" data-receipt-id={receipt.id} onClick={onClick}>
       <span className="receipt-row-thumb">
         {imageSrc ? <img src={imageSrc} alt="レシート写真" /> : <span aria-hidden="true">📄</span>}
       </span>

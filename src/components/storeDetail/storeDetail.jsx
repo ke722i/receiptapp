@@ -1,8 +1,9 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import './storeDetail.css';
 import { fetchReceiptHistory } from '../../utils/receiptDb';
 import { formatPurchaseDate } from '../../utils/purchaseDate';
-import { RECEIPT_SORT_OPTIONS, DEFAULT_RECEIPT_SORT, sortReceipts } from '../../utils/receiptSort';
+import { RECEIPT_SORT_OPTIONS, sortReceipts } from '../../utils/receiptSort';
+import { loadReceiptSort, saveReceiptSort, peekReturnState, rememberOpenedReceipt, scrollToReturnedReceipt } from '../../utils/receiptListState';
 import ReceiptRowCard from '../receiptRowCard/receiptRowCard';
 
 const UNREGISTERED = '店舗名未登録';
@@ -26,7 +27,9 @@ export default function StoreDetail({ storeName, onBack, onSelectReceiptDetail }
   const [receipts, setReceipts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
-  const [sortKey, setSortKey] = useState(DEFAULT_RECEIPT_SORT);
+  const [returned] = useState(() => peekReturnState()); // レシート詳細から戻ってきたとき、その行まで戻す
+  const [sortKey, setSortKey] = useState(loadReceiptSort); // 並び替えは、端末に保存（レシート一覧と共通）
+  const scrolledRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -46,6 +49,17 @@ export default function StoreDetail({ storeName, onBack, onSelectReceiptDetail }
     () => sortReceipts(receipts.filter((r) => (r.store_name || UNREGISTERED) === storeName), sortKey),
     [receipts, storeName, sortKey]
   );
+
+  const changeSort = (value) => {
+    setSortKey(value);
+    saveReceiptSort(value);
+  };
+
+  useEffect(() => {
+    if (loading || scrolledRef.current) return;
+    scrolledRef.current = true;
+    scrollToReturnedReceipt(returned?.receiptId);
+  }, [loading, returned]);
 
   const address = pickLatest(storeReceipts, 'store_address');
   const phone = pickLatest(storeReceipts, 'store_number');
@@ -114,7 +128,7 @@ export default function StoreDetail({ storeName, onBack, onSelectReceiptDetail }
             <div className="store-detail-sort-row">
               <h2 className="store-detail-section-title">この店舗のレシート</h2>
               {storeReceipts.length > 1 && (
-                <select className="store-detail-sort" value={sortKey} onChange={(e) => setSortKey(e.target.value)} aria-label="並び替え">
+                <select className="store-detail-sort" value={sortKey} onChange={(e) => changeSort(e.target.value)} aria-label="並び替え">
                   {RECEIPT_SORT_OPTIONS.map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
@@ -128,7 +142,14 @@ export default function StoreDetail({ storeName, onBack, onSelectReceiptDetail }
             ) : (
               <div className="receipt-row-list">
                 {storeReceipts.map((receipt) => (
-                  <ReceiptRowCard key={receipt.id} receipt={receipt} onClick={() => onSelectReceiptDetail && onSelectReceiptDetail(receipt)} />
+                  <ReceiptRowCard
+                    key={receipt.id}
+                    receipt={receipt}
+                    onClick={() => {
+                      rememberOpenedReceipt(receipt.id);
+                      if (onSelectReceiptDetail) onSelectReceiptDetail(receipt);
+                    }}
+                  />
                 ))}
               </div>
             )}
