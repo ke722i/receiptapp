@@ -1,23 +1,39 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import './receiptHistoryList.css';
 import { fetchReceiptHistory } from '../../utils/receiptDb';
 import ReceiptRowCard from '../receiptRowCard/receiptRowCard';
-import { RECEIPT_SORT_OPTIONS, DEFAULT_RECEIPT_SORT, sortReceipts } from '../../utils/receiptSort';
+import { RECEIPT_SORT_OPTIONS, sortReceipts } from '../../utils/receiptSort';
+import { loadReceiptSort, saveReceiptSort, peekReturnState, rememberOpenedReceipt, scrollToReturnedReceipt } from '../../utils/receiptListState';
 import { RECEIPT_PERIOD_OPTIONS, filterReceipts } from '../../utils/receiptFilter';
 
 export default function ReceiptHistoryList({ onBack, onSelectReceiptDetail }) {
   const [receipts, setReceipts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
-  const [sortKey, setSortKey] = useState(DEFAULT_RECEIPT_SORT); // 既定は購入日
-  const [searchText, setSearchText] = useState(''); // 店名・印字名の絞り込み
-  const [period, setPeriod] = useState('all'); // 購入日の期間
+  // レシート詳細から戻ってきたときは、絞り込みを元に戻す（あらためて開いたときは、絞り込みなし）
+  const [returned] = useState(() => peekReturnState());
+  const [sortKey, setSortKey] = useState(loadReceiptSort); // 並び替えは、端末に保存（既定は購入日）
+  const [searchText, setSearchText] = useState(returned?.searchText ?? ''); // 店名・印字名の絞り込み
+  const [period, setPeriod] = useState(returned?.period ?? 'all'); // 購入日の期間
+  const scrolledRef = useRef(false);
   // 絞り込んでから、並び替える
   const sortedReceipts = useMemo(
     () => sortReceipts(filterReceipts(receipts, { text: searchText, period }), sortKey),
     [receipts, sortKey, searchText, period]
   );
   const isFiltering = searchText.trim() !== '' || period !== 'all';
+
+  const changeSort = (value) => {
+    setSortKey(value);
+    saveReceiptSort(value);
+  };
+
+  // 詳細から戻ってきたら、開いたレシートの行までスクロールする（読み込みが終わって、行が並んだあとに 1 回だけ）
+  useEffect(() => {
+    if (loading || scrolledRef.current) return;
+    scrolledRef.current = true;
+    scrollToReturnedReceipt(returned?.receiptId);
+  }, [loading, returned]);
 
   // Supabase からレシート履歴を取得
   useEffect(() => {
@@ -97,7 +113,7 @@ export default function ReceiptHistoryList({ onBack, onSelectReceiptDetail }) {
               id="receipt-sort"
               className="sort-select"
               value={sortKey}
-              onChange={(e) => setSortKey(e.target.value)}
+              onChange={(e) => changeSort(e.target.value)}
             >
               {RECEIPT_SORT_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -121,7 +137,10 @@ export default function ReceiptHistoryList({ onBack, onSelectReceiptDetail }) {
                 key={receipt.id}
                 receipt={receipt}
                 showStore
-                onClick={() => onSelectReceiptDetail && onSelectReceiptDetail(receipt)}
+                onClick={() => {
+                  rememberOpenedReceipt(receipt.id, { searchText, period });
+                  if (onSelectReceiptDetail) onSelectReceiptDetail(receipt);
+                }}
               />
             ))}
           </div>
