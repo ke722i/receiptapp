@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import './storeDetail.css';
-import { fetchReceiptHistory } from '../../utils/receiptDb';
+import { useReceiptHistory } from '../../utils/receiptCache';
 import { formatPurchaseDate } from '../../utils/purchaseDate';
 import { RECEIPT_SORT_OPTIONS, sortReceipts } from '../../utils/receiptSort';
 import { loadReceiptSort, saveReceiptSort, peekReturnState, rememberOpenedReceipt, scrollToReturnedReceipt } from '../../utils/receiptListState';
@@ -24,25 +24,10 @@ const isPhoneLike = (text) => /^[\d\s\-()（）+]{8,}$/.test(text);
  * @param {string} storeName 店舗名（「チェーン名 支店名」の形。レシートの store_name）
  */
 export default function StoreDetail({ storeName, onBack, onSelectReceiptDetail }) {
-  const [receipts, setReceipts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState('');
+  const { receipts, loading, errorMessage } = useReceiptHistory(); // 覚えた一覧を使う（utils/receiptCache.js）
   const [returned] = useState(() => peekReturnState()); // レシート詳細から戻ってきたとき、その行まで戻す
   const [sortKey, setSortKey] = useState(loadReceiptSort); // 並び替えは、端末に保存（レシート一覧と共通）
   const scrolledRef = useRef(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    fetchReceiptHistory().then((result) => {
-      if (cancelled) return;
-      setLoading(false);
-      if (result.success) setReceipts(result.data);
-      else setErrorMessage(result.error);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   // この店舗のレシート（選んだ順に並べる。最初は、購入日の新しい順）
   const storeReceipts = useMemo(

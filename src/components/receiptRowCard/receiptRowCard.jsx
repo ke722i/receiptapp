@@ -1,4 +1,6 @@
+import { useRef } from 'react';
 import './receiptRowCard.css';
+import { useReceiptImage } from '../../utils/receiptCache';
 import { formatPurchaseDate } from '../../utils/purchaseDate';
 
 const UNREGISTERED = '店舗名未登録';
@@ -11,7 +13,9 @@ const UNREGISTERED = '店舗名未登録';
  */
 export default function ReceiptRowCard({ receipt, showStore = false, onClick }) {
   const items = receipt.receipt_items || [];
-  const imageSrc = receipt.image_url || receipt.imageSrc || null;
+  const rowRef = useRef(null);
+  // 画像は、一覧には含めない。この行が画面に近づいたら読む（undefined = 読み込み中、null = 画像なし）
+  const imageSrc = useReceiptImage(receipt, rowRef);
   const names = items
     .map((item) => item.item_name)
     .filter(Boolean)
@@ -19,9 +23,13 @@ export default function ReceiptRowCard({ receipt, showStore = false, onClick }) 
     .join('、');
 
   return (
-    <button type="button" className="receipt-row-card" data-receipt-id={receipt.id} onClick={onClick}>
+    <button type="button" className="receipt-row-card" data-receipt-id={receipt.id} onClick={onClick} ref={rowRef}>
       <span className="receipt-row-thumb">
-        {imageSrc ? <img src={imageSrc} alt="レシート写真" /> : <span aria-hidden="true">📄</span>}
+        {imageSrc ? (
+          <img src={imageSrc} alt="レシート写真" />
+        ) : imageSrc === undefined ? null : (
+          <span aria-hidden="true">📄</span>
+        )}
       </span>
       <span className="receipt-row-info">
         <span className="receipt-row-date">{formatPurchaseDate(receipt.purchase_date)}</span>

@@ -36,7 +36,7 @@ const animateFrame = (thumb, frame, overlay, direction) => {
  * レシート画像のサムネイル。画像があるときは、押すと大きく表示する（外側のタップ・Esc で閉じる）。
  * サムネイルの大きさや枠は、使う画面側の CSS（receipt-image-preview など）で決める。
  */
-export default function ReceiptImagePreview({ src, alt = 'レシート写真' }) {
+export default function ReceiptImagePreview({ src, alt = 'レシート写真', loading = false }) {
   const [open, setOpen] = useState(false);
   const closingRef = useRef(false);
   const thumbRef = useRef(null);
@@ -74,7 +74,7 @@ export default function ReceiptImagePreview({ src, alt = 'レシート写真' })
   if (!src) {
     return (
       <div className="receipt-image-preview">
-        <div className="no-image-text">No Image</div>
+        <div className="no-image-text">{loading ? '読み込み中' : 'No Image'}</div>
       </div>
     );
   }

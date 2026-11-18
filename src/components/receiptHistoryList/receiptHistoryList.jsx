@@ -1,15 +1,14 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import './receiptHistoryList.css';
-import { fetchReceiptHistory } from '../../utils/receiptDb';
+import { useReceiptHistory } from '../../utils/receiptCache';
 import ReceiptRowCard from '../receiptRowCard/receiptRowCard';
 import { RECEIPT_SORT_OPTIONS, sortReceipts } from '../../utils/receiptSort';
 import { loadReceiptSort, saveReceiptSort, peekReturnState, rememberOpenedReceipt, scrollToReturnedReceipt } from '../../utils/receiptListState';
 import { RECEIPT_PERIOD_OPTIONS, filterReceipts } from '../../utils/receiptFilter';
 
 export default function ReceiptHistoryList({ onBack, onSelectReceiptDetail }) {
-  const [receipts, setReceipts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState('');
+  // 一覧は、一度読んだら覚えておく（2 回目からは、すぐ出る。utils/receiptCache.js）
+  const { receipts, loading, errorMessage } = useReceiptHistory();
   // レシート詳細から戻ってきたときは、絞り込みを元に戻す（あらためて開いたときは、絞り込みなし）
   const [returned] = useState(() => peekReturnState());
   const [sortKey, setSortKey] = useState(loadReceiptSort); // 並び替えは、端末に保存（既定は購入日）
@@ -34,25 +33,6 @@ export default function ReceiptHistoryList({ onBack, onSelectReceiptDetail }) {
     scrolledRef.current = true;
     scrollToReturnedReceipt(returned?.receiptId);
   }, [loading, returned]);
-
-  // Supabase からレシート履歴を取得
-  useEffect(() => {
-    const loadHistory = async () => {
-      setLoading(true);
-      setErrorMessage('');
-
-      const result = await fetchReceiptHistory();
-      setLoading(false);
-
-      if (result.success) {
-        setReceipts(result.data);
-      } else {
-        setErrorMessage(result.error);
-      }
-    };
-
-    loadHistory();
-  }, []);
 
   return (
     <div className="receipt-history-container">

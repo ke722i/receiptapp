@@ -5,6 +5,7 @@ import { OTHER } from '../../utils/categoryUtils';
 import { formatPurchaseDate, normalizePurchaseDate } from '../../utils/purchaseDate';
 import { normalizeVolume } from '../../utils/volume';
 import ReceiptImagePreview from '../receiptImagePreview/receiptImagePreview';
+import { useReceiptImage } from '../../utils/receiptCache';
 import { splitStoreName, joinStoreName } from '../../utils/storeNameNormalizer';
 import ReceiptEdit from '../receiptEdit/receiptEdit';
 import VolumeButton from '../volumeButton/volumeButton';
@@ -75,6 +76,9 @@ export default function ReceiptHistoryDetail({ receipt, onBack, onDelete, onUpda
   // 初めて入力された名前かどうかの判定に使う（辞書と、これまでのレシートの店舗名）
   const [knownStores, rememberStore] = useKnownStores();
 
+  // 一覧から開いたときは、画像を持っていないので、ここで読む（読んだ画像は覚えておく。フックは、下の return より前に呼ぶ）
+  const imageSrc = useReceiptImage(receipt);
+
   if (!receipt) return null;
 
   // 保存した内容があればそれを、無ければ受け取ったレシートを表示する
@@ -83,7 +87,6 @@ export default function ReceiptHistoryDetail({ receipt, onBack, onDelete, onUpda
   // Supabase フィールド名とモック（プロパティ）の互換マッピング
   const storeName = current.store_name || current.storeName || '店舗名未登録';
   const purchaseDate = current.purchase_date || current.purchaseDate || '';
-  const imageSrc = current.image_url || current.imageSrc || null;
   const savedItems = (current.receipt_items || current.items || []).map(toViewItem);
   const shownItems = isEditing ? draftItems : savedItems;
 
@@ -345,7 +348,7 @@ export default function ReceiptHistoryDetail({ receipt, onBack, onDelete, onUpda
               </div>
             </div>
 
-            <ReceiptImagePreview src={imageSrc} alt="レシート写真" />
+            <ReceiptImagePreview src={imageSrc} loading={imageSrc === undefined} alt="レシート写真" />
           </div>
         </section>
 
