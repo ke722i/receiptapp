@@ -26,6 +26,7 @@ import {
   otherSubPath,
   otherProductPath,
 } from '../../utils/categoryUtils';
+import { navKeyOf, rememberHomeCategory, peekHomeCategory, scrollToReturnedCategoryRow } from '../../utils/homeCategoryState';
 
 const SEARCH_INPUT_ID = 'home-search-input';
 const STORAGE_KEY_PROPOSAL_TIP = 'receipt_app_proposal_tip_dismissed'; // カテゴリの提案のお知らせを閉じたか
@@ -77,7 +78,9 @@ export default function Home({
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [openCategories, setOpenCategories] = useState({});
+  // 商品などを開いて戻ってきたときは、開いていた分類を元に戻す（utils/homeCategoryState.js）
+  const [returnedCategory] = useState(() => peekHomeCategory());
+  const [openCategories, setOpenCategories] = useState(() => returnedCategory?.open ?? {});
   const [highlightCategory, setHighlightCategory] = useState(null); // 検索から開いた分類（少しのあいだ色を付ける）
 
   // 検索の切り替え（端末に覚える）
@@ -203,6 +206,11 @@ export default function Home({
     };
   }, [isSearchFocused, searchFilter, itemNames]);
 
+  // 戻ってきたら、押した行までスクロールする（1 回だけ）
+  useEffect(() => {
+    scrollToReturnedCategoryRow(returnedCategory?.key ?? null);
+  }, [returnedCategory]);
+
   // 検索から開いた分類まで、画面を動かす
   useEffect(() => {
     if (!highlightCategory) return undefined;
@@ -233,6 +241,18 @@ export default function Home({
       // 消せなくても、使わない
     }
   }, [userId]);
+
+  // カテゴリ一覧の行を押したとき: 開いていた分類と行の位置を覚えてから、開く（戻ったとき、元に戻す）
+  const navProps = (path) => {
+    const key = navKeyOf(path);
+    return {
+      'data-nav-key': key,
+      onClick: () => {
+        rememberHomeCategory(openCategories, key);
+        handleSelectProductItem(path);
+      },
+    };
+  };
 
   const toggleCategory = (categoryId) => {
     setOpenCategories((prev) => ({
@@ -830,14 +850,7 @@ export default function Home({
                                         key={itemName}
                                         type="button"
                                         className="item-category-button"
-                                        onClick={() =>
-                                          handleSelectProductItem({
-                                            main: topCat.name,
-                                            category: mainCat.name,
-                                            sub: subCat.name,
-                                            product: itemName,
-                                          })
-                                        }
+                                        {...navProps({ main: topCat.name, category: mainCat.name, sub: subCat.name, product: itemName })}
                                       >
                                         {itemName}
                                       </button>
@@ -846,7 +859,7 @@ export default function Home({
                                     <button
                                       type="button"
                                       className="item-category-button"
-                                      onClick={() => handleSelectProductItem(otherProductPath(topCat.name, mainCat.name, subCat.name))}
+                                      {...navProps(otherProductPath(topCat.name, mainCat.name, subCat.name))}
                                     >
                                       {OTHER}
                                     </button>
@@ -859,7 +872,7 @@ export default function Home({
                               <button
                                 type="button"
                                 className="sub-category-button"
-                                onClick={() => handleSelectProductItem(otherSubPath(topCat.name, mainCat.name))}
+                                {...navProps(otherSubPath(topCat.name, mainCat.name))}
                               >
                                 <span>{OTHER}</span>
                                 <span className="sub-arrow">›</span>
@@ -875,14 +888,7 @@ export default function Home({
                                 key={itemName}
                                 type="button"
                                 className="item-category-button"
-                                onClick={() =>
-                                  handleSelectProductItem({
-                                    main: topCat.name,
-                                    category: mainCat.name,
-                                    sub: null,
-                                    product: itemName,
-                                  })
-                                }
+                                {...navProps({ main: topCat.name, category: mainCat.name, sub: null, product: itemName })}
                               >
                                 {itemName}
                               </button>
@@ -891,7 +897,7 @@ export default function Home({
                             <button
                               type="button"
                               className="item-category-button"
-                              onClick={() => handleSelectProductItem(otherProductPath(topCat.name, mainCat.name, null))}
+                              {...navProps(otherProductPath(topCat.name, mainCat.name, null))}
                             >
                               {OTHER}
                             </button>
@@ -904,7 +910,7 @@ export default function Home({
                       <button
                         type="button"
                         className="sub-category-button"
-                        onClick={() => handleSelectProductItem(otherMidPath(topCat.name))}
+                        {...navProps(otherMidPath(topCat.name))}
                       >
                         <span className="category-label">{OTHER}</span>
                         <span className="sub-arrow">›</span>
@@ -919,7 +925,7 @@ export default function Home({
               <button
                 type="button"
                 className="category-main-button"
-                onClick={() => handleSelectProductItem(otherMainPath())}
+                {...navProps(otherMainPath())}
               >
                 <span className="category-label">{OTHER}</span>
                 <span className="category-arrow">›</span>
