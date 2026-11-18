@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import './storeDetail.css';
 import { fetchReceiptHistory } from '../../utils/receiptDb';
 import { formatPurchaseDate } from '../../utils/purchaseDate';
-import { STORE_RECEIPT_SORT_OPTIONS, DEFAULT_RECEIPT_SORT, sortReceipts } from '../../utils/receiptSort';
+import { RECEIPT_SORT_OPTIONS, DEFAULT_RECEIPT_SORT, sortReceipts } from '../../utils/receiptSort';
 import ReceiptRowCard from '../receiptRowCard/receiptRowCard';
 
 const UNREGISTERED = '店舗名未登録';
@@ -115,7 +115,7 @@ export default function StoreDetail({ storeName, onBack, onSelectReceiptDetail }
               <h2 className="store-detail-section-title">この店舗のレシート</h2>
               {storeReceipts.length > 1 && (
                 <select className="store-detail-sort" value={sortKey} onChange={(e) => setSortKey(e.target.value)} aria-label="並び替え">
-                  {STORE_RECEIPT_SORT_OPTIONS.map((option) => (
+                  {RECEIPT_SORT_OPTIONS.map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
                     </option>
