@@ -1,0 +1,18 @@
+[
+  {
+    "main": "魚",
+    "product": "ぶり",
+    "default": "さかなたち",
+    "by_category": {
+      "刺身・寿司ネタ": "すし"
+    }
+  },
+  {
+    "main": "魚",
+    "product": "鯛",
+    "default": "さかなたち",
+    "by_category": {
+      "刺身・寿司ネタ": "すし"
+    }
+  }
+]
