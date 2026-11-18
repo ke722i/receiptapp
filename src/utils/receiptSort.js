@@ -1,19 +1,14 @@
-// レシート一覧の並び替え（画面に依存しない処理）
+// レシートの並び替え（画面に依存しない処理）。レシート一覧・店舗詳細で、同じ 5 つの選択肢を使う
 
-/** 並び替えの選択肢。最初のものが既定（購入日） */
+/** 並び替えの選択肢（全画面共通）: 購入日・登録日の、それぞれ新しい順・古い順と、店舗名。最初のものが既定（購入日の新しい順） */
 export const RECEIPT_SORT_OPTIONS = [
-  { value: 'purchaseDate', label: '購入日（新しい順）' },
-  { value: 'storeName', label: '店舗名（あいうえお順）' },
-  { value: 'createdAt', label: '登録日（新しい順）' },
-];
-export const DEFAULT_RECEIPT_SORT = 'purchaseDate';
-
-/** 1 つの店舗の中の並び替え（店舗詳細）。店舗名は同じなので、並び替えに使わない */
-export const STORE_RECEIPT_SORT_OPTIONS = [
   { value: 'purchaseDate', label: '購入日（新しい順）' },
   { value: 'purchaseDateAsc', label: '購入日（古い順）' },
   { value: 'createdAt', label: '登録日（新しい順）' },
+  { value: 'createdAtAsc', label: '登録日（古い順）' },
+  { value: 'storeName', label: '店舗名（あいうえお順）' },
 ];
+export const DEFAULT_RECEIPT_SORT = 'purchaseDate';
 
 const text = (value) => String(value || '');
 
@@ -35,12 +30,13 @@ const compareAsc = (a, b) => {
 
 /**
  * レシートを並び替えた、新しい配列を返す（元の配列は変えない）
- *  ・購入日: 新しい順。同じ日は、登録日の新しい順
- *  ・店舗名: あいうえお順（店舗名が無いものは最後）。同じ店舗は、購入日の新しい順
- *  ・購入日（古い順）: 古い順。購入日が無いものは最後。同じ日は、登録日の古い順
- *  ・登録日: 新しい順（登録日の列が無いデータは、最後）
+ *  ・購入日（新しい順）: 購入日の新しい順。同じ日は、登録日の新しい順
+ *  ・購入日（古い順）: 購入日の古い順（購入日が無いものは最後）。同じ日は、登録日の古い順
+ *  ・登録日（新しい順）: 登録日の新しい順（登録日の列が無いデータは、最後）。同じ登録日は、購入日の新しい順
+ *  ・登録日（古い順）: 登録日の古い順（登録日の列が無いデータは、最後）。同じ登録日は、購入日の新しい順
+ *  ・店舗名（あいうえお順）: 店舗名のあいうえお順（店舗名が無いものは最後）。同じ店舗は、購入日の新しい順
  * @param {{ id, store_name, purchase_date, created_at }[]} receipts
- * @param {'purchaseDate' | 'purchaseDateAsc' | 'storeName' | 'createdAt'} sortKey
+ * @param {'purchaseDate' | 'purchaseDateAsc' | 'createdAt' | 'createdAtAsc' | 'storeName'} sortKey
  */
 export const sortReceipts = (receipts, sortKey = DEFAULT_RECEIPT_SORT) => {
   const byPurchase = (a, b) =>
@@ -50,6 +46,8 @@ export const sortReceipts = (receipts, sortKey = DEFAULT_RECEIPT_SORT) => {
   const compare = {
     purchaseDate: byPurchase,
     purchaseDateAsc: (a, b) => compareAsc(text(a.purchase_date), text(b.purchase_date)) || compareAsc(text(a.created_at), text(b.created_at)),
+    createdAt: (a, b) => compareDesc(text(a.created_at), text(b.created_at)) || byPurchase(a, b),
+    createdAtAsc: (a, b) => compareAsc(text(a.created_at), text(b.created_at)) || byPurchase(a, b),
     storeName: (a, b) => {
       const sa = text(a.store_name);
       const sb = text(b.store_name);
@@ -57,7 +55,6 @@ export const sortReceipts = (receipts, sortKey = DEFAULT_RECEIPT_SORT) => {
       if (sa && !sb) return -1;
       return sa.localeCompare(sb, 'ja') || byPurchase(a, b);
     },
-    createdAt: (a, b) => compareDesc(text(a.created_at), text(b.created_at)) || byPurchase(a, b),
   }[sortKey] || byPurchase;
 
   return [...(receipts || [])].sort(compare);
