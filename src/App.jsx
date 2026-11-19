@@ -44,6 +44,8 @@ import { fetchMyProposals } from './utils/categoryProposalDb';
 import TabBar from './components/tabBar/tabBar';
 import UndoToast from './components/undoToast/undoToast';
 import { restoreSession, signOutHere, rememberRegistered } from './utils/authSession';
+import { clearScreenState } from './utils/screenState';
+import { forgetLocalUserData } from './utils/accountDb';
 import { supabase } from './services/supabaseClient';
 
 // 下のタブを出す画面と、そのタブ（ほかの画面は、戻るボタンで戻る）
@@ -61,7 +63,6 @@ const SCREEN_OF_TAB = {
   settings: 'settings',
 };
 
-const STORAGE_KEY_VIEW_HISTORY = 'receipt_app_view_history'; // 閲覧履歴は廃止（お気に入りに変えた）。以前の保存だけを消す
 const STORAGE_KEY_USER_ID = 'receipt_app_user_id';
 const ANNOUNCEMENT_POLL_MS = 30000; // お知らせを読み直す間隔（ログインしている間）
 const STORAGE_KEY_AVATAR = 'receipt_app_avatar'; // 選んだアイコン（すぐ表示するための控え。本体は、アカウントの情報）
@@ -107,15 +108,6 @@ function App() {
       // 控えを保存できなくても、アカウントの情報には保存されている
     }
   };
-
-  // 以前の閲覧履歴の保存を消す（ホームの「閲覧履歴」は、お気に入りに変えた）
-  useEffect(() => {
-    try {
-      localStorage.removeItem(STORAGE_KEY_VIEW_HISTORY);
-    } catch {
-      // 消せなくても、使わない
-    }
-  }, []);
 
   // お気に入りの商品（端末に保存。ユーザーごと）
   const [favVersion, setFavVersion] = useState(0);
@@ -312,6 +304,7 @@ function App() {
   //  options.itemSearch: ホームの検索で、印字名から開いたときの文字（商品詳細の、印字名の検索に入れておく）
   const handleSelectProduct = (path, options = {}) => {
     if (!isOpenablePath(path)) return; // 表の商品、またはホームのカテゴリの「その他」
+    clearScreenState(); // あらためて開いたときは、前の並び替え・位置を使わない（戻ったときだけ使う）
     setSelectedProduct(path);
     setProductSearchText(options.itemSearch || '');
     setCurrentScreen('productDetail');
@@ -386,7 +379,6 @@ function App() {
       {/* 設定・商品詳細・履歴 */}
       {currentScreen === 'settings' && (
         <Settings
-          userId={userId}
           avatarId={avatarId}
           onAvatarChange={changeAvatar}
           onBack={() => setCurrentScreen('home')}
@@ -396,7 +388,12 @@ function App() {
             setCurrentScreen('myStores');
           }}
           onOpenAdminHome={() => setCurrentScreen('adminHome')}
-          onDeleteAccount={handleLogout}
+          onDeleteAccount={async () => {
+            // アカウントは消えている。端末の控え（検索履歴・お気に入りなど）も消して、ログイン画面へ
+            forgetLocalUserData(userId);
+            changeAvatar('');
+            await handleLogout();
+          }}
           onOpenCategoryProposal={() => {
             setProposalBackScreen('settings');
             setCurrentScreen('categoryProposal');

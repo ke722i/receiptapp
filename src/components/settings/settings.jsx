@@ -7,7 +7,9 @@ import LegalModal from '../legalModal/legalModal';
 import Avatar from '../avatar/avatar';
 import { AVATARS } from '../../constants/avatars';
 import Icon from '../icon/icon';
+import { deleteMyAccount } from '../../utils/accountDb';
 import './settings.css';
+import '../confirmDialog/confirmDialog.css';
 
 export default function Settings({
   avatarId = '',
@@ -16,13 +18,11 @@ export default function Settings({
   onLogout,
   onOpenMyStores,
   onOpenAdminHome,
-  onDeleteReceiptData,
   onDeleteAccount,
   onOpenCategoryProposal,
   onOpenReassign,
   isAdmin = false,
 }) {
-  const [retentionPeriod, setRetentionPeriod] = useState('90');
   const [userInfo, setUserInfo] = useState({ displayName: '読み込み中...' });
   // 価格データの匿名提供（オプトイン。初期はオフ）
   const [sharePrices, setSharePrices] = useState(false);
@@ -97,7 +97,6 @@ export default function Settings({
     if (window.confirm('レシートデータを削除してもよろしいですか？')) {
       const res = await deleteAllReceiptsFromDatabase();
       if (res.success) {
-        if (onDeleteReceiptData) onDeleteReceiptData(); // 親コンポーネント側の状態(State)を更新
         alert('レシートデータを削除しました。');
       } else {
         alert(`削除に失敗しました: ${res.error}`);
@@ -105,16 +104,33 @@ export default function Settings({
     }
   };
 
-  // アカウント削除ハンドラー
-  const handleDeleteUserAccount = () => {
-    if (
-      window.confirm(
-        'アカウントを削除してもよろしいですか？アカウント情報およびデータがすべて消去されます。'
-      )
-    ) {
-      if (onDeleteAccount) onDeleteAccount();
-      alert('アカウントを削除しました。');
+  // アカウントの削除（元に戻せないので、パスワードで本人を確かめてから消す。utils/accountDb.js）
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+  const closeDelete = () => {
+    if (deleteBusy) return;
+    setDeleteOpen(false);
+    setDeletePassword('');
+    setDeleteError('');
+  };
+  const handleDeleteUserAccount = async (e) => {
+    e.preventDefault();
+    if (!deletePassword) {
+      setDeleteError('パスワードを入力してください。');
+      return;
     }
+    setDeleteBusy(true);
+    setDeleteError('');
+    const result = await deleteMyAccount(deletePassword);
+    setDeleteBusy(false);
+    if (!result.success) {
+      setDeleteError(result.error);
+      return;
+    }
+    setDeleteOpen(false);
+    if (onDeleteAccount) onDeleteAccount();
   };
 
   return (
@@ -270,30 +286,6 @@ export default function Settings({
           </div>
         </section>
 
-        {/* 3. データ設定 */}
-        <section className="settings-section">
-          <h2 className="section-header">データ設定</h2>
-          <div className="settings-card">
-            {/* 保存期間プルダウン */}
-            <div className="settings-row">
-              <label htmlFor="retention-period" className="row-label">
-                レシートの保存期間
-              </label>
-              <select
-                id="retention-period"
-                className="select-input"
-                value={retentionPeriod}
-                onChange={(e) => setRetentionPeriod(e.target.value)}
-              >
-                <option value="120">120日</option>
-                <option value="90">90日</option>
-                <option value="60">60日</option>
-                <option value="30">30日</option>
-              </select>
-            </div>
-          </div>
-        </section>
-
         {/* 4. データ・アカウント管理 */}
         <section className="settings-section">
           <h2 className="section-header danger-header">データ・アカウント管理</h2>
@@ -309,7 +301,7 @@ export default function Settings({
             <button
               type="button"
               className="action-button danger-button"
-              onClick={handleDeleteUserAccount}
+              onClick={() => setDeleteOpen(true)}
             >
               アカウントを削除する
             </button>
@@ -325,6 +317,48 @@ export default function Settings({
       </main>
 
       {legalDoc && <LegalModal doc={legalDoc} onClose={() => setLegalDoc(null)} />}
+
+      {/* アカウントの削除（パスワードで本人を確かめる） */}
+      {deleteOpen && (
+        <div className="confirm-dialog-overlay" onClick={closeDelete}>
+          <form
+            className="confirm-dialog-card account-delete-card"
+            role="dialog"
+            aria-modal="true"
+            aria-label="アカウントの削除"
+            onClick={(e) => e.stopPropagation()}
+            onSubmit={handleDeleteUserAccount}
+          >
+            <h2 className="confirm-dialog-title">アカウントの削除</h2>
+            <p className="confirm-dialog-message">
+              アカウントと、すべてのレシート・マイ店舗・お気に入りなどのデータを削除します。
+              <b>元に戻せません。</b>
+              <br />
+              続けるときは、パスワードを入力してください。
+            </p>
+            <input
+              type="password"
+              className="account-delete-input"
+              value={deletePassword}
+              onChange={(e) => setDeletePassword(e.target.value)}
+              placeholder="パスワード"
+              autoComplete="current-password"
+              aria-label="パスワード"
+              disabled={deleteBusy}
+              autoFocus
+            />
+            {deleteError && <p className="account-delete-error" role="alert">{deleteError}</p>}
+            <div className="confirm-dialog-buttons">
+              <button type="button" className="confirm-dialog-button confirm-dialog-cancel" onClick={closeDelete} disabled={deleteBusy}>
+                やめる
+              </button>
+              <button type="submit" className="confirm-dialog-button confirm-dialog-danger" disabled={deleteBusy}>
+                {deleteBusy ? '削除中...' : '削除する'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import './productDetail.css';
 import { fetchProductPriceHistory } from '../../utils/receiptDb';
-import { isOtherPath, pathTitle, formatPlace } from '../../utils/categoryUtils';
+import { isOtherPath, pathTitle, formatPlace, productKey } from '../../utils/categoryUtils';
+import { rememberScreenState, peekScreenState, clearScreenState, restoreScroll } from '../../utils/screenState';
 import MyStorePrices from '../myStorePrices/myStorePrices';
 import ProductIcon from '../productIcon/productIcon';
 import { canFavorite } from '../../utils/favorites';
@@ -28,12 +29,36 @@ export default function ProductDetail({
   onNavigateToMyStores,
 }) {
   const productName = pathTitle(product); // 「その他」の箱は「菓子のその他」など
-  const [sortOrder, setSortOrder] = useState('dateDesc'); // デフォルト：日付順（新しい順）
+  // 「すべて見る」・レシートから戻ってきたときは、並び替え・検索・スクロールの位置を元に戻す（utils/screenState.js）
+  const stateKey = `productDetail:${productKey(product)}`;
+  const [returned] = useState(() => peekScreenState(stateKey));
+  const [sortOrder, setSortOrder] = useState(returned?.sortOrder ?? 'dateDesc'); // デフォルト：日付順（新しい順）
   const [historyData, setHistoryData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
-  const [searchText, setSearchText] = useState(initialSearchText || ''); // 印字名の検索（ホームで印字名から開いたときは、その文字）
-  const [showAllOthers, setShowAllOthers] = useState(false); // 「他の商品の最安値」をすべて表示中か
+  const [searchText, setSearchText] = useState(returned?.searchText ?? (initialSearchText || '')); // 印字名の検索（ホームで印字名から開いたときは、その文字）
+  const [showAllOthers, setShowAllOthers] = useState(returned?.showAllOthers ?? false); // 「他の商品の最安値」をすべて表示中か
+
+  // 戻ってきたときは、読み込みが終わって、行が並んだあとに、押したときの位置へ戻す（1 回だけ）
+  useEffect(() => {
+    if (loading || !returned) return;
+    restoreScroll(returned);
+    clearScreenState(stateKey);
+  }, [loading, returned, stateKey]);
+
+  // 別の画面へ移る直前に、今の状態を覚える
+  const leave = (go) => (...args) => {
+    rememberScreenState(stateKey, { sortOrder, searchText, showAllOthers });
+    go(...args);
+  };
+  const openReceipt = onSelectReceipt ? leave(onSelectReceipt) : undefined;
+  const openAllHistory = onViewAllHistory
+    ? leave(() => {
+        clearScreenState(`productHistory:${productKey(product)}`); // 「すべて見る」は、いちばん上から
+        onViewAllHistory();
+      })
+    : undefined;
+  const openMyStores = onNavigateToMyStores ? leave(onNavigateToMyStores) : undefined;
 
   // 自分のレシートから、この商品の購入履歴を取得
   useEffect(() => {
@@ -141,8 +166,8 @@ export default function ProductDetail({
             <button
               type="button"
               className="best-price-banner"
-              onClick={onSelectReceipt ? () => onSelectReceipt(best.receiptId) : undefined}
-              disabled={!onSelectReceipt}
+              onClick={openReceipt ? () => openReceipt(best.receiptId) : undefined}
+              disabled={!openReceipt}
             >
               <span className="best-price-icon"><Icon name="trophy" size={22} /></span>
               <span className="best-price-body">
@@ -203,16 +228,16 @@ export default function ProductDetail({
             <h3 className="section-title">最安値の購入</h3>
             {/* カード全体を押すと、そのレシートが開く（ほかのカードと同じ） */}
             <div
-              className={`recent-purchase-card ${onSelectReceipt ? 'is-clickable' : ''}`}
+              className={`recent-purchase-card ${openReceipt ? 'is-clickable' : ''}`}
               {...(onSelectReceipt
                 ? {
                     role: 'button',
                     tabIndex: 0,
-                    onClick: () => onSelectReceipt(topItem.cheapest.receiptId),
+                    onClick: () => openReceipt(topItem.cheapest.receiptId),
                     onKeyDown: (e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
-                        onSelectReceipt(topItem.cheapest.receiptId);
+                        openReceipt(topItem.cheapest.receiptId);
                       }
                     },
                   }
@@ -253,7 +278,7 @@ export default function ProductDetail({
                       price={cheapest.price}
                       unitPrice={unitPriceText(cheapest.price, cheapest.volume)}
                       isDiscount={cheapest.isDiscount}
-                      onClick={onSelectReceipt ? () => onSelectReceipt(cheapest.receiptId) : undefined}
+                      onClick={openReceipt ? () => openReceipt(cheapest.receiptId) : undefined}
                     />
                   ))}
                 </div>
@@ -300,7 +325,7 @@ export default function ProductDetail({
                   price={item.price}
                   unitPrice={unitPriceText(item.price, item.volume)}
                   isDiscount={item.isDiscount}
-                  onClick={onSelectReceipt ? () => onSelectReceipt(item.receiptId) : undefined}
+                  onClick={openReceipt ? () => openReceipt(item.receiptId) : undefined}
                 />
               ))}
             </div>
@@ -310,7 +335,7 @@ export default function ProductDetail({
               <button
                 type="button"
                 className="view-all-button"
-                onClick={onViewAllHistory}
+                onClick={openAllHistory}
               >
                 すべて見る
               </button>
@@ -329,8 +354,8 @@ export default function ProductDetail({
             product={product}
             ownHistory={historyData}
             ownLoading={loading}
-            onManageStores={onNavigateToMyStores}
-            onSelectReceipt={onSelectReceipt}
+            onManageStores={openMyStores}
+            onSelectReceipt={openReceipt}
           />
         )}
       </main>

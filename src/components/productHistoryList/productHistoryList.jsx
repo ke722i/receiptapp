@@ -4,12 +4,16 @@ import { SkeletonList } from '../common/common';
 import { fetchProductPriceHistory } from '../../utils/receiptDb';
 import PurchaseRow from '../purchaseRow/purchaseRow';
 import { unitPriceText } from '../../utils/volume';
-import { pathTitle } from '../../utils/categoryUtils';
+import { pathTitle, productKey } from '../../utils/categoryUtils';
+import { rememberScreenState, peekScreenState, clearScreenState, restoreScroll } from '../../utils/screenState';
 
 // product: { main, category, sub, product }（同じ名前の商品を場所で区別する）
 export default function ProductHistoryList({ product, onBack, onSelectReceipt }) {
   const productName = pathTitle(product); // 「その他」の箱は「菓子のその他」など
-  const [sortOrder, setSortOrder] = useState('dateDesc'); // デフォルト：日付順（新しい順）
+  // レシートから戻ってきたときは、並び替えとスクロールの位置を元に戻す（utils/screenState.js）
+  const stateKey = `productHistory:${productKey(product)}`;
+  const [returned] = useState(() => peekScreenState(stateKey));
+  const [sortOrder, setSortOrder] = useState(returned?.sortOrder ?? 'dateDesc'); // デフォルト：日付順（新しい順）
   const [fullHistoryData, setFullHistoryData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
@@ -35,6 +39,19 @@ export default function ProductHistoryList({ product, onBack, onSelectReceipt })
       cancelled = true;
     };
   }, [product]);
+
+  useEffect(() => {
+    if (loading || !returned) return;
+    restoreScroll(returned);
+    clearScreenState(stateKey);
+  }, [loading, returned, stateKey]);
+
+  const openReceipt = onSelectReceipt
+    ? (id) => {
+        rememberScreenState(stateKey, { sortOrder });
+        onSelectReceipt(id);
+      }
+    : undefined;
 
   // 並び替え処理
   const sortedHistory = [...fullHistoryData].sort((a, b) => {
@@ -101,7 +118,7 @@ export default function ProductHistoryList({ product, onBack, onSelectReceipt })
                   price={item.price}
                   unitPrice={unitPriceText(item.price, item.volume)}
                   isDiscount={item.isDiscount}
-                  onClick={onSelectReceipt ? () => onSelectReceipt(item.receiptId) : undefined}
+                  onClick={openReceipt ? () => openReceipt(item.receiptId) : undefined}
                 />
               ))}
             </div>
