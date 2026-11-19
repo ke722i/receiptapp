@@ -30,23 +30,13 @@ import {
 import { navKeyOf, rememberHomeCategory, peekHomeCategory, scrollToReturnedCategoryRow } from '../../utils/homeCategoryState';
 
 const SEARCH_INPUT_ID = 'home-search-input';
-const STORAGE_KEY_PROPOSAL_TIP = 'receipt_app_proposal_tip_dismissed'; // カテゴリの提案のお知らせを閉じたか
 // 検索履歴・お知らせを閉じた印は、ユーザーごとに覚える（別のアカウントに、前のアカウントの履歴が出ないように）
 const STORAGE_KEY_SEARCH_HISTORY = 'receipt_app_search_history';
-const STORAGE_KEY_OLD_SEARCH_HISTORY = 'receipt_app_search_history'; // 以前の、ユーザーを分けない保存（使わない。消す）
 const historyKeyOf = (userId) => `${STORAGE_KEY_SEARCH_HISTORY}_${userId}`;
-const proposalTipKeyOf = (userId) => `${STORAGE_KEY_PROPOSAL_TIP}_${userId}`;
-const STORAGE_KEY_SEARCH_FILTER = 'receipt_app_search_filter'; // 検索の切り替え（最後に選んだもの）
+const proposalTipKeyOf = (userId) => `receipt_app_proposal_tip_dismissed_${userId}`; // カテゴリの提案のお知らせを閉じたか
 
-// 検索の対象（検索バーの左のプルダウン）。すべて（カテゴリ・商品名・印字名）／カテゴリだけ／商品名だけ
-const SEARCH_FILTERS = [
-  { value: 'all', label: 'すべて', placeholder: '例: ぎゅうにゅう' },
-  { value: 'category', label: 'カテゴリ', placeholder: '例: ちょうみりょう' },
-  { value: 'item', label: '商品名', placeholder: '例: ぎゅうにゅう' },
-];
-// 「すべて」のときに、種類ごとに出す最大の件数（切り替えたときは、もっと出す）
-const ALL_LIMIT = { category: 3, product: 5, item: 5 };
-const ONE_LIMIT = { category: 20, product: 10, item: 20 };
+// 検索は 1 つ（カテゴリ・商品名・レシートの印字名を、まとめて探す）。種類ごとに出す最大の件数
+const LIMITS = { category: 3, product: 5, item: 5 };
 
 // 履歴の1件を商品のパス { main, category, sub, product } にそろえる
 //  （以前は商品名の文字列で保存していたので、文字列なら表から探して変換する）
@@ -75,23 +65,6 @@ export default function Home({
   const [openCategories, setOpenCategories] = useState(() => returnedCategory?.open ?? {});
   const [highlightCategory, setHighlightCategory] = useState(null); // 検索から開いた分類（少しのあいだ色を付ける）
 
-  // 検索の切り替え（端末に覚える）
-  const [searchFilter, setSearchFilter] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY_SEARCH_FILTER);
-      return SEARCH_FILTERS.some((f) => f.value === saved) ? saved : 'all';
-    } catch {
-      return 'all';
-    }
-  });
-  const changeSearchFilter = (value) => {
-    setSearchFilter(value);
-    try {
-      localStorage.setItem(STORAGE_KEY_SEARCH_FILTER, value);
-    } catch {
-      // 保存できなくても、この画面では切り替える
-    }
-  };
 
   // 自分のレシートの印字名（「すべて」で、検索を始めたときに 1 回だけ読み込む。印字名は「すべて」のときだけ探す）
   const [itemNames, setItemNames] = useState(null); // null: まだ / { index } / { error }
@@ -167,27 +140,24 @@ export default function Home({
 
   // 切り替えに合わせた、検索結果（カテゴリ・商品名・印字名）
   const trimmedQuery = searchQuery.trim();
-  const wantsCategories = searchFilter !== 'item';
-  const wantsProducts = searchFilter !== 'category';
-  const wantsItemNames = searchFilter === 'all';
-  const limits = searchFilter === 'all' ? ALL_LIMIT : ONE_LIMIT;
+  const limits = LIMITS;
   const categoryResults = useMemo(
-    () => (wantsCategories && trimmedQuery ? filterCategorySuggestions(trimmedQuery, limits.category) : []),
-    [wantsCategories, trimmedQuery, limits.category]
+    () => (trimmedQuery ? filterCategorySuggestions(trimmedQuery, limits.category) : []),
+    [trimmedQuery, limits.category]
   );
-  const productResults = wantsProducts && trimmedQuery ? pathSuggestions.slice(0, limits.product) : [];
+  const productResults = trimmedQuery ? pathSuggestions.slice(0, limits.product) : [];
   const itemResults = useMemo(
     () =>
-      wantsItemNames && trimmedQuery && itemNames?.index
+      trimmedQuery && itemNames?.index
         ? filterItemNameSuggestions(itemNames.index, trimmedQuery, limits.item)
         : [],
-    [wantsItemNames, trimmedQuery, itemNames, limits.item]
+    [trimmedQuery, itemNames, limits.item]
   );
-  const itemNamesLoading = wantsItemNames && Boolean(trimmedQuery) && itemNames === null;
+  const itemNamesLoading = Boolean(trimmedQuery) && itemNames === null;
 
   // 印字名の読み込み（必要になったときに 1 回だけ。読み込んだものは、DB の処理の側でも覚えている）
   useEffect(() => {
-    if (!isSearchFocused || searchFilter !== 'all' || itemNames !== null) return undefined;
+    if (!isSearchFocused || itemNames !== null) return undefined;
     let cancelled = false;
     fetchMyItemNames().then((result) => {
       if (cancelled) return;
@@ -196,7 +166,7 @@ export default function Home({
     return () => {
       cancelled = true;
     };
-  }, [isSearchFocused, searchFilter, itemNames]);
+  }, [isSearchFocused, itemNames]);
 
   // 戻ってきたら、押した行までスクロールする（1 回だけ）
   useEffect(() => {
@@ -219,20 +189,6 @@ export default function Home({
       console.error('Failed to save search history:', err);
     }
   }, [searchHistory, userId]);
-
-  // 以前の、ユーザーを分けない検索履歴は、別のアカウントに出てしまうので、消す
-  useEffect(() => {
-    try {
-      localStorage.removeItem(STORAGE_KEY_OLD_SEARCH_HISTORY);
-      // 以前の「提案のお知らせを閉じた」印は、今ログインしているユーザーに引き継いで、消す
-      if (localStorage.getItem(STORAGE_KEY_PROPOSAL_TIP) === '1' && localStorage.getItem(proposalTipKeyOf(userId)) === null) {
-        localStorage.setItem(proposalTipKeyOf(userId), '1');
-      }
-      localStorage.removeItem(STORAGE_KEY_PROPOSAL_TIP);
-    } catch {
-      // 消せなくても、使わない
-    }
-  }, [userId]);
 
   // カテゴリ一覧の行を押したとき: 開いていた分類と行の位置を覚えてから、開く（戻ったとき、元に戻す）
   const navProps = (path) => {
@@ -454,29 +410,14 @@ export default function Home({
       <div className="home-search-sticky">
         <div ref={searchBarRef} className={`search-bar-container ${isSearchFocused ? 'is-focused' : ''}`}>
           <div className="search-input-wrapper">
-            {/* 検索の対象（すべて／カテゴリ／商品名）。検索バーの左に、いつも出す */}
-            <select
-              className="search-filter-select"
-              value={searchFilter}
-              onChange={(e) => {
-                changeSearchFilter(e.target.value);
-                // 検索中に切り替えたときは、続けて入力できるように、入力欄に戻す
-                if (isSearchFocused) document.getElementById(SEARCH_INPUT_ID)?.focus();
-              }}
-              aria-label="検索の対象"
-            >
-              {SEARCH_FILTERS.map((f) => (
-                <option key={f.value} value={f.value}>
-                  {f.label}
-                </option>
-              ))}
-            </select>
             <div className="search-field">
+              <Icon name="search" size={20} className="search-field-icon" />
               <input
                 id={SEARCH_INPUT_ID}
                 type="search"
                 className="search-input"
-                placeholder={SEARCH_FILTERS.find((f) => f.value === searchFilter)?.placeholder}
+                placeholder="商品名・カテゴリで探す（例: ぎゅうにゅう）"
+                aria-label="商品名・カテゴリ・レシートの印字名で探す"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={() => setIsSearchFocused(true)}
@@ -515,7 +456,7 @@ export default function Home({
                   {/* 商品名 */}
                   {productResults.length > 0 && (
                     <>
-                      {searchFilter === 'all' && <div className="search-section-title">商品名</div>}
+                      <div className="search-section-title">商品名</div>
                       <ul className="search-suggestions-list">
                         {productResults.map((path) => {
                           const isHistory = historyKeys.has(productKey(path));
@@ -544,7 +485,7 @@ export default function Home({
                   {/* カテゴリ */}
                   {categoryResults.length > 0 && (
                     <>
-                      {searchFilter === 'all' && <div className="search-section-title">カテゴリ</div>}
+                      <div className="search-section-title">カテゴリ</div>
                       <ul className="search-suggestions-list">
                         {categoryResults.map((entry) => (
                           <li
@@ -591,7 +532,7 @@ export default function Home({
                   )}
 
                   {itemNamesLoading && <div className="search-no-result">印字名を読み込み中...</div>}
-                  {wantsItemNames && itemNames?.error && (
+                  {itemNames?.error && (
                     <div className="search-no-result">{itemNames.error}</div>
                   )}
                   {!itemNamesLoading &&
@@ -599,11 +540,7 @@ export default function Home({
                     productResults.length === 0 &&
                     itemResults.length === 0 && (
                       <div className="search-no-result">
-                        {searchFilter === 'category'
-                          ? '一致するカテゴリが見つかりません'
-                          : searchFilter === 'item'
-                            ? '一致する商品名が見つかりません'
-                            : '一致するものが見つかりません'}
+                        一致するものが見つかりません
                       </div>
                     )}
                 </>

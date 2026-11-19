@@ -27,3 +27,9 @@
 - ログイン状態は Supabase が localStorage に保存する。App は `'boot'` から始まり、`restoreSession()` でログイン状態があればホーム（管理者は管理者ホーム）へ。画面の更新ではログアウトしない。
 - ログアウトはボタンのときだけ `signOutHere()`（`supabase.auth.signOut({ scope: 'local' })`。以前は画面を戻すだけで、ログイン状態が残っていた）。`SIGNED_OUT` を受けたらログイン画面へ。
 - ログイン画面の「自動ログイン」（`receipt_app_auto_login`、初期オン）: オフなら sessionStorage の印（`receipt_app_session_alive`）が無いとき（タブを閉じたあと）に signOut。「ユーザーIDを保存」（`receipt_app_saved_user_id`）は ID だけ。パスワードはアプリで保存しない（`autoComplete` でブラウザに任せる）。
+
+## アカウントの削除（11/19〜。設定の「アカウントを削除する」）
+- 画面でパスワードを入力 → `signInWithPassword` で本人を確認 → DB の関数 `delete_my_account()`（`supabase/migrations/20261119000000_delete_my_account.sql`。`src/utils/accountDb.js`）。
+- 関数は本人（`auth.uid()`）だけを消す: receipt_items → receipts を明示的に消し、`auth.users` を消す（ほかの表は on delete cascade）。管理者（`app_admins`）は消せない（`admin_account`）。
+- 消したあと、端末の控え（`receipt_app_〇〇_<ユーザーID>`、保存した ID）を消して、ログアウト。
+- 「レシートの保存期間」は、何もしていなかったので廃止した。

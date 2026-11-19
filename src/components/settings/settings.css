@@ -111,21 +111,6 @@
   color: var(--text-sub);
 }
 
-/* プルダウン選択肢 */
-.select-input {
-  padding: 8px 12px;
-  font-size: 14px;
-  border: 1px solid var(--border-strong);
-  border-radius: 8px;
-  background-color: #ffffff;
-  outline: none;
-  color: var(--text);
-}
-
-.select-input:focus {
-  border-color: var(--primary);
-}
-
 /* チェックボックス */
 .checkbox-input {
   width: 22px;
@@ -378,4 +363,40 @@
 
 .settings-logout:active {
   background: var(--surface-2);
+}
+
+/* アカウントの削除（パスワードで本人を確かめる） */
+.account-delete-card {
+  max-width: 340px;
+  text-align: left;
+}
+
+.account-delete-card .confirm-dialog-title {
+  color: var(--danger-dark);
+  text-align: center;
+}
+
+.account-delete-input {
+  width: 100%;
+  height: 44px;
+  box-sizing: border-box;
+  margin-bottom: 8px;
+  padding: 0 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+}
+
+.account-delete-input:focus {
+  outline: none;
+  border-color: var(--danger);
+}
+
+.account-delete-error {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: var(--danger-dark);
+}
+
+.account-delete-card .confirm-dialog-buttons {
+  margin-top: 8px;
 }

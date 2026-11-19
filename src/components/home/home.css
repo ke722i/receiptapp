@@ -28,36 +28,11 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* ハンバーガーボタン */
-.hamburger-button {
-  width: 32px;
-  height: 32px;
-  background: none;
-  border: none;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-around;
-  padding: 4px;
-  cursor: pointer;
-}
-
-.hamburger-line {
-  width: 100%;
-  height: 2px;
-  background-color: #ffffff;
-  border-radius: 2px;
-}
-
 /* アプリロゴ領域 */
 .header-logo-area {
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.header-logo {
-  max-height: 38px;
-  object-fit: contain;
 }
 
 .header-logo-placeholder {
@@ -68,128 +43,6 @@
 
 .header-right-spacer {
   width: 32px;
-}
-
-/* --- サイドバー（ドロワーメニュー） --- */
-
-/* 暗い背景オーバーレイ */
-.drawer-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  height: 100dvh; /* スマホのブラウザの、下のバーに隠れないように（上の 100vh は、古いブラウザ用） */
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 200;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.3s ease, visibility 0.3s ease;
-}
-
-.drawer-overlay.is-active {
-  opacity: 1;
-  visibility: visible;
-}
-
-/* ドロワーメニュー本体 */
-.drawer-menu {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 280px;
-  height: 100vh;
-  height: 100dvh; /* スマホのブラウザの、下のバーに隠れないように（上の 100vh は、古いブラウザ用） */
-  background-color: #ffffff;
-  z-index: 210;
-  transform: translateX(-100%);
-  transition: transform 0.3s ease;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.15);
-}
-
-.drawer-menu.is-active {
-  transform: translateX(0);
-}
-
-/* ユーザー情報ヘッダー */
-.drawer-user-info {
-  background-color: var(--primary);
-  color: #ffffff;
-  padding: 32px 20px 20px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.user-avatar {
-  width: 44px;
-  height: 44px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.user-details {
-  display: flex;
-  flex-direction: column;
-  text-align: left;
-}
-
-.user-label {
-  font-size: 11px;
-  opacity: 0.85;
-}
-
-.user-id {
-  font-size: 16px;
-  font-weight: bold;
-}
-
-/* ナビゲーションメニュー */
-.drawer-nav {
-  flex: 1;
-  padding: 12px 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.drawer-item {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 16px 24px;
-  background: none;
-  border: none;
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text);
-  cursor: pointer;
-  text-align: left;
-  transition: background-color 0.2s;
-  width: 100%;
-}
-
-.drawer-item:active {
-  background-color: var(--primary-soft);
-  color: var(--primary);
-}
-
-.drawer-icon {
-  font-size: 18px;
-  width: 24px;
-  text-align: center;
-}
-
-.drawer-footer {
-  border-top: 1px solid var(--border);
-  padding: 8px 0 24px;
-}
-
-.logout-item {
-  color: var(--danger);
 }
 
 /* --- 検索バー領域（クリアボタン） --- */
@@ -241,32 +94,6 @@
   border-color: var(--primary);
   background-color: #ffffff;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-/* 検索の対象（すべて／カテゴリ／商品名・印字名）のプルダウン */
-.search-filter-select {
-  flex-shrink: 0;
-  width: auto;
-  max-width: 32%;
-  height: 44px;
-  padding: 0 20px 0 10px;
-  border: none;
-  border-right: 1px solid var(--border);
-  border-radius: 24px 0 0 24px;
-  background-color: transparent;
-  /* 下向きの矢印（色は灰色） */
-  background-image: linear-gradient(45deg, transparent 50%, var(--text-muted) 50%), linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
-  background-position: calc(100% - 11px) 50%, calc(100% - 6px) 50%;
-  background-size: 5px 5px, 5px 5px;
-  background-repeat: no-repeat;
-  color: var(--text);
-  font-size: 13px;
-  font-weight: bold;
-  text-overflow: ellipsis;
-  outline: none;
-  cursor: pointer;
-  -webkit-appearance: none;
-  appearance: none;
 }
 
 .search-field {
@@ -511,35 +338,6 @@
 .item-category-button:active {
   color: var(--primary);
   background-color: var(--primary-soft);
-}
-
-/* --- カメラ丸型FABボタン --- */
-.camera-fab {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background-color: var(--primary);
-  color: #ffffff;
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 10px rgba(var(--primary-rgb), 0.4);
-  cursor: pointer;
-  z-index: 100;
-  transition: transform 0.1s;
-}
-
-.camera-fab:active {
-  transform: scale(0.92);
-}
-
-.camera-icon {
-  width: 28px;
-  height: 28px;
 }
 
 /* 検索の履歴・候補（YouTube のように、1 行ずつ。バーのすぐ下に、白い面で出す） */
@@ -794,29 +592,6 @@
   .notice-bell.has-unread svg { animation: none; }
 }
 
-/* 管理者のアカウントの印（ハンバーガーメニューのユーザー欄・設定のユーザー情報） */
-.admin-badge {
-  display: inline-block;
-  align-self: flex-start;
-  margin-top: 3px;
-  padding: 1px 8px;
-  border-radius: 10px;
-  background-color: #ffeb3b;
-  color: var(--primary-darker);
-  font-size: 11px;
-  font-weight: bold;
-}
-
-/* ハンバーガーメニューの「管理者」の区切り */
-.drawer-section-label {
-  margin: 10px 20px 2px;
-  padding-top: 10px;
-  border-top: 1px solid var(--border);
-  font-size: 11px;
-  font-weight: bold;
-  color: #e65100;
-}
-
 /* 管理者が配信したお知らせ（提案のお知らせと同じ形で、青系） */
 .announcement-card {
   background-color: #e3f2fd;
@@ -883,17 +658,6 @@
 
 .header-logo-area {
   gap: 8px;
-}
-
-.header-logo-mark {
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.18);
-  color: #ffffff;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .header-logo-placeholder {
@@ -1020,4 +784,17 @@
   object-fit: cover;
   background: #ffffff;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* 検索欄の左の虫めがね（検索の切り替えは無くし、1 つの検索にした） */
+.search-field-icon {
+  position: absolute;
+  left: 14px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.home-search-sticky .search-input {
+  padding-left: 44px;
+  border-radius: 24px;
 }
