@@ -1,0 +1,74 @@
+.undo-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(16px + var(--safe-bottom));
+  transform: translateX(-50%);
+  width: calc(100% - 24px);
+  max-width: 560px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 8px 10px 16px;
+  border-radius: 14px;
+  background: #1f2a24;
+  color: #ffffff;
+  box-shadow: var(--shadow-pop);
+  z-index: 500;
+  animation: undo-toast-in 0.2s ease-out;
+}
+
+/* 下のタブがある画面では、タブの上に出す */
+.undo-toast.is-raised {
+  bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 12px);
+}
+
+.undo-toast-message {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.undo-toast-undo {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #8ee4b1;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.undo-toast-undo:active {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.undo-toast-close {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+}
+
+@keyframes undo-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 12px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}

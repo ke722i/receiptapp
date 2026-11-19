@@ -125,7 +125,11 @@ def plan_and_apply(xlsx, items, apply):
         def put_products(at_row, sub, names, style_row):
             """sub の下（at_row の次の行から）に、商品名を足す。足した行数を返す"""
             n = 0
+            # 同じ中分類の中（ほかの小分類も含む）に、同じ商品名を入れない
+            #  （レシート解析は「中分類＋商品名」で商品を決めるため。supabase/functions/parse-receipt/catalog.js の findProduct）
             existing = {fold(p['name']) for p in sub['products']} if sub else set()
+            if mid is not None:
+                existing |= {fold(p['name']) for s in mid['subs'] for p in s['products']}
             num = max([p['num'] or 0 for p in sub['products']], default=0) if sub else 0
             for name in names:
                 if fold(name) in existing:

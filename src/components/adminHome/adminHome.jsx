@@ -3,6 +3,7 @@ import '../categoryProposal/categoryProposal.css';
 import '../adminProposals/adminProposals.css';
 import './adminHome.css';
 import { fetchAdminStats } from '../../utils/adminDb';
+import Icon from '../icon/icon';
 
 // 利用状況の数字（ラベル・値の取り出し）
 const STAT_ITEMS = [
@@ -83,7 +84,7 @@ export default function AdminHome({ userId, onOpenProposals, onOpenAnnouncements
           <h2 className="proposal-section-title">管理者の機能</h2>
           <div className="admin-menu">
             <button type="button" className="admin-menu-item" onClick={onOpenProposals}>
-              <span className="admin-menu-icon" aria-hidden="true">✅</span>
+              <span className="admin-menu-icon" aria-hidden="true"><Icon name="check" size={22} /></span>
               <span className="admin-menu-text">
                 <span className="admin-menu-title">提案の承認</span>
                 <span className="admin-menu-sub">カテゴリの提案を、承認・見送りにする</span>
@@ -92,7 +93,7 @@ export default function AdminHome({ userId, onOpenProposals, onOpenAnnouncements
               <span className="admin-menu-arrow">›</span>
             </button>
             <button type="button" className="admin-menu-item" onClick={onOpenAnnouncements}>
-              <span className="admin-menu-icon" aria-hidden="true">📢</span>
+              <span className="admin-menu-icon" aria-hidden="true"><Icon name="megaphone" size={22} /></span>
               <span className="admin-menu-text">
                 <span className="admin-menu-title">お知らせの配信</span>
                 <span className="admin-menu-sub">全員のホームに、お知らせを出す</span>
@@ -100,7 +101,7 @@ export default function AdminHome({ userId, onOpenProposals, onOpenAnnouncements
               <span className="admin-menu-arrow">›</span>
             </button>
             <button type="button" className="admin-menu-item" onClick={onOpenUsers}>
-              <span className="admin-menu-icon" aria-hidden="true">👥</span>
+              <span className="admin-menu-icon" aria-hidden="true"><Icon name="user" size={22} /></span>
               <span className="admin-menu-text">
                 <span className="admin-menu-title">アカウントの管理</span>
                 <span className="admin-menu-sub">テスト用・管理者の権限、ユーザー別の解析の回数</span>

@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import './cropImage.css';
 import { rotateImage, rotateCropBox } from '../../utils/imageUtils';
+import ScanSteps from '../scanSteps/scanSteps';
 
 export default function CropImage({ imageSrc, onCancel, onCropComplete }) {
   // トリミング枠の初期表示位置（%）
@@ -185,8 +186,9 @@ export default function CropImage({ imageSrc, onCancel, onCropComplete }) {
     <div className="crop-container">
       {/* 1. ヘッダー */}
       <header className="crop-header">
-        <h1 className="header-title">トリミング</h1>
+        <h1 className="header-title">範囲を決める</h1>
       </header>
+      <ScanSteps current={1} />
 
       {/* 2. 注意書きバナー */}
       <div className="crop-notice-banner">

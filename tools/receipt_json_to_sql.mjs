@@ -7,6 +7,7 @@
 //       ・JSON に、使える商品番号・中分類番号が無い明細は、飛ばす（今の分類を、そのままにする）
 //       ・新しい指示文で作り直した JSON で、まちがった分類を直すときに使う（入れ直しなので、レシートは消さない）
 //  既定のフォルダ: tools/receipt_json/trial → 出力: tools/receipt_json/import.sql（Git には入れない）
+//  ・今の指示文（11/19〜）の JSON は「M番号＋商品名（文字）」。商品名は、今の表で探すので、表が変わっても、ずれない（M番号は、下と同じく、指示文の版で読む）
 //  ・P番号・M番号は、Gemini に貼った指示文の番号（既定: tools/gemini_chat_prompt.txt。JSON のフォルダに prompt.txt があれば、そちら）で、
 //    カテゴリの名前に戻す。今のカテゴリ表の番号ではない（表が変わると番号がずれて、別の商品になってしまうため）。
 //    その名前が今の表に無いときは、中分類まで（それも無ければ、アプリと同じ名前の一致 → 「未選択」）
@@ -18,7 +19,7 @@
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { resolveItems } from '../supabase/functions/parse-receipt/catalog.js';
+import { resolveItems, findProduct } from '../supabase/functions/parse-receipt/catalog.js';
 import { normalizeStoreName } from '../src/utils/storeNameNormalizer.js';
 import { CATEGORY_TREE } from '../src/constants/categoryData.js';
 
@@ -74,8 +75,21 @@ CATEGORY_TREE.forEach((top) =>
     (mid.subCategories || []).forEach((sub) => (sub.items || []).forEach((product) => tablePaths.add(`${top.name}>${mid.name}>${sub.name}>${product}`)));
   })
 );
-/** 指示文の番号で名前に戻す。今の表に無ければ、null（呼び出し側で、アプリと同じ名前の一致に任せる） */
+/**
+ * JSON の答えを、カテゴリの名前に戻す。決められなければ、null（呼び出し側で、アプリと同じ名前の一致に任せる）
+ *  ・今の形（11/19〜）: 中分類の M番号（指示文の版の番号）＋ 商品名（文字）。商品名は、今の表で探す（findProduct。表が変わっても、ずれない）
+ *  ・古い形: P番号・M番号（指示文の版の番号）
+ */
 const resolveByPrompt = (prompt, item) => {
+  const promptMid = prompt.mids.get(String(item.mid_code || '').trim()) || null;
+  if (item.product_name) {
+    const found = findProduct(promptMid, item.product_name);
+    if (found) return { main_category: found.main, category: found.category, sub_category: found.sub, product_name: found.product };
+    if (promptMid && tableMids.has(`${promptMid.main}>${promptMid.category}`)) {
+      return { main_category: promptMid.main, category: promptMid.category, sub_category: null, product_name: null };
+    }
+    return null;
+  }
   const p = prompt.products.get(String(item.product_code || '').trim());
   if (p && tablePaths.has(`${p.main}>${p.category}>${p.sub}>${p.product}`)) {
     return { main_category: p.main, category: p.category, sub_category: p.sub, product_name: p.product };
@@ -123,7 +137,7 @@ for (const dir of dirs) {
         return;
       }
       // 番号は、指示文の番号で名前に戻す（アプリと同じ resolveItems は、今の表の番号なので、番号がずれる）。番号が使えないものだけ、resolveItems（名前の一致）に任せる
-      const fallback = resolveItems({ items: r.items.map((i) => ({ ...i, product_code: null, mid_code: null })) }).items;
+      const fallback = resolveItems({ items: r.items.map((i) => ({ ...i, product_code: null, mid_code: null, product_name: null })) }).items;
       const resolved = fallback.map((i, n) => ({ ...i, ...(resolveByPrompt(prompt, r.items[n]) || {}) }));
       const sum = resolved.reduce((s, i) => s + Number(i.price || 0), 0);
       const storeName = r.store_name ? normalizeStoreName(r.store_name) : '';

@@ -5,7 +5,7 @@
   height: 100vh;
   height: 100dvh; /* スマホのブラウザの、下のバーに隠れないように（上の 100vh は、古いブラウザ用） */
   width: 100%;
-  background-color: #f8f9fa;
+  background-color: var(--bg);
   box-sizing: border-box;
 }
 
@@ -16,7 +16,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 0 16px;
-  background-color: #e53935;
+  background-color: var(--primary);
   color: #ffffff;
   position: sticky;
   top: 0;
@@ -54,7 +54,7 @@
 
 .no-stores-message {
   text-align: center;
-  color: #888888;
+  color: var(--text-muted);
   margin-top: 40px;
   font-size: 14px;
 }
@@ -69,7 +69,7 @@
 .store-chain-card {
   background-color: #ffffff;
   border-radius: 12px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   overflow: hidden;
 }
@@ -89,7 +89,7 @@
 }
 
 .store-chain-header:active {
-  background-color: #f5f5f5;
+  background-color: var(--surface-2);
 }
 
 .store-chain-icon {
@@ -108,7 +108,7 @@
 .store-chain-name {
   font-size: 13px;
   font-weight: bold;
-  color: #333333;
+  color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -116,12 +116,12 @@
 
 .store-chain-meta {
   font-size: 11px;
-  color: #888888;
+  color: var(--text-muted);
 }
 
 .store-chain-arrow {
   font-size: 24px;
-  color: #888888;
+  color: var(--text-muted);
   line-height: 1;
   transition: transform 0.2s;
 }
@@ -135,11 +135,11 @@
   list-style: none;
   margin: 0;
   padding: 0;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid var(--border);
 }
 
 .store-receipt-list li + li {
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--surface-2);
 }
 
 .store-receipt-row {
@@ -156,12 +156,12 @@
 }
 
 .store-receipt-row:active {
-  background-color: #f5f5f5;
+  background-color: var(--surface-2);
 }
 
 .store-receipt-date {
   font-size: 11px;
-  color: #888888;
+  color: var(--text-muted);
   flex-shrink: 0;
 }
 
@@ -170,7 +170,7 @@
   min-width: 0;
   font-size: 13px;
   font-weight: bold;
-  color: #333333;
+  color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -178,20 +178,74 @@
 
 .store-receipt-count {
   font-size: 11px;
-  color: #888888;
+  color: var(--text-muted);
   flex-shrink: 0;
 }
 
 /* 開いたときの店舗（支店名つき）の行 */
 .store-branch-meta {
   font-size: 11px;
-  color: #888888;
+  color: var(--text-muted);
   flex-shrink: 0;
 }
 
 .store-branch-arrow {
   font-size: 20px;
-  color: #888888;
+  color: var(--text-muted);
   line-height: 1;
   flex-shrink: 0;
+}
+
+/* マイ店舗への入口（店舗のタブの、いちばん上） */
+.store-mystores-link {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--primary-border);
+  border-radius: var(--radius);
+  background: var(--primary-soft);
+  color: var(--primary-dark);
+  text-align: left;
+  cursor: pointer;
+}
+
+.store-mystores-link:active {
+  background: #dff2e7;
+}
+
+.store-mystores-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.store-mystores-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.store-mystores-title {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.store-mystores-sub {
+  font-size: 12px;
+  color: var(--text-sub);
+}
+
+.store-chain-icon {
+  color: var(--primary);
+  display: inline-flex;
 }

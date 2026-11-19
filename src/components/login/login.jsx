@@ -3,6 +3,7 @@ import { supabase } from '../../services/supabaseClient';
 import './login.css';
 import appLogo from '../../assets/logo.png';
 import { fetchLoginAnnouncements, formatDateTime } from '../../utils/announcements';
+import Icon from '../icon/icon';
 
 export default function Login({ onNavigateToRegister, onLoginSuccess }) {
   const [userId, setUserId] = useState('');
@@ -63,7 +64,7 @@ export default function Login({ onNavigateToRegister, onLoginSuccess }) {
             {notes.map((a) => (
               <div key={a.id} className={`login-notice ${a.level === 'high' ? 'is-high' : ''}`} role="note">
                 <p className="login-notice-title">
-                  <span aria-hidden="true">{a.level === 'high' ? '⚠️ ' : '📢 '}</span>
+                  <span aria-hidden="true" className="login-notice-icon"><Icon name={a.level === 'high' ? 'alert' : 'megaphone'} size={16} /></span>
                   {a.title}
                 </p>
                 {a.body && <p className="login-notice-body">{a.body}</p>}

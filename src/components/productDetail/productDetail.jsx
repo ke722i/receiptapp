@@ -8,6 +8,8 @@ import { canFavorite } from '../../utils/favorites';
 import PurchaseRow from '../purchaseRow/purchaseRow';
 import { unitPriceText } from '../../utils/volume';
 import { cheapestByItemName, normalizeForSearch, matchesItemSearch } from '../../utils/itemNameGroup';
+import { SkeletonList } from '../common/common';
+import Icon from '../icon/icon';
 
 const OTHER_PREVIEW = 1; // 「他の商品の最安値」を最初に見せる件数（残りは「すべて表示」）
 
@@ -84,6 +86,10 @@ export default function ProductDetail({
   //  検索中は、一致したものを全部出す（「すべて見る」の画面は、検索で絞り込まないため）
   const previewHistory = isSearching ? sortedHistory : sortedHistory.slice(0, 4);
 
+  // いちばん安かった購入（全部の履歴から。商品名のすぐ下に、大きく出す）と、いちばん高かった値段
+  const best = historyData.reduce((min, item) => (min === null || item.price < min.price ? item : min), null);
+  const highest = historyData.reduce((max, item) => Math.max(max, Number(item.price) || 0), 0);
+
   return (
     <div className="product-detail-container">
       {/* 1. ヘッダー領域 */}
@@ -106,7 +112,7 @@ export default function ProductDetail({
             aria-pressed={!!isFavorite}
             aria-label={isFavorite ? 'お気に入りから外す' : 'お気に入りに入れる'}
           >
-            {isFavorite ? '★' : '☆'}
+            <Icon name="star" size={24} filled={!!isFavorite} />
           </button>
         ) : (
           <div className="header-right-spacer"></div>
@@ -129,12 +135,36 @@ export default function ProductDetail({
               </div>
             </div>
           </div>
+
+          {/* いちばん安かった値段とお店（押すと、そのレシートが開く） */}
+          {!loading && best && (
+            <button
+              type="button"
+              className="best-price-banner"
+              onClick={onSelectReceipt ? () => onSelectReceipt(best.receiptId) : undefined}
+              disabled={!onSelectReceipt}
+            >
+              <span className="best-price-icon"><Icon name="trophy" size={22} /></span>
+              <span className="best-price-body">
+                <span className="best-price-label">いちばん安かった</span>
+                <span className="best-price-shop">{best.shop || '店舗名未登録'}</span>
+                <span className="best-price-date">{best.date}</span>
+              </span>
+              <span className="best-price-value">
+                <span className="best-price-amount">{Number(best.price).toLocaleString()}</span>
+                <span className="best-price-unit">円</span>
+                {highest > best.price && (
+                  <span className="best-price-diff">最高より {(highest - best.price).toLocaleString()}円 安い</span>
+                )}
+              </span>
+            </button>
+          )}
         </section>
 
-        {loading && <div className="detail-message">データを読み込み中...</div>}
+        {loading && <SkeletonList rows={3} thumb={false} />}
 
         {errorMessage && (
-          <div className="detail-message" style={{ color: '#c62828' }}>
+          <div className="detail-message" style={{ color: 'var(--danger)' }}>
             {errorMessage}
           </div>
         )}

@@ -5,7 +5,7 @@
   min-height: 100vh;
   min-height: 100dvh; /* スマホのブラウザの、下のバーに隠れないように（上の 100vh は、古いブラウザ用） */
   width: 100%;
-  background-color: #f5f5f5;
+  background-color: var(--surface-2);
   box-sizing: border-box;
 }
 
@@ -17,7 +17,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 0 16px;
-  background-color: #e53935;
+  background-color: var(--primary);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -65,7 +65,7 @@
   background-color: #ffffff;
   border-radius: 12px;
   padding: 16px 20px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
@@ -78,7 +78,7 @@
 .product-name {
   font-size: 22px;
   font-weight: bold;
-  color: #333333;
+  color: var(--text);
   margin: 0;
 }
 
@@ -98,12 +98,12 @@
   width: 100%;
   height: 100%;
   border-radius: 8px;
-  background-color: #f0f0f0;
+  background-color: var(--surface-2);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 12px;
-  color: #888888;
+  color: var(--text-muted);
 }
 
 /* セクション共通 */
@@ -116,7 +116,7 @@
 .section-title {
   font-size: 15px;
   font-weight: bold;
-  color: #333333;
+  color: var(--text);
   margin: 0;
   text-align: left;
 }
@@ -138,8 +138,8 @@
   background-color: #ffffff;
   border-radius: 10px; /* 購入履歴のカードと同じ */
   padding: 16px;
-  border: 2px solid #e53935; /* 最安値だけ、赤い枠で強調 */
-  box-shadow: 0 2px 8px rgba(229, 57, 53, 0.1);
+  border: 2px solid var(--primary); /* 最安値だけ、赤い枠で強調 */
+  box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.1);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -152,7 +152,7 @@
 }
 
 .recent-purchase-card.is-clickable:active {
-  background-color: #f5f5f5;
+  background-color: var(--surface-2);
   transform: scale(0.99);
 }
 
@@ -162,20 +162,20 @@
   align-items: baseline;
   flex-wrap: wrap;
   gap: 4px 10px;
-  border-top: 1px dashed #e0e0e0; /* 価格・商品名の下に、日付・店名 */
+  border-top: 1px dashed var(--border); /* 価格・商品名の下に、日付・店名 */
   padding-top: 8px;
 }
 
 .purchase-date {
   font-size: 15px;
   font-weight: bold;
-  color: #333333;
+  color: var(--text);
 }
 
 .shop-name {
   font-size: 14px;
-  color: #666666;
-  background-color: #f5f5f5;
+  color: var(--text-sub);
+  background-color: var(--surface-2);
   padding: 2px 8px;
   border-radius: 4px;
 }
@@ -194,7 +194,7 @@
   text-align: left;
   font-size: 16px;
   font-weight: bold;
-  color: #333333;
+  color: var(--text);
   word-break: break-word;
 }
 
@@ -215,14 +215,14 @@
 
 .recent-unit-price {
   font-size: 11px;
-  color: #777777;
+  color: var(--text-sub);
   white-space: nowrap;
 }
 
 .current-price {
   font-size: 26px;
   font-weight: bold;
-  color: #e53935;
+  color: var(--primary);
   line-height: 1;
 }
 
@@ -233,19 +233,19 @@
 
 .original-price {
   font-size: 12px;
-  color: #888888;
+  color: var(--text-muted);
   text-decoration: line-through;
   margin-top: 4px;
 }
 
 .discount-tag {
-  background-color: #ffebee;
-  color: #d32f2f;
+  background-color: var(--danger-soft);
+  color: var(--danger);
   font-size: 13px;
   font-weight: bold;
   padding: 4px 10px;
   border-radius: 12px;
-  border: 1px solid #ffcdd2;
+  border: 1px solid var(--danger-border);
 }
 
 /* 購入履歴セクション */
@@ -258,10 +258,10 @@
 .sort-select {
   padding: 6px 10px;
   font-size: 13px;
-  border: 1px solid #cccccc;
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
   background-color: #ffffff;
-  color: #333333;
+  color: var(--text);
   outline: none;
 }
 
@@ -275,7 +275,7 @@
 .history-shop {
   font-size: 14px;
   font-weight: bold;
-  color: #333333;
+  color: var(--text);
 }
 
 /* すべて見るボタン */
@@ -283,8 +283,8 @@
   width: 100%;
   padding: 12px;
   background-color: #ffffff;
-  color: #333333;
-  border: 1px solid #cccccc;
+  color: var(--text);
+  border: 1px solid var(--border-strong);
   border-radius: 20px;
   font-size: 14px;
   font-weight: bold;
@@ -294,18 +294,18 @@
 }
 
 .view-all-button:active {
-  background-color: #f0f0f0;
+  background-color: var(--surface-2);
 }
 /* --- DB連携で追加 --- */
 .product-name-note {
   margin-top: 4px;
   font-size: 12px;
-  color: #888888;
+  color: var(--text-muted);
 }
 
 .detail-message {
   text-align: center;
-  color: #888888;
+  color: var(--text-muted);
   font-size: 14px;
   padding: 24px 0;
 }
@@ -324,23 +324,23 @@
   box-sizing: border-box;
   padding: 10px 56px 10px 16px; /* 右に、件数を出す隙間 */
   font-size: 16px; /* iPhone で、入力のとき、拡大されない大きさ */
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border);
   border-radius: 24px;
   background-color: #ffffff;
-  color: #333333;
+  color: var(--text);
   outline: none;
   -webkit-appearance: none;
 }
 
 .item-search-input:focus {
-  border-color: #e53935;
+  border-color: var(--primary);
 }
 
 .item-search-count {
   position: absolute;
   right: 16px;
   font-size: 12px;
-  color: #888888;
+  color: var(--text-muted);
   pointer-events: none;
 }
 
@@ -350,8 +350,8 @@
   padding: 10px 12px;
   font-size: 12px;
   line-height: 1.6;
-  color: #666666;
-  background-color: #f5f5f5;
+  color: var(--text-sub);
+  background-color: var(--surface-2);
   border-radius: 8px;
   text-align: left;
 }
@@ -382,4 +382,102 @@
 
 .favorite-button.is-on {
   color: #ffeb3b;
+}
+
+/* ---------- いちばん安かった値段とお店 ---------- */
+.favorite-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.best-price-banner {
+  width: 100%;
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--primary-border);
+  border-radius: var(--radius);
+  background: var(--primary-soft);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.best-price-banner:disabled {
+  cursor: default;
+}
+
+.best-price-banner:active:not(:disabled) {
+  background: #dff2e7;
+}
+
+.best-price-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--primary);
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.best-price-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.best-price-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--primary-dark);
+}
+
+.best-price-shop {
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.best-price-date {
+  font-size: 12px;
+  color: var(--text-sub);
+}
+
+.best-price-value {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: flex-end;
+  max-width: 45%;
+  color: var(--primary-dark);
+}
+
+.best-price-amount {
+  font-size: 26px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.best-price-unit {
+  font-size: 13px;
+  font-weight: 700;
+  margin-left: 1px;
+}
+
+.best-price-diff {
+  flex-basis: 100%;
+  text-align: right;
+  font-size: 11px;
+  color: var(--text-sub);
 }

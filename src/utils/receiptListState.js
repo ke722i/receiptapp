@@ -29,13 +29,14 @@ export const saveReceiptSort = (sortKey) => {
 };
 
 // 開いたレシートの id と、そのときの絞り込み（レシート一覧）
-const returnState = { receiptId: null, searchText: '', period: 'all' };
+const returnState = { receiptId: null, searchText: '', period: 'all', needsOnly: false };
 
 /** レシートを開く直前に呼ぶ。戻ってきたとき、この行まで戻す */
 export const rememberOpenedReceipt = (receiptId, filter = {}) => {
   returnState.receiptId = receiptId;
   returnState.searchText = filter.searchText ?? '';
   returnState.period = filter.period ?? 'all';
+  returnState.needsOnly = Boolean(filter.needsOnly);
 };
 
 /** 一覧を開くときに呼ぶ。詳細から戻ってきたなら、絞り込みと行の id を返す（なければ null） */
@@ -46,6 +47,7 @@ export const clearReturnState = () => {
   returnState.receiptId = null;
   returnState.searchText = '';
   returnState.period = 'all';
+  returnState.needsOnly = false;
 };
 
 /** 戻ってきた行までスクロールする。行が見つからなくても、状態は消す */

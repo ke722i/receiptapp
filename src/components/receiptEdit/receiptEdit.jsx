@@ -9,6 +9,7 @@ import {
   applyCategoryChange,
 } from '../../utils/categoryUtils';
 import { parseVolume, composeVolume, isValidAmount, unitsForItem, defaultUnitForItem, unitPriceText } from '../../utils/volume';
+import Icon from '../icon/icon';
 
 // 容量は、「数の欄＋単位のプルダウン」で入力する。保存されている容量（"300g" など）を、数と単位に分けて持つ
 //  ・分けられない容量（「6枚切」など）は volRaw にそのまま残す。数を入れると、新しい容量に置き換わる
@@ -260,7 +261,7 @@ export default function ReceiptEdit({ isOpen, selectedItems, onClose, onSave, fo
                 {/* 「その他」を選んだときの案内（カテゴリの提案ができること） */}
                 {[item.mainCategory, item.category, item.subCategory, item.productName].includes(OTHER) && (
                   <p className="edit-proposal-hint">
-                    💡 ぴったりの分類が無いときは、設定の「カテゴリを提案する」から、新しい中分類・小分類・商品名を提案できます。
+                    <Icon name="bulb" size={15} /> ぴったりの分類が無いときは、設定の「カテゴリを提案する」から、新しい中分類・小分類・商品名を提案できます。
                   </p>
                 )}
               </div>

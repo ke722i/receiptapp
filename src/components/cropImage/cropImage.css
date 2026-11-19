@@ -5,7 +5,7 @@
   height: 100vh;
   height: 100dvh; /* スマホのブラウザの、下のバーに隠れないように（上の 100vh は、古いブラウザ用） */
   width: 100%;
-  background-color: #000000;
+  background-color: var(--text);
   box-sizing: border-box;
   position: relative;
   overflow: hidden;
@@ -19,12 +19,12 @@
   justify-content: center; /* 戻るボタンを無くしたのでタイトルを中央に */
   align-items: center;
   padding: 0 16px;
-  background-color: #1a1a1a;
+  background-color: var(--text);
   position: sticky;
   top: 0;
   z-index: 10;
   box-sizing: border-box;
-  border-bottom: 1px solid #333333;
+  border-bottom: 1px solid var(--text);
 }
 
 .back-button {
@@ -80,7 +80,7 @@
 /* 「注意」バッジ */
 .notice-badge {
   background-color: #ff9500;
-  color: #000000;
+  color: var(--text);
   font-size: 10px;
   font-weight: bold;
   padding: 1px 6px;
@@ -233,7 +233,7 @@
 }
 
 .crop-placeholder {
-  color: #888888;
+  color: var(--text-muted);
   font-size: 14px;
 }
 
@@ -241,7 +241,7 @@
 .crop-bottom-bar {
   height: 70px;
   width: 100%;
-  background-color: #1a1a1a;
+  background-color: var(--text);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -255,7 +255,7 @@
 .crop-cancel-button {
   background: none;
   border: none;
-  color: #aaaaaa;
+  color: var(--text-muted);
   font-size: 15px;
   cursor: pointer;
   padding: 8px 16px;
@@ -327,7 +327,7 @@
 .crop-rotate-label {
   font-size: 10px;
   line-height: 1;
-  color: #cccccc;
+  color: var(--border-strong);
 }
 
 .crop-rotate-error {
@@ -335,8 +335,13 @@
   z-index: 20;
   margin: 0;
   padding: 8px 16px;
-  background-color: #1a1a1a;
+  background-color: var(--text);
   color: #ff8a80;
   font-size: 12px;
   text-align: center;
+}
+
+/* 撮影の進み具合の帯（ScanSteps）の分だけ、作業の枠を低くする（下のボタンが隠れないように） */
+.crop-workspace {
+  height: calc(65vh - 60px);
 }

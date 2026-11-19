@@ -8,18 +8,18 @@
 .admin-tab {
   flex: 1;
   padding: 8px 0;
-  border: 1.5px solid #dddddd;
+  border: 1.5px solid var(--border);
   border-radius: 20px;
   background-color: #ffffff;
-  color: #555555;
+  color: var(--text-sub);
   font-size: 13px;
   font-weight: bold;
   cursor: pointer;
 }
 
 .admin-tab.is-active {
-  border-color: #e53935;
-  background-color: #e53935;
+  border-color: var(--primary);
+  background-color: var(--primary);
   color: #ffffff;
 }
 
@@ -49,7 +49,7 @@
 .admin-card-title {
   font-size: 15px;
   font-weight: bold;
-  color: #333333;
+  color: var(--text);
 }
 
 .admin-people {
@@ -81,7 +81,7 @@
 }
 
 .admin-templates-label.is-approve {
-  background: #2e7d32;
+  background: var(--primary-dark);
 }
 
 .admin-templates-label.is-reject {
@@ -106,8 +106,8 @@
 }
 
 .admin-template.is-approve {
-  border-color: #2e7d32;
-  color: #2e7d32;
+  border-color: var(--primary-dark);
+  color: var(--primary-dark);
 }
 
 .admin-template.is-reject {
@@ -138,20 +138,20 @@
 
 .admin-approve {
   border: none;
-  background-color: #2e7d32;
+  background-color: var(--primary-dark);
   color: #ffffff;
 }
 
 .admin-reject {
   border: 1.5px solid #9e9e9e;
   background-color: #ffffff;
-  color: #555555;
+  color: var(--text-sub);
 }
 
 .admin-undo {
-  border: 1.5px solid #e53935;
+  border: 1.5px solid var(--primary);
   background-color: #ffffff;
-  color: #e53935;
+  color: var(--primary);
 }
 
 .admin-approve:disabled,
@@ -180,6 +180,6 @@
 .admin-csv-note {
   margin: 6px 2px 0;
   font-size: 11px;
-  color: #777777;
+  color: var(--text-sub);
   line-height: 1.6;
 }

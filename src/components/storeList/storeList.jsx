@@ -3,6 +3,8 @@ import './storeList.css';
 import { useReceiptHistory } from '../../utils/receiptCache';
 import { getChainName } from '../../utils/storeNameNormalizer';
 import { formatPurchaseDate } from '../../utils/purchaseDate';
+import Icon from '../icon/icon';
+import { SkeletonList, EmptyState } from '../common/common';
 
 const UNREGISTERED = '店舗名未登録';
 
@@ -14,7 +16,7 @@ const UNREGISTERED = '店舗名未登録';
  * @param {(name: string|null) => void} onOpenChainChange
  * @param {(storeName: string) => void} onSelectStore 店舗を選んだとき（店舗詳細へ）
  */
-export default function StoreList({ onBack, onSelectStore, openChain = null, onOpenChainChange }) {
+export default function StoreList({ onBack, onSelectStore, openChain = null, onOpenChainChange, onOpenMyStores, onOpenCamera }) {
   const { receipts, loading, errorMessage } = useReceiptHistory(); // 覚えた一覧を使う（画像は読まない。utils/receiptCache.js）
   const [localOpen, setLocalOpen] = useState(null); // 親が開いたチェーンを持たないときの控え
   const openName = onOpenChainChange ? openChain : localOpen;
@@ -56,22 +58,41 @@ export default function StoreList({ onBack, onSelectStore, openChain = null, onO
         <button type="button" className="back-button" onClick={onBack} aria-label="戻る">
           ‹
         </button>
-        <h1 className="header-title">店舗別一覧</h1>
+        <h1 className="header-title">店舗</h1>
         <div className="header-right-spacer"></div>
       </header>
 
       {/* 2. メインコンテンツ（チェーン別カード） */}
       <main className="store-list-main">
-        {loading && <div className="no-stores-message">データを読み込み中...</div>}
+        {/* マイ店舗（よく行く店舗を登録して、価格を比べる） */}
+        {onOpenMyStores && (
+          <button type="button" className="store-mystores-link" onClick={onOpenMyStores}>
+            <span className="store-mystores-icon"><Icon name="star" size={20} /></span>
+            <span className="store-mystores-text">
+              <span className="store-mystores-title">マイ店舗</span>
+              <span className="store-mystores-sub">よく行く店舗を登録すると、商品ごとに価格を比べられます</span>
+            </span>
+            <Icon name="chevronRight" size={18} />
+          </button>
+        )}
+
+        {loading && <SkeletonList rows={4} />}
 
         {errorMessage && (
-          <div className="no-stores-message" style={{ color: '#c62828' }}>
+          <div className="no-stores-message" style={{ color: 'var(--danger)' }}>
             {errorMessage}
           </div>
         )}
 
         {!loading && !errorMessage && chains.length === 0 && (
-          <div className="no-stores-message">登録されたレシートはありません</div>
+          <EmptyState
+            icon="store"
+            title="まだ店舗がありません"
+            text="レシートを撮影すると、お店ごとにまとまって、ここに出ます。"
+            actionLabel={onOpenCamera ? 'レシートを撮影する' : undefined}
+            actionIcon="camera"
+            onAction={onOpenCamera}
+          />
         )}
 
         {!loading && chains.length > 0 && (
@@ -86,7 +107,7 @@ export default function StoreList({ onBack, onSelectStore, openChain = null, onO
                     onClick={() => setOpenName(isOpen ? null : chain.name)}
                     aria-expanded={isOpen}
                   >
-                    <span className="store-chain-icon">🏪</span>
+                    <span className="store-chain-icon"><Icon name="store" size={22} /></span>
                     <span className="store-chain-text">
                       <span className="store-chain-name">{chain.name}</span>
                       <span className="store-chain-meta">

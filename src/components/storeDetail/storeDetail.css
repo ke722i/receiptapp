@@ -5,7 +5,7 @@
   height: 100vh;
   height: 100dvh;
   width: 100%;
-  background-color: #f8f9fa;
+  background-color: var(--bg);
   box-sizing: border-box;
 }
 
@@ -16,7 +16,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 0 16px;
-  background-color: #e53935;
+  background-color: var(--primary);
   color: #ffffff;
   position: sticky;
   top: 0;
@@ -54,7 +54,7 @@
 
 .store-detail-message {
   text-align: center;
-  color: #888888;
+  color: var(--text-muted);
   margin-top: 40px;
   font-size: 14px;
 }
@@ -62,7 +62,7 @@
 .store-info-card {
   background-color: #ffffff;
   border-radius: 12px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   padding: 14px 16px;
   margin-bottom: 20px;
@@ -72,7 +72,7 @@
   margin: 0 0 10px;
   font-size: 16px;
   font-weight: bold;
-  color: #333333;
+  color: var(--text);
   word-break: break-word;
 }
 
@@ -80,20 +80,20 @@
   display: flex;
   gap: 12px;
   padding: 8px 0;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--surface-2);
   font-size: 13px;
 }
 
 .store-info-label {
   width: 72px;
   flex-shrink: 0;
-  color: #888888;
+  color: var(--text-muted);
 }
 
 .store-info-value {
   flex: 1;
   min-width: 0;
-  color: #333333;
+  color: var(--text);
   word-break: break-word;
 }
 
@@ -106,7 +106,7 @@
   margin: 0 0 10px;
   font-size: 14px;
   font-weight: bold;
-  color: #333333;
+  color: var(--text);
 }
 
 .store-detail-sort-row {
@@ -124,9 +124,9 @@
 .store-detail-sort {
   padding: 6px 10px;
   font-size: 13px;
-  border: 1px solid #cccccc;
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
   background-color: #ffffff;
-  color: #333333;
+  color: var(--text);
   outline: none;
 }

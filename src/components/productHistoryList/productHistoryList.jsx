@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import './productHistoryList.css';
+import { SkeletonList } from '../common/common';
 import { fetchProductPriceHistory } from '../../utils/receiptDb';
 import PurchaseRow from '../purchaseRow/purchaseRow';
 import { unitPriceText } from '../../utils/volume';
@@ -60,10 +61,10 @@ export default function ProductHistoryList({ product, onBack, onSelectReceipt })
 
       {/* メインコンテンツ */}
       <main className="history-list-main">
-        {loading && <div className="history-message">データを読み込み中...</div>}
+        {loading && <SkeletonList rows={4} />}
 
         {errorMessage && (
-          <div className="history-message" style={{ color: '#c62828' }}>
+          <div className="history-message" style={{ color: 'var(--danger)' }}>
             {errorMessage}
           </div>
         )}

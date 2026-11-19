@@ -2,6 +2,8 @@ import { useRef } from 'react';
 import './receiptRowCard.css';
 import { useReceiptImage } from '../../utils/receiptCache';
 import { formatPurchaseDate } from '../../utils/purchaseDate';
+import { countNeedsCheck } from '../../utils/needsCheck';
+import Icon from '../icon/icon';
 
 const UNREGISTERED = '店舗名未登録';
 
@@ -21,20 +23,26 @@ export default function ReceiptRowCard({ receipt, showStore = false, onClick }) 
     .filter(Boolean)
     .slice(0, 3)
     .join('、');
+  const total = items.reduce((sum, item) => sum + (Number(item.price) || 0), 0); // 印字の値段の合計（値引き前）
+  const needs = countNeedsCheck(items);
 
   return (
     <button type="button" className="receipt-row-card" data-receipt-id={receipt.id} onClick={onClick} ref={rowRef}>
-      <span className="receipt-row-thumb">
+      <span className={`receipt-row-thumb ${imageSrc === undefined ? 'skeleton-block' : ''}`}>
         {imageSrc ? (
           <img src={imageSrc} alt="レシート写真" />
         ) : imageSrc === undefined ? null : (
-          <span aria-hidden="true">📄</span>
+          <Icon name="receipt" size={26} />
         )}
       </span>
       <span className="receipt-row-info">
-        <span className="receipt-row-date">{formatPurchaseDate(receipt.purchase_date)}</span>
         {showStore && <span className="receipt-row-store">{receipt.store_name || UNREGISTERED}</span>}
-        <span className="receipt-row-meta">{items.length}点</span>
+        <span className="receipt-row-date">{formatPurchaseDate(receipt.purchase_date)}</span>
+        <span className="receipt-row-meta">
+          <span className="receipt-row-total">{total.toLocaleString()}円</span>
+          <span>・{items.length}点</span>
+          {needs > 0 && <span className="needs-check-badge">要確認 {needs}</span>}
+        </span>
         {names && (
           <span className="receipt-row-items">
             {names}
@@ -42,7 +50,7 @@ export default function ReceiptRowCard({ receipt, showStore = false, onClick }) 
           </span>
         )}
       </span>
-      <span className="receipt-row-arrow" aria-hidden="true">›</span>
+      <span className="receipt-row-arrow" aria-hidden="true"><Icon name="chevronRight" size={20} /></span>
     </button>
   );
 }

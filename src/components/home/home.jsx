@@ -12,7 +12,7 @@ import {
   filterItemNameSuggestions,
 } from '../../utils/searchUtils';
 import { fetchMyItemNames } from '../../utils/receiptDb';
-import Avatar from '../avatar/avatar';
+import Icon from '../icon/icon';
 import ProductIcon from '../productIcon/productIcon';
 import {
   findProductPaths,
@@ -55,29 +55,20 @@ const toProductPath = (entry) => {
   return entry.product || isOtherPath(entry) ? entry : null; // 「その他」の箱（閲覧履歴から開き直す）も
 };
 
+// ホーム。画面の移動（レシート・撮影・店舗・設定）は、下のタブ（components/tabBar）で行う
 export default function Home({
-  onLogout,
   onNavigateToCategory,
-  onOpenCamera,
-  onNavigateToHistory,
-  onNavigateToStores,
-  onNavigateToMyStores,
-  onNavigateToSettings,
   onOpenCategoryProposal,
   onOpenNotices,
-  isAdmin = false,
-  onOpenAdminHome,
   announcements = [],
   onCloseAnnouncement,
   onSelectProduct,
   favorites = [],
   unreadCount = 0,
   userId = 'User_12345',
-  avatarId = '',
 }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   // 商品などを開いて戻ってきたときは、開いていた分類を元に戻す（utils/homeCategoryState.js）
   const [returnedCategory] = useState(() => peekHomeCategory());
   const [openCategories, setOpenCategories] = useState(() => returnedCategory?.open ?? {});
@@ -261,11 +252,6 @@ export default function Home({
     }));
   };
 
-  const handleMenuClick = (action) => {
-    setIsMenuOpen(false);
-    if (action) action();
-  };
-
   const handleClearSearch = (e) => {
     e.stopPropagation();
     setSearchQuery('');
@@ -442,22 +428,14 @@ export default function Home({
     <div className="home-container">
       {/* ヘッダー */}
       <header className="home-header">
-        <button
-          type="button"
-          className="hamburger-button"
-          onClick={() => setIsMenuOpen(true)}
-          aria-label="メニューを開く"
-        >
-          <span className="hamburger-line"></span>
-          <span className="hamburger-line"></span>
-          <span className="hamburger-line"></span>
-        </button>
-
         <div className="header-logo-area">
-          <div className="header-logo-placeholder">レシート即！メモ</div>
+          <span className="header-logo-mark" aria-hidden="true">
+            <Icon name="receipt" size={20} strokeWidth={2} />
+          </span>
+          <span className="header-logo-placeholder">レシート即！メモ</span>
         </div>
 
-        {/* 通知（手紙）。未読があると、黄色の丸に数が出る */}
+        {/* 通知（手紙）。未読があると、丸に数が出る */}
         {onOpenNotices ? (
           <button
             type="button"
@@ -465,10 +443,7 @@ export default function Home({
             onClick={onOpenNotices}
             aria-label={unreadCount > 0 ? `通知（未読 ${unreadCount} 件）` : '通知'}
           >
-            <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#ffffff" strokeWidth="1.8" strokeLinejoin="round" strokeLinecap="round" aria-hidden="true">
-              <rect x="3" y="5" width="18" height="14" rx="2" />
-              <path d="M3.5 7l8.5 6.5L20.5 7" />
-            </svg>
+            <Icon name="mail" size={26} />
             {unreadCount > 0 && <span className="notice-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>}
           </button>
         ) : (
@@ -476,61 +451,8 @@ export default function Home({
         )}
       </header>
 
-      {/* ドロワーメニュー */}
-      <div
-        className={`drawer-overlay ${isMenuOpen ? 'is-active' : ''}`}
-        onClick={() => setIsMenuOpen(false)}
-      />
-      <aside className={`drawer-menu ${isMenuOpen ? 'is-active' : ''}`}>
-        <div className="drawer-user-info">
-          <div className="user-avatar">
-            <Avatar avatarId={avatarId} size={44} />
-          </div>
-          <div className="user-details">
-            <span className="user-label">ログインユーザー</span>
-            <span className="user-id">{userId}</span>
-            {isAdmin && <span className="admin-badge">管理者</span>}
-          </div>
-        </div>
-        <nav className="drawer-nav">
-          <button type="button" className="drawer-item" onClick={() => handleMenuClick()}>
-            <span className="drawer-icon">🏠</span><span>ホーム</span>
-          </button>
-          <button type="button" className="drawer-item" onClick={() => handleMenuClick(onOpenCamera)}>
-            <span className="drawer-icon">📷</span><span>レシート撮影</span>
-          </button>
-          <button type="button" className="drawer-item" onClick={() => handleMenuClick(onNavigateToHistory)}>
-            <span className="drawer-icon">📄</span><span>レシート一覧</span>
-          </button>
-          <button type="button" className="drawer-item" onClick={() => handleMenuClick(onNavigateToStores)}>
-            <span className="drawer-icon">🏪</span><span>店舗別一覧</span>
-          </button>
-          <button type="button" className="drawer-item" onClick={() => handleMenuClick(onNavigateToMyStores)}>
-            <span className="drawer-icon">⭐</span><span>マイ店舗</span>
-          </button>
-          <button type="button" className="drawer-item" onClick={() => handleMenuClick(onNavigateToSettings)}>
-            <span className="drawer-icon">⚙️</span><span>設定</span>
-          </button>
-          {/* 管理者のアカウントだけに出る */}
-          {isAdmin && onOpenAdminHome && (
-            <>
-              <div className="drawer-section-label">管理者</div>
-              <button type="button" className="drawer-item" onClick={() => handleMenuClick(onOpenAdminHome)}>
-                <span className="drawer-icon">🛠️</span><span>管理者ホーム</span>
-              </button>
-            </>
-          )}
-        </nav>
-        <div className="drawer-footer">
-          <button type="button" className="drawer-item logout-item" onClick={() => handleMenuClick(onLogout)}>
-            <span className="drawer-icon">🚪</span><span>ログアウト</span>
-          </button>
-        </div>
-      </aside>
-
-      {/* メインエリア */}
-      <main className="home-main">
-        {/* 検索バー（YouTube のように、押すと、履歴と候補が出る。バーと候補以外は暗くなる） */}
+      {/* 検索バー（画面の上に、いつも出す。押すと、履歴と候補が出る。バーと候補以外は暗くなる） */}
+      <div className="home-search-sticky">
         <div ref={searchBarRef} className={`search-bar-container ${isSearchFocused ? 'is-focused' : ''}`}>
           <div className="search-input-wrapper">
             {/* 検索の対象（すべて／カテゴリ／商品名）。検索バーの左に、いつも出す */}
@@ -580,7 +502,7 @@ export default function Home({
                   onClick={handleClearSearch}
                   aria-label="検索文字をクリア"
                 >
-                  ✕
+                  <Icon name="close" size={16} strokeWidth={2.2} />
                 </button>
               )}
             </div>
@@ -600,7 +522,7 @@ export default function Home({
                           const isHistory = historyKeys.has(productKey(path));
                           return (
                             <li key={productKey(path)} className="search-suggestion-item" {...tapProps(path)}>
-                              <span className="suggestion-icon">{isHistory ? '🕒' : '🔍'}</span>
+                              <span className="suggestion-icon"><Icon name={isHistory ? 'history' : 'search'} size={18} /></span>
                               <span className="suggestion-body">
                                 <span className="suggestion-text">{path.product}</span>
                                 <span className="suggestion-path">{formatPath(path)}</span>
@@ -611,7 +533,7 @@ export default function Home({
                                 aria-label="検索欄に入れる"
                                 {...rowButtonProps(() => fillSearch(path.product))}
                               >
-                                ↖
+                                <Icon name="arrowUpLeft" size={18} />
                               </button>
                             </li>
                           );
@@ -631,7 +553,7 @@ export default function Home({
                             className="search-suggestion-item"
                             {...tapAction(() => handleSelectCategory(entry))}
                           >
-                            <span className="suggestion-icon">📂</span>
+                            <span className="suggestion-icon"><Icon name="folder" size={18} /></span>
                             <span className="suggestion-body">
                               <span className="suggestion-text">{entry.name}</span>
                               <span className="suggestion-path">
@@ -656,7 +578,7 @@ export default function Home({
                             className="search-suggestion-item"
                             {...tapAction(() => handleSelectItemName(entry))}
                           >
-                            <span className="suggestion-icon">🧾</span>
+                            <span className="suggestion-icon"><Icon name="receipt" size={18} /></span>
                             <span className="suggestion-body">
                               <span className="suggestion-text">{entry.itemName}</span>
                               <span className="suggestion-path">
@@ -690,7 +612,7 @@ export default function Home({
                 <ul className="search-suggestions-list">
                   {searchHistory.map((path) => (
                     <li key={productKey(path)} className="search-suggestion-item" {...tapProps(path)}>
-                      <span className="suggestion-icon">🕒</span>
+                      <span className="suggestion-icon"><Icon name="history" size={18} /></span>
                       <span className="suggestion-body">
                         <span className="suggestion-text">{path.product}</span>
                         <span className="suggestion-path">{formatPath(path)}</span>
@@ -701,7 +623,7 @@ export default function Home({
                         aria-label="検索欄に入れる"
                         {...rowButtonProps(() => fillSearch(path.product))}
                       >
-                        ↖
+                        <Icon name="arrowUpLeft" size={18} />
                       </button>
                       <button
                         type="button"
@@ -709,7 +631,7 @@ export default function Home({
                         aria-label="履歴から消す"
                         {...rowButtonProps(() => removeFromHistory(path))}
                       >
-                        ✕
+                        <Icon name="close" size={16} />
                       </button>
                     </li>
                   ))}
@@ -720,28 +642,31 @@ export default function Home({
             </div>
           )}
         </div>
+      </div>
 
+      {/* メインエリア */}
+      <main className="home-main">
         {/* お知らせ（管理者のお知らせ・カテゴリの提案）。横にスライドして見る。「✕」で閉じると、この端末では出ない */}
         {noticeSlideCount > 0 && (
           <div className="notice-carousel-wrap">
             <div className="notice-carousel" ref={carouselRef} onScroll={handleCarouselScroll}>
             {announcements.map((a) => (
               <aside key={`${a.id}:${a.updated_at}`} className="proposal-tip announcement-card" aria-label="運営からのお知らせ">
-                <span className="proposal-tip-icon" aria-hidden="true">📢</span>
+                <span className="proposal-tip-icon" aria-hidden="true"><Icon name="megaphone" size={22} /></span>
                 <div className="proposal-tip-body">
                   <p className="proposal-tip-title">{a.title}</p>
                   {a.body && <p className="proposal-tip-text announcement-text">{a.body}</p>}
                 </div>
                 {onCloseAnnouncement && (
                   <button type="button" className="proposal-tip-close" onClick={() => onCloseAnnouncement(a)} aria-label="お知らせを閉じる">
-                    ✕
+                    <Icon name="close" size={16} />
                   </button>
                 )}
               </aside>
             ))}
                 {showProposalTip && onOpenCategoryProposal && (
               <aside className="proposal-tip" aria-label="お知らせ">
-                <span className="proposal-tip-icon" aria-hidden="true">💡</span>
+                <span className="proposal-tip-icon" aria-hidden="true"><Icon name="bulb" size={22} /></span>
                 <div className="proposal-tip-body">
                   <p className="proposal-tip-title">カテゴリを提案できます</p>
                   <p className="proposal-tip-text">
@@ -752,7 +677,7 @@ export default function Home({
                   </button>
                 </div>
                 <button type="button" className="proposal-tip-close" onClick={dismissProposalTip} aria-label="お知らせを閉じる">
-                  ✕
+                  <Icon name="close" size={16} />
                 </button>
               </aside>
             )}
@@ -787,8 +712,9 @@ export default function Home({
               ))}
             </div>
           ) : (
-            <div style={{ fontSize: '13px', color: '#888', padding: '12px 0' }}>
-              商品詳細の ☆ を押すと、ここに入ります
+            <div className="favorites-empty">
+              <Icon name="star" size={20} />
+              <span>商品詳細の ☆ を押すと、よく買う商品を、ここにまとめられます</span>
             </div>
           )}
         </section>
@@ -806,8 +732,8 @@ export default function Home({
                   onClick={() => toggleCategory(topCat.id)}
                 >
                   <span className="category-label">{topCat.name}</span>
-                  <span className="category-arrow">
-                    {openCategories[topCat.id] ? '▲' : '▼'}
+                  <span className={`category-arrow ${openCategories[topCat.id] ? 'is-open' : ''}`}>
+                    <Icon name="chevronDown" size={18} />
                   </span>
                 </button>
 
@@ -822,8 +748,8 @@ export default function Home({
                           onClick={() => toggleCategory(mainCat.id)}
                         >
                           <span className="category-label">{mainCat.name}</span>
-                          <span className="sub-arrow">
-                            {openCategories[mainCat.id] ? '▲' : '▼'}
+                          <span className={`sub-arrow ${openCategories[mainCat.id] ? 'is-open' : ''}`}>
+                            <Icon name="chevronDown" size={16} />
                           </span>
                         </button>
 
@@ -838,8 +764,8 @@ export default function Home({
                                   onClick={() => toggleCategory(subCat.id)}
                                 >
                                   <span>{subCat.name}</span>
-                                  <span className="sub-arrow">
-                                    {openCategories[subCat.id] ? '▲' : '▼'}
+                                  <span className={`sub-arrow ${openCategories[subCat.id] ? 'is-open' : ''}`}>
+                                    <Icon name="chevronDown" size={16} />
                                   </span>
                                 </button>
 
@@ -875,7 +801,7 @@ export default function Home({
                                 {...navProps(otherSubPath(topCat.name, mainCat.name))}
                               >
                                 <span>{OTHER}</span>
-                                <span className="sub-arrow">›</span>
+                                <span className="sub-arrow"><Icon name="chevronRight" size={16} /></span>
                               </button>
                             </div>
                           </div>
@@ -913,7 +839,7 @@ export default function Home({
                         {...navProps(otherMidPath(topCat.name))}
                       >
                         <span className="category-label">{OTHER}</span>
-                        <span className="sub-arrow">›</span>
+                        <span className="sub-arrow"><Icon name="chevronRight" size={16} /></span>
                       </button>
                     </div>
                   </div>
@@ -928,25 +854,12 @@ export default function Home({
                 {...navProps(otherMainPath())}
               >
                 <span className="category-label">{OTHER}</span>
-                <span className="category-arrow">›</span>
+                <span className="category-arrow"><Icon name="chevronRight" size={18} /></span>
               </button>
             </div>
           </div>
         </section>
       </main>
-
-      {/* カメラFAB */}
-      <button
-        type="button"
-        className="camera-fab"
-        onClick={onOpenCamera}
-        aria-label="カメラ起動"
-      >
-        <svg className="camera-icon" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 15.2a3.2 3.2 0 100-6.4 3.2 3.2 0 000 6.4z" />
-          <path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z" />
-        </svg>
-      </button>
     </div>
   );
 }

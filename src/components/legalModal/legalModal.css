@@ -25,19 +25,19 @@
 
 .legal-header {
   padding: 16px 20px 12px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--surface-2);
 }
 
 .legal-title {
   font-size: 17px;
   font-weight: bold;
-  color: #333333;
+  color: var(--text);
   margin: 0;
 }
 
 .legal-version {
   font-size: 12px;
-  color: #888888;
+  color: var(--text-muted);
 }
 
 .legal-body {
@@ -54,21 +54,21 @@
 .legal-heading {
   font-size: 14px;
   font-weight: bold;
-  color: #333333;
+  color: var(--text);
   margin: 0 0 6px;
 }
 
 .legal-text {
   font-size: 13px;
   line-height: 1.7;
-  color: #555555;
+  color: var(--text-sub);
   margin: 0 0 4px;
   white-space: pre-wrap;
 }
 
 .legal-footer {
   padding: 12px 20px 16px;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--surface-2);
 }
 
 .legal-close-button {
@@ -76,7 +76,7 @@
   padding: 12px 0;
   border: none;
   border-radius: 8px;
-  background-color: #e53935;
+  background-color: var(--primary);
   color: #ffffff;
   font-size: 15px;
   font-weight: bold;
@@ -84,5 +84,5 @@
 }
 
 .legal-close-button:active {
-  background-color: #d32f2f;
+  background-color: var(--primary-dark);
 }

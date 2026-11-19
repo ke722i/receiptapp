@@ -19,16 +19,16 @@
 
 /* 容量が空: 点線の枠で「＋容量」 */
 .volume-button.is-empty {
-  border: 1px dashed #e53935;
+  border: 1px dashed var(--primary);
   background-color: #ffffff;
-  color: #e53935;
+  color: var(--primary);
 }
 
 /* 容量あり: 灰色の小さな札 */
 .volume-button.has-volume {
-  border: 1px solid #dddddd;
-  background-color: #f5f5f5;
-  color: #555555;
+  border: 1px solid var(--border);
+  background-color: var(--surface-2);
+  color: var(--text-sub);
 }
 
 .volume-button:active {
@@ -42,5 +42,5 @@
 
 .volume-unit-price {
   font-size: 10px;
-  color: #888888;
+  color: var(--text-muted);
 }

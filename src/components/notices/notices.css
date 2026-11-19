@@ -13,7 +13,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 0 16px;
-  background-color: #e53935;
+  background-color: var(--primary);
   color: #ffffff;
   position: sticky;
   top: 0;
@@ -47,14 +47,14 @@
 
 .notices-message {
   text-align: center;
-  color: #888888;
+  color: var(--text-muted);
   font-size: 14px;
   line-height: 1.7;
   margin-top: 40px;
 }
 
 .notices-error {
-  color: #c62828;
+  color: var(--danger-dark);
 }
 
 .notices-list {
@@ -71,7 +71,7 @@
   gap: 12px;
   padding: 14px;
   background-color: #ffffff;
-  border: 1px solid #eeeeee;
+  border: 1px solid var(--border);
   border-radius: 12px;
   text-align: left;
 }
@@ -79,7 +79,7 @@
 /* 未読: 赤い枠と、うすい赤の背景で目立たせる */
 .notice-item.is-unread {
   background-color: #fff5f5;
-  border: 1.5px solid #e53935;
+  border: 1.5px solid var(--primary);
 }
 
 .notice-mail {
@@ -96,7 +96,7 @@
   margin: 0;
   font-size: 14px;
   font-weight: bold;
-  color: #333333;
+  color: var(--text);
 }
 
 .notice-new {
@@ -104,7 +104,7 @@
   margin-right: 6px;
   padding: 1px 7px;
   border-radius: 10px;
-  background-color: #e53935;
+  background-color: var(--primary);
   color: #ffffff;
   font-size: 11px;
   vertical-align: 1px;
@@ -113,20 +113,20 @@
 .notice-place {
   margin: 6px 0 0;
   font-size: 15px;
-  color: #333333;
+  color: var(--text);
 }
 
 .notice-note {
   margin: 6px 0 0;
   font-size: 12px;
-  color: #666666;
+  color: var(--text-sub);
   line-height: 1.5;
 }
 
 .notice-date {
   margin: 6px 0 0;
   font-size: 11px;
-  color: #999999;
+  color: var(--text-muted);
 }
 
 /* 結果の札（承認＝緑、見送り＝灰色） */
@@ -141,11 +141,11 @@
 }
 
 .notice-result.is-approved {
-  background-color: #2e7d32;
+  background-color: var(--primary-dark);
 }
 
 .notice-result.is-rejected {
-  background-color: #757575;
+  background-color: var(--text-sub);
 }
 
 .notices-toolbar {
@@ -158,23 +158,23 @@
 .notices-unread-count {
   font-size: 14px;
   font-weight: bold;
-  color: #e53935;
+  color: var(--primary);
 }
 
 .notices-readall {
   padding: 7px 14px;
-  border: 1.5px solid #e53935;
+  border: 1.5px solid var(--primary);
   border-radius: 18px;
   background-color: #ffffff;
-  color: #e53935;
+  color: var(--primary);
   font-size: 13px;
   font-weight: bold;
   cursor: pointer;
 }
 
 .notices-readall:disabled {
-  border-color: #cccccc;
-  color: #aaaaaa;
+  border-color: var(--border-strong);
+  color: var(--text-muted);
   cursor: default;
 }
 
@@ -189,7 +189,7 @@
   padding: 3px 10px;
   border: none;
   border-radius: 16px;
-  background-color: #e53935;
+  background-color: var(--primary);
   color: #ffffff;
   font-size: 11px;
   font-weight: bold;
@@ -198,7 +198,7 @@
 
 .notice-read-label {
   font-size: 12px;
-  color: #999999;
+  color: var(--text-muted);
 }
 
 .notice-item:not(.is-unread) {
@@ -208,7 +208,7 @@
 .notice-item:not(.is-unread) .notice-title,
 .notice-item:not(.is-unread) .notice-place,
 .notice-item:not(.is-unread) .notice-note {
-  color: #777777;
+  color: var(--text-sub);
 }
 
 /* 左にスワイプして出すボタン（LINE のように） */
@@ -259,7 +259,7 @@
   margin: 6px 0 0;
   padding-left: 18px;
   font-size: 12px;
-  color: #444444;
+  color: var(--text);
   line-height: 1.6;
 }
 
@@ -269,10 +269,10 @@
 
 .notice-undo-button {
   padding: 6px 14px;
-  border: 1.5px solid #e53935;
+  border: 1.5px solid var(--primary);
   border-radius: 16px;
   background-color: #ffffff;
-  color: #e53935;
+  color: var(--primary);
   font-size: 12px;
   font-weight: bold;
   cursor: pointer;
@@ -296,5 +296,5 @@
 }
 
 .notice-error {
-  color: #c62828;
+  color: var(--danger-dark);
 }

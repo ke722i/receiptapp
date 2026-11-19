@@ -12,7 +12,7 @@
   width: 100%;
   padding: 10px;
   background-color: #ffffff;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border);
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   text-align: left;
@@ -30,7 +30,7 @@
   height: 96px;
   flex-shrink: 0;
   border-radius: 8px;
-  background-color: #f0f0f0;
+  background-color: var(--surface-2);
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -55,13 +55,13 @@
 .receipt-row-date {
   font-size: 14px;
   font-weight: bold;
-  color: #333333;
+  color: var(--text);
 }
 
 .receipt-row-store {
   font-size: 13px;
   font-weight: bold;
-  color: #333333;
+  color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -69,12 +69,12 @@
 
 .receipt-row-meta {
   font-size: 12px;
-  color: #888888;
+  color: var(--text-muted);
 }
 
 .receipt-row-items {
   font-size: 12px;
-  color: #666666;
+  color: var(--text-sub);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -82,6 +82,45 @@
 
 .receipt-row-arrow {
   font-size: 22px;
-  color: #888888;
+  color: var(--text-muted);
   flex-shrink: 0;
+}
+
+/* 2026-11 デザインの見直し: 店名を先頭に、合計金額と「要確認」を添える */
+.receipt-row-card {
+  padding: 10px 12px 10px 10px;
+  border-radius: var(--radius);
+}
+
+.receipt-row-thumb {
+  width: 60px;
+  height: 80px;
+  color: var(--text-muted);
+}
+
+.receipt-row-store {
+  font-size: 15px;
+}
+
+.receipt-row-date {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-sub);
+}
+
+.receipt-row-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.receipt-row-total {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.receipt-row-arrow {
+  display: inline-flex;
 }

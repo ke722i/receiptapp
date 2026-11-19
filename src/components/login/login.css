@@ -40,14 +40,14 @@
 .logo-placeholder {
   width: 140px;
   height: 140px;
-  border: 2px dashed #e0e0e0;
+  border: 2px dashed var(--border);
   border-radius: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #888888;
+  color: var(--text-muted);
   font-size: 14px;
-  background-color: #fafafa;
+  background-color: var(--surface-2);
 }
 
 /* フォームの共通設定 */
@@ -68,23 +68,23 @@
 .form-group label {
   font-size: 14px;
   font-weight: 600;
-  color: #333333;
+  color: var(--text);
 }
 
 .form-group input {
   width: 100%;
   padding: 14px 16px;
   font-size: 16px; /* スマホで自動ズームされない16px以上に設定 */
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border);
   border-radius: 12px;
   outline: none;
-  background-color: #f9f9f9;
+  background-color: var(--surface-2);
   box-sizing: border-box;
   transition: border-color 0.2s, background-color 0.2s;
 }
 
 .form-group input:focus {
-  border-color: #e53935; /* 差し色: 赤 */
+  border-color: var(--primary); /* 差し色: 赤 */
   background-color: #ffffff;
 }
 
@@ -93,7 +93,7 @@
   width: 100%;
   padding: 14px;
   margin-top: 10px;
-  background-color: #e53935; /* 差し色: 赤 */
+  background-color: var(--primary); /* 差し色: 赤 */
   color: #ffffff;
   border: none;
   border-radius: 12px;
@@ -104,7 +104,7 @@
 }
 
 .login-button:active {
-  background-color: #d32f2f;
+  background-color: var(--primary-dark);
   transform: scale(0.98);
 }
 
@@ -121,15 +121,15 @@
 
 .register-text {
   font-size: 13px;
-  color: #666666;
+  color: var(--text-sub);
   margin: 0;
 }
 
 /* 新規登録ボタン（枠線タイプでシンプルに表現） */
 .register-button {
   background: none;
-  border: 1.5px solid #e53935; /* 差し色: 赤 */
-  color: #e53935;
+  border: 1.5px solid var(--primary); /* 差し色: 赤 */
+  color: var(--primary);
   padding: 12px 24px;
   border-radius: 12px;
   font-size: 14px;
@@ -140,23 +140,23 @@
 }
 
 .register-button:active {
-  background-color: #ffebee;
+  background-color: var(--primary-soft);
 }
 
 /* ログイン/新規登録の入力フォームの文字色と背景色を強制固定 */
 input[type="text"],
 input[type="password"],
 input[type="email"] {
-  color: #333333 !important;                     /* テキスト色を濃いグレー/黒に固定 */
+  color: var(--text) !important;                     /* テキスト色を濃いグレー/黒に固定 */
   background-color: #ffffff !important;           /* 背景色を白に固定 */
-  -webkit-text-fill-color: #333333 !important;   /* iOS Safariでの白塗りつぶし対策 */
+  -webkit-text-fill-color: var(--text) !important;   /* iOS Safariでの白塗りつぶし対策 */
 }
 
 /* プレースホルダー（入力前の案内文字）の色設定 */
 input[type="text"]::placeholder,
 input[type="password"]::placeholder,
 input[type="email"]::placeholder {
-  color: #888888 !important;
+  color: var(--text-muted) !important;
   opacity: 1;
 }
 /* ログイン画面のお知らせ（管理者が「ログイン画面にも出す」にしたもの） */
@@ -179,8 +179,8 @@ input[type="email"]::placeholder {
 }
 
 .login-notice.is-high {
-  border-color: #ef9a9a;
-  background-color: #ffebee;
+  border-color: var(--danger-border);
+  background-color: var(--danger-soft);
 }
 
 .login-notice-title {
@@ -191,14 +191,14 @@ input[type="email"]::placeholder {
 }
 
 .login-notice.is-high .login-notice-title {
-  color: #c62828;
+  color: var(--danger-dark);
 }
 
 .login-notice-body {
   margin: 4px 0 0;
   font-size: 13px;
   line-height: 1.5;
-  color: #333333;
+  color: var(--text);
   white-space: pre-wrap;
   word-break: break-word;
 }
@@ -206,5 +206,5 @@ input[type="email"]::placeholder {
 .login-notice-ends {
   margin: 4px 0 0;
   font-size: 11px;
-  color: #777777;
+  color: var(--text-sub);
 }
