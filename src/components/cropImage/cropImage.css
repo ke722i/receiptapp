@@ -341,3 +341,9 @@
 .crop-workspace {
   height: calc(65vh - 60px);
 }
+
+/* 進み具合の帯は、暗転マスク（トリミング枠の影）より前に出して、明るいまま見せる */
+.crop-container .scan-steps {
+  position: relative;
+  z-index: 9;
+}
