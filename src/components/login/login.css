@@ -208,3 +208,49 @@ input[type="email"]::placeholder {
   font-size: 11px;
   color: var(--text-sub);
 }
+
+/* 自動ログイン・ユーザー ID の保存 */
+.login-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 4px 0 16px;
+  text-align: left;
+}
+
+.login-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.login-option input {
+  width: 20px;
+  height: 20px;
+  margin: 1px 0 0;
+  flex-shrink: 0;
+}
+
+.login-option span {
+  display: flex;
+  flex-direction: column;
+}
+
+.login-option small {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.login-option-note {
+  font-size: 12px;
+  color: var(--warn);
+  background: var(--warn-soft);
+  border: 1px solid var(--warn-border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+}

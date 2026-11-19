@@ -4,9 +4,14 @@ import './login.css';
 import appLogo from '../../assets/logo.png';
 import { fetchLoginAnnouncements, formatDateTime } from '../../utils/announcements';
 import Icon from '../icon/icon';
+import { loadLoginPrefs, rememberLoginPrefs } from '../../utils/authSession';
 
 export default function Login({ onNavigateToRegister, onLoginSuccess }) {
-  const [userId, setUserId] = useState('');
+  // 前回の選択（自動ログイン・ユーザー ID の保存）。保存した ID は、最初から入れておく
+  const [prefs] = useState(loadLoginPrefs);
+  const [userId, setUserId] = useState(prefs.savedId);
+  const [autoLogin, setAutoLogin] = useState(prefs.autoLogin);
+  const [saveId, setSaveId] = useState(prefs.saveId);
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -41,6 +46,7 @@ export default function Login({ onNavigateToRegister, onLoginSuccess }) {
         throw error;
       }
 
+      rememberLoginPrefs({ autoLogin, saveId, userId: trimmedId });
       if (data?.user && onLoginSuccess) {
         onLoginSuccess(data.user, trimmedId);
       }
@@ -76,7 +82,7 @@ export default function Login({ onNavigateToRegister, onLoginSuccess }) {
 
         <form onSubmit={handleSubmit} className="login-form">
           {errorMessage && (
-            <div className="error-message" style={{ color: 'red', marginBottom: '10px', fontSize: '14px' }}>
+            <div className="error-message" style={{ color: 'var(--danger)', marginBottom: '10px', fontSize: '14px' }}>
               {errorMessage}
             </div>
           )}
@@ -89,6 +95,9 @@ export default function Login({ onNavigateToRegister, onLoginSuccess }) {
               value={userId}
               onChange={(e) => setUserId(e.target.value)}
               placeholder="ユーザーIDを入力"
+              autoComplete="username"
+              autoCapitalize="none"
+              autoCorrect="off"
               required
             />
           </div>
@@ -101,8 +110,28 @@ export default function Login({ onNavigateToRegister, onLoginSuccess }) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="パスワードを入力"
+              autoComplete="current-password"
               required
             />
+          </div>
+
+          {/* ログイン状態を保つ・ユーザー ID を覚える（utils/authSession.js） */}
+          <div className="login-options">
+            <label className="login-option">
+              <input type="checkbox" checked={autoLogin} onChange={(e) => setAutoLogin(e.target.checked)} />
+              <span>
+                自動ログイン
+                <small>ログアウトするまで、ログインしたままにします</small>
+              </span>
+            </label>
+            <label className="login-option">
+              <input type="checkbox" checked={saveId} onChange={(e) => setSaveId(e.target.checked)} />
+              <span>
+                ユーザーIDを保存
+                <small>次から、ユーザーIDを入力しなくてよくなります</small>
+              </span>
+            </label>
+            {!autoLogin && <p className="login-option-note">ブラウザを閉じると、ログアウトします。共用の端末では、こちらにしてください。</p>}
           </div>
 
           <button type="submit" className="login-button" disabled={loading}>
