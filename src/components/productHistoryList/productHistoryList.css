@@ -5,7 +5,7 @@
   min-height: 100vh;
   min-height: 100dvh; /* スマホのブラウザの、下のバーに隠れないように（上の 100vh は、古いブラウザ用） */
   width: 100%;
-  background-color: #f5f5f5;
+  background-color: var(--surface-2);
   box-sizing: border-box;
 }
 
@@ -17,7 +17,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 0 16px;
-  background-color: #e53935;
+  background-color: var(--primary);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -70,16 +70,16 @@
 .history-count {
   font-size: 14px;
   font-weight: bold;
-  color: #666666;
+  color: var(--text-sub);
 }
 
 .sort-select {
   padding: 6px 10px;
   font-size: 13px;
-  border: 1px solid #cccccc;
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
   background-color: #ffffff;
-  color: #333333;
+  color: var(--text);
   outline: none;
 }
 
@@ -92,7 +92,7 @@
 /* --- DB連携で追加 --- */
 .history-message {
   text-align: center;
-  color: #888888;
+  color: var(--text-muted);
   font-size: 14px;
   padding: 24px 0;
 }

@@ -5,7 +5,10 @@ import { OTHER } from '../../utils/categoryUtils';
 import { formatPurchaseDate, normalizePurchaseDate } from '../../utils/purchaseDate';
 import { normalizeVolume } from '../../utils/volume';
 import ReceiptImagePreview from '../receiptImagePreview/receiptImagePreview';
-import { useReceiptImage } from '../../utils/receiptCache';
+import { useReceiptImage, setReceiptHidden } from '../../utils/receiptCache';
+import { showUndoToast } from '../../utils/undoToast';
+import { needsCheckReason } from '../../utils/needsCheck';
+import Icon from '../icon/icon';
 import { splitStoreName, joinStoreName } from '../../utils/storeNameNormalizer';
 import ReceiptEdit from '../receiptEdit/receiptEdit';
 import VolumeButton from '../volumeButton/volumeButton';
@@ -54,10 +57,8 @@ const isItemChanged = (a, b) =>
   (normalizeVolume(a.volume) || '') !== (normalizeVolume(b.volume) || '');
 
 export default function ReceiptHistoryDetail({ receipt, onBack, onDelete, onUpdate }) {
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false); // 削除完了モーダル用
-  const [isDeleting, setIsDeleting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [needsOnly, setNeedsOnly] = useState(false); // 未選択・その他の商品だけを出す
 
   // 編集（この画面のまま、店舗名・購入日を入力し、商品は既存の編集画面で直す）
   const [savedReceipt, setSavedReceipt] = useState(null); // 保存したあとの内容（画面に反映する）
@@ -89,6 +90,7 @@ export default function ReceiptHistoryDetail({ receipt, onBack, onDelete, onUpda
   const purchaseDate = current.purchase_date || current.purchaseDate || '';
   const savedItems = (current.receipt_items || current.items || []).map(toViewItem);
   const shownItems = isEditing ? draftItems : savedItems;
+  const needsCount = shownItems.filter((item) => needsCheckReason(item)).length;
 
   // 保存していない変更があるか（店名と店舗名は、つないだ形で比べる）
   const originalDate = normalizePurchaseDate(purchaseDate) || '';
@@ -220,38 +222,50 @@ export default function ReceiptHistoryDetail({ receipt, onBack, onDelete, onUpda
         rows.has(raw.id) ? { ...raw, ...rows.get(raw.id) } : raw
       ),
     };
+    const before = current; // 保存する前の内容（「元に戻す」で使う）
+    const beforeById = new Map(savedItems.map((item) => [item.id, item]));
     setSavedReceipt(next);
     rememberStore(draftStore); // 保存した店舗名は、次からは「初めて」ではない
     if (onUpdate) onUpdate(next);
     exitEdit();
-    setSaveMessage('保存しました。');
+    // 上書きは、確認を出さずに保存し、「元に戻す」で前の内容を保存し直せるようにする
+    showUndoToast({
+      message: '保存しました',
+      onUndo: async () => {
+        const undo = await updateReceiptInDatabase(
+          before.id,
+          receiptChanged ? { store_name: before.store_name || before.storeName || '', purchase_date: originalDate || purchaseDate } : null,
+          changedItems.map((item) => toDbFields(beforeById.get(item.id)))
+        );
+        if (!undo.success) {
+          showUndoToast({ message: `元に戻せませんでした: ${undo.error}` });
+          return;
+        }
+        setSavedReceipt(before);
+        if (onUpdate) onUpdate(before);
+        showUndoToast({ message: '元に戻しました' });
+      },
+    });
   };
 
-  // 削除確定時の処理（receiptDb.js を使用して Supabase DB から削除）
-  const handleConfirmDelete = async () => {
-    setErrorMessage('');
-    setIsDeleting(true);
-
-    const result = await deleteReceiptFromDatabase(current.id);
-    setIsDeleting(false);
-    setShowDeleteModal(false);
-
-    if (result.success) {
-      setShowSuccessModal(true); // 削除完了モーダルを表示
-    } else {
-      setErrorMessage(result.error);
-    }
-  };
-
-  // 完了モーダルの「OK」クリック時
-  const handleSuccessOk = () => {
-    setShowSuccessModal(false);
-    if (onDelete) {
-      onDelete(current.id);
-    }
-    if (onBack) {
-      onBack();
-    }
+  // 削除: 確認のポップアップは出さず、すぐ一覧から消して戻る。
+  //  数秒のあいだ「元に戻す」を出し、押されなければ DB から消す（utils/undoToast.js）
+  const handleDelete = () => {
+    const id = current.id;
+    setReceiptHidden(id, true);
+    showUndoToast({
+      message: 'レシートを削除しました',
+      onUndo: () => setReceiptHidden(id, false),
+      onCommit: async () => {
+        const result = await deleteReceiptFromDatabase(id);
+        if (!result.success) {
+          setReceiptHidden(id, false);
+          showUndoToast({ message: `削除できませんでした: ${result.error}` });
+        }
+      },
+    });
+    if (onDelete) onDelete(id);
+    if (onBack) onBack();
   };
 
   const selectedItemsToEdit =
@@ -273,7 +287,7 @@ export default function ReceiptHistoryDetail({ receipt, onBack, onDelete, onUpda
 
       <main className="receipt-detail-main">
         {errorMessage && (
-          <div style={{ color: '#c62828', backgroundColor: '#ffebee', padding: '10px', borderRadius: '8px', fontSize: '13px' }}>
+          <div style={{ color: 'var(--danger-dark)', backgroundColor: 'var(--danger-soft)', padding: '10px', borderRadius: '8px', fontSize: '13px' }}>
             {errorMessage}
           </div>
         )}
@@ -376,6 +390,23 @@ export default function ReceiptHistoryDetail({ receipt, onBack, onDelete, onUpda
           </div>
         )}
 
+        {/* 直してほしい商品（未選択・その他）の数。押すと、その商品だけを出す */}
+        {needsCount > 0 ? (
+          <div className="needs-check-summary">
+            <span>
+              <Icon name="alert" size={15} strokeWidth={2.2} /> 未選択・その他の商品が {needsCount} 件あります
+            </span>
+            <button
+              type="button"
+              className={`needs-check-toggle ${needsOnly ? 'is-on' : ''}`}
+              aria-pressed={needsOnly}
+              onClick={() => setNeedsOnly((v) => !v)}
+            >
+              {needsOnly ? 'すべて表示' : 'その商品だけ表示'}
+            </button>
+          </div>
+        ) : null}
+
         {/* 3. 商品リスト表 */}
         <section className="table-wrapper">
           <table className="receipt-table">
@@ -399,8 +430,11 @@ export default function ReceiptHistoryDetail({ receipt, onBack, onDelete, onUpda
             </thead>
             <tbody>
               {shownItems.length > 0 ? (
-                shownItems.map((item, index) => (
-                  <tr key={item.id ?? index}>
+                shownItems.map((item, index) => {
+                  const reason = needsCheckReason(item);
+                  if (needsOnly && needsCount > 0 && !reason) return null;
+                  return (
+                  <tr key={item.id ?? index} className={reason && reason !== 'その他' ? 'needs-check' : ''}>
                     {isEditing && (
                       <td style={{ textAlign: 'center' }}>
                         <input
@@ -426,19 +460,21 @@ export default function ReceiptHistoryDetail({ receipt, onBack, onDelete, onUpda
                     <td className="category-cell">
                       {/* 大分類がその他なら中分類もその他なので、大分類の表示は省く */}
                       {item.mainCategory && item.mainCategory !== OTHER && (
-                        <div style={{ fontSize: '10px', color: '#999999' }}>{item.mainCategory}</div>
+                        <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{item.mainCategory}</div>
                       )}
                       {item.category}
                       {item.productName && <div className="product-label">{item.productName}</div>}
+                      {reason && <span className={`needs-check-badge ${reason === 'その他' ? 'is-other' : ''}`}>{reason}</span>}
                     </td>
                     <td className="discount-cell">
                       {item.isDiscount ? <span className="discount-yes">あり</span> : <span className="discount-none">－</span>}
                     </td>
                   </tr>
-                ))
+                  );
+                })
               ) : (
                 <tr>
-                  <td colSpan={isEditing ? 5 : 4} style={{ textAlign: 'center', color: '#888888', padding: '16px' }}>
+                  <td colSpan={isEditing ? 5 : 4} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '16px' }}>
                     明細データがありません
                   </td>
                 </tr>
@@ -450,13 +486,8 @@ export default function ReceiptHistoryDetail({ receipt, onBack, onDelete, onUpda
         {/* 4. 目立たない削除ボタン（編集中は出さない） */}
         {!isEditing && (
           <div className="delete-action-area">
-            <button
-              type="button"
-              className="subtle-delete-button"
-              onClick={() => setShowDeleteModal(true)}
-              disabled={isDeleting}
-            >
-              このレシートを削除する
+            <button type="button" className="subtle-delete-button" onClick={handleDelete}>
+              <Icon name="trash" size={16} /> このレシートを削除する
             </button>
           </div>
         )}
@@ -482,74 +513,6 @@ export default function ReceiptHistoryDetail({ receipt, onBack, onDelete, onUpda
         />
       )}
 
-      {/* 5. 削除確認カスタムモーダル */}
-      {showDeleteModal && (
-        <div className="custom-modal-overlay" onClick={() => setShowDeleteModal(false)}>
-          <div className="custom-modal-card" onClick={(e) => e.stopPropagation()}>
-            <h2 className="custom-modal-title">削除の確認</h2>
-            <p className="custom-modal-message">
-              このレシートデータを削除しても<br />よろしいですか？
-            </p>
-            <div className="custom-modal-button-group">
-              <button
-                type="button"
-                className="custom-modal-button cancel-button"
-                onClick={() => setShowDeleteModal(false)}
-                disabled={isDeleting}
-              >
-                キャンセル
-              </button>
-              <button
-                type="button"
-                className="custom-modal-button delete-button"
-                onClick={handleConfirmDelete}
-                disabled={isDeleting}
-              >
-                {isDeleting ? '削除中...' : '削除する'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 6. 削除完了カスタムモーダル */}
-      {showSuccessModal && (
-        <div className="custom-modal-overlay">
-          <div className="custom-modal-card">
-            <div className="success-icon-check">✓</div>
-            <h2 className="custom-modal-title">削除完了</h2>
-            <p className="custom-modal-message">
-              レシートデータを正常に削除しました。
-            </p>
-            <div className="custom-modal-button-group">
-              <button
-                type="button"
-                className="custom-modal-button ok-button"
-                style={{
-                  flex: '0 0 auto',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  minWidth: '140px',
-                  height: '42px',
-                  padding: '0 24px',
-                  backgroundColor: '#007aff',
-                  color: '#ffffff',
-                  fontSize: '15px',
-                  fontWeight: 'bold',
-                  border: 'none',
-                  borderRadius: '21px',
-                  whiteSpace: 'nowrap',
-                  boxShadow: '0 2px 6px rgba(0, 122, 255, 0.3)',
-                }}
-                onClick={handleSuccessOk}
-              >
-                OK
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

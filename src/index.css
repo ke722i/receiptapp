@@ -1,131 +1,139 @@
+/*
+ * アプリ全体の見た目の基準（色・文字・余白・カード）
+ *  ・色は、ここの変数（var(--…)）だけを使う。各画面の CSS に、色の値を直接書かない
+ *  ・メインの色は緑（清潔・明るい）。削除・エラー・値引きは赤（--danger）
+ *  ・スマホが中心。パソコンでは、真ん中に、スマホの幅で出す
+ */
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+  /* メインの色（緑） */
+  --primary: #1e9e5a;
+  --primary-rgb: 30, 158, 90;
+  --primary-dark: #17804a;
+  --primary-darker: #0f5f37;
+  --primary-soft: #e9f7ef;
+  --primary-border: #b9e4ca;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  /* 削除・エラー・値引き（赤） */
+  --danger: #d93025;
+  --danger-dark: #b3261e;
+  --danger-soft: #fdecea;
+  --danger-border: #f5c2bd;
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
+  /* 注意（未選択など、直してほしい所） */
+  --warn: #b26a00;
+  --warn-soft: #fff4e0;
+  --warn-border: #ffd79a;
+
+  /* 文字 */
+  --text: #1f2a24;
+  --text-sub: #56635c;
+  --text-muted: #8a958f;
+
+  /* 面・線 */
+  --bg: #f4f7f5;
+  --surface: #ffffff;
+  --surface-2: #f1f5f2;
+  --border: #e2e8e4;
+  --border-strong: #cdd6d0;
+
+  /* 形 */
+  --radius: 14px;
+  --radius-sm: 10px;
+  --shadow-card: 0 1px 2px rgba(16, 40, 28, 0.06), 0 2px 8px rgba(16, 40, 28, 0.05);
+  --shadow-pop: 0 8px 28px rgba(16, 40, 28, 0.18);
+
+  /* 下のタブの高さ（画面の下の余白に使う） */
+  --tabbar-h: 64px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+  --sans: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', 'Yu Gothic UI', 'Meiryo', system-ui, sans-serif;
+
+  font: 16px/1.6 var(--sans);
+  color-scheme: light;
   color: var(--text);
   background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
+  -webkit-text-size-adjust: 100%;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
 }
 
 body {
   margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-tap-highlight-color: transparent;
 }
 
 #root {
-  width: 1126px;
-  max-width: 100%;
+  width: 100%;
+  max-width: 600px; /* スマホが中心。パソコンでは、真ん中に、この幅で出す */
   margin: 0 auto;
   text-align: left; /* 文字は基本、左詰め。中央ぞろえにしたい所は、その部品で指定する */
-  border-inline: 1px solid var(--border);
   min-height: 100svh;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+  background: var(--bg);
+}
+
+@media (min-width: 640px) {
+  #root {
+    border-inline: 1px solid var(--border);
+    box-shadow: 0 0 40px rgba(16, 40, 28, 0.06);
+  }
 }
 
 h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
+h2,
+h3 {
+  font-family: var(--sans);
+  color: var(--text);
 }
 
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
 p {
   margin: 0;
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
+button {
+  font-family: inherit;
 }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+/* 金額は、数字の幅をそろえる（縦に並んだときに見やすい） */
+[class*='price'],
+[class*='amount'],
+[class*='total'] {
+  font-variant-numeric: tabular-nums;
 }
 
-/* 全画面のすべての入力フォーム（ログイン・新規登録・検索等）の文字色を強制固定 */
+/* キーボードで操作したときの、選択の枠 */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* 全画面のすべての入力フォーム（ログイン・新規登録・検索等）の文字色を固定。
+   iPhone で拡大されないよう、文字は 16px 以上 */
 input,
 select,
 textarea {
-  color: #222222 !important;
-  background-color: #ffffff !important;
-  -webkit-text-fill-color: #222222 !important;
-  caret-color: #222222 !important; /* カーソルの色も可視化 */
+  color: var(--text) !important;
+  background-color: var(--surface) !important;
+  -webkit-text-fill-color: var(--text) !important;
+  caret-color: var(--primary) !important;
+  font-family: inherit;
+  font-size: max(16px, 1em);
 }
 
-/* プレースホルダー（入力前の薄いヒント文字） */
 input::placeholder,
 textarea::placeholder {
-  color: #888888 !important;
-  -webkit-text-fill-color: #888888 !important;
+  color: var(--text-muted) !important;
+  -webkit-text-fill-color: var(--text-muted) !important;
   opacity: 1 !important;
+}
+
+input[type='checkbox'],
+input[type='radio'] {
+  accent-color: var(--primary);
 }
 
 /* スマホの自動補正・オートコンプリート背景（黄ばみ・黒塗り対策） */
@@ -133,7 +141,294 @@ input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
-  -webkit-text-fill-color: #222222 !important;
+  -webkit-text-fill-color: var(--text) !important;
   -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
   transition: background-color 5000s ease-in-out 0s;
+}
+
+/* ---------- 画面の上の帯（ヘッダー）を、全画面でそろえる ---------- */
+.app .home-header,
+.app .receipt-history-header,
+.app .store-list-header,
+.app .store-detail-header,
+.app .settings-header,
+.app .product-detail-header,
+.app .history-list-header,
+.app .receipt-detail-header,
+.app .receipt-confirm-header,
+.app .image-confirm-header,
+.app .scanner-header,
+.app .crop-header,
+.app .my-stores-header,
+.app .notices-header,
+.app .proposal-header,
+.app .receipt-edit-header {
+  height: 56px;
+  background-color: var(--primary);
+  color: #ffffff;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+}
+
+.app .header-title,
+.app .scanner-title {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* 戻るボタン（‹）は、押しやすい大きさに */
+.app .back-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0 4px;
+}
+
+.app .back-button:active {
+  background-color: rgba(255, 255, 255, 0.18);
+}
+
+/* ---------- カードを、全画面でそろえる ---------- */
+.app .settings-card,
+.app .receipt-info-card,
+.app .store-info-card,
+.app .store-chain-card,
+.app .receipt-row-card,
+.app .my-stores-card,
+.app .product-title-card,
+.app .msp-card,
+.app .proposal-card,
+.app .admin-card,
+.app .table-wrapper {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+}
+
+.app .confirm-dialog-card,
+.app .custom-modal-card,
+.app .leave-modal-card,
+.app .ann-popup-card,
+.app .legal-card {
+  border-radius: 18px;
+  box-shadow: var(--shadow-pop);
+}
+
+/* 画面の中身の余白（下のタブに隠れないように、下を空ける） */
+.app.has-tabbar main {
+  padding-bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 24px) !important;
+}
+
+/* ---------- 共通の部品 ---------- */
+
+/* 読み込み中の、空の枠（スケルトン） */
+.skeleton-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.skeleton-block {
+  background: linear-gradient(90deg, var(--surface-2) 0%, #e6ece8 50%, var(--surface-2) 100%);
+  background-size: 200% 100%;
+  animation: skeleton-shine 1.2s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+.skeleton-thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.skeleton-lines {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skeleton-line {
+  height: 12px;
+}
+
+@keyframes skeleton-shine {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-block {
+    animation: none;
+  }
+}
+
+/* 空の状態（まだ何も無いとき）の案内 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  padding: 40px 20px;
+  color: var(--text-sub);
+}
+
+.empty-state-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--primary-soft);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-state-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.empty-state-text {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.empty-state-action {
+  margin-top: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 22px;
+  border: none;
+  border-radius: 999px;
+  background: var(--primary);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
+}
+
+.empty-state-action:active {
+  background: var(--primary-dark);
+}
+
+/* 直してほしい所（未選択・その他）の印 */
+.needs-check-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--warn-soft);
+  border: 1px solid var(--warn-border);
+  color: var(--warn);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.app tr.needs-check td {
+  background-color: var(--warn-soft);
+}
+
+.app tr.needs-check td:first-child {
+  box-shadow: inset 3px 0 0 var(--warn);
+}
+
+/* 「要確認だけ」の切り替え */
+.needs-check-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--warn-border);
+  background: var(--surface);
+  color: var(--warn);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.needs-check-toggle.is-on {
+  background: var(--warn);
+  border-color: var(--warn);
+  color: #ffffff;
+}
+
+.needs-check-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--warn-soft);
+  border: 1px solid var(--warn-border);
+  color: var(--warn);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.needs-check-summary.is-ok {
+  background: var(--primary-soft);
+  border-color: var(--primary-border);
+  color: var(--primary-dark);
+}
+
+/* 画面には出さず、読み上げだけに使う文字 */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* 「その他」は、自分で選んだこともあるので、控えめな灰色 */
+.needs-check-badge.is-other {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--text-sub);
+}
+
+.app .category-cell .needs-check-badge {
+  margin-top: 3px;
+}
+
+.needs-check-summary > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.app .subtle-delete-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }

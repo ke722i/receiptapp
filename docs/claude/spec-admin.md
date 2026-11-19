@@ -20,5 +20,5 @@
 - `App.jsx`: ログイン成功時に `checkIsAdmin()` → 管理者なら `adminHome`、それ以外は `home`。ホームを開くたびに `isAdmin` を読み直す。お知らせ（`fetchAnnouncements`）は、ログイン中（login/register 以外）に 30 秒ごと（画面が前面のとき）・前面に戻ったとき・ホームを開いたときに読み直す。mid → ホームのスライド、low・mid → 通知の画面（`utils/notices.js` の `buildNoticeItems`。key は `a:id:updated_at`、mid は `noRead` で未読に数えない）、high → `components/announcementPopup`（OK を押した印は `receipt_app_confirmed_announcements_<userId>`）。ログイン画面は `list_login_announcements` を表示。画面: `adminHome`／`adminProposals`／`adminAnnouncements`／`adminUsers`（戻るは `adminHome`）。
 - `components/adminHome/adminHome.jsx`（利用状況・入口・「一般の画面を見る」・ログアウト）、`adminAnnouncements.jsx`、`adminUsers.jsx`（自分の管理者のチェックは無効。管理者の付け外しは ConfirmDialog のあと。テスト用はすぐ）。
 - `components/adminProposals/adminProposals.jsx`（提案の承認。docs/claude/proposal-approval.md）。
-- `components/home/home.jsx`: ハンバーガーメニューの「管理者」→「管理者ホーム」（`isAdmin` のときだけ）。ユーザー欄と設定のユーザー情報に「管理者」の印（`.admin-badge`）。公開中のお知らせを、ホームの上に出す（`.announcement-card`、本文は改行そのまま）。
+- `components/settings/settings.jsx`: 「メニュー」の「管理者ホーム」（`isAdmin` のときだけ。11/19 にホームのハンバーガーメニューを廃止し、下のタブ `components/tabBar` に変えたため、設定へ移した）。設定のユーザー情報に「管理者」の印（`.admin-badge`）。`components/home/home.jsx`:公開中のお知らせを、ホームの上に出す（`.announcement-card`、本文は改行そのまま）。
 - `utils/adminDb.js`（rpc の呼び出しと、エラーの日本語化）、`utils/announcements.js`（公開中のお知らせ、閉じた印は `receipt_app_closed_announcements_<userId>` に `id:updated_at` で保存 → 直されたら再表示）。

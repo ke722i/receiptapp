@@ -6,7 +6,7 @@
   margin-bottom: 12px;
   font-size: 15px;
   font-weight: bold;
-  color: #333333;
+  color: var(--text);
 }
 
 .admin-home-account .admin-badge,
@@ -15,7 +15,7 @@
   padding: 1px 8px;
   border-radius: 10px;
   background-color: #ffeb3b;
-  color: #b71c1c;
+  color: var(--primary-darker);
   font-size: 11px;
   font-weight: bold;
 }
@@ -32,10 +32,10 @@
 
 .admin-home-reload {
   padding: 4px 12px;
-  border: 1px solid #dddddd;
+  border: 1px solid var(--border);
   border-radius: 14px;
   background-color: #ffffff;
-  color: #555555;
+  color: var(--text-sub);
   font-size: 12px;
   cursor: pointer;
 }
@@ -53,26 +53,26 @@
   gap: 2px;
   padding: 12px;
   background-color: #ffffff;
-  border: 1px solid #eeeeee;
+  border: 1px solid var(--border);
   border-radius: 12px;
   text-align: left;
 }
 
 .admin-stat-label {
   font-size: 12px;
-  color: #777777;
+  color: var(--text-sub);
 }
 
 .admin-stat-value {
   font-size: 24px;
   font-weight: bold;
-  color: #333333;
+  color: var(--text);
   font-variant-numeric: tabular-nums;
 }
 
 .admin-stat-sub {
   font-size: 11px;
-  color: #999999;
+  color: var(--text-muted);
 }
 
 /* 管理者の機能の入口 */
@@ -89,7 +89,7 @@
   width: 100%;
   padding: 14px;
   background-color: #ffffff;
-  border: 1px solid #eeeeee;
+  border: 1px solid var(--border);
   border-radius: 12px;
   text-align: left;
   cursor: pointer;
@@ -110,12 +110,12 @@
 .admin-menu-title {
   font-size: 15px;
   font-weight: bold;
-  color: #333333;
+  color: var(--text);
 }
 
 .admin-menu-sub {
   font-size: 12px;
-  color: #777777;
+  color: var(--text-sub);
 }
 
 .admin-menu-count {
@@ -123,7 +123,7 @@
   padding: 2px 7px;
   box-sizing: border-box;
   border-radius: 11px;
-  background-color: #e53935;
+  background-color: var(--primary);
   color: #ffffff;
   font-size: 12px;
   font-weight: bold;
@@ -153,15 +153,15 @@
 }
 
 .admin-home-general {
-  border: 1.5px solid #e53935;
+  border: 1.5px solid var(--primary);
   background-color: #ffffff;
-  color: #e53935;
+  color: var(--primary);
 }
 
 .admin-home-logout {
   border: 1.5px solid #bbbbbb;
   background-color: #ffffff;
-  color: #555555;
+  color: var(--text-sub);
 }
 
 /* チェック（スイッチの代わり） */
@@ -170,7 +170,7 @@
   align-items: center;
   gap: 6px;
   font-size: 13px;
-  color: #333333;
+  color: var(--text);
   cursor: pointer;
 }
 
@@ -180,16 +180,16 @@
 }
 
 .admin-check.is-disabled {
-  color: #999999;
+  color: var(--text-muted);
 }
 
 .admin-delete {
   flex: 1;
   padding: 10px 0;
-  border: 1.5px solid #c62828;
+  border: 1.5px solid var(--danger-dark);
   border-radius: 22px;
   background-color: #ffffff;
-  color: #c62828;
+  color: var(--danger-dark);
   font-size: 14px;
   font-weight: bold;
   cursor: pointer;
@@ -220,14 +220,14 @@
 .admin-users-count {
   margin: 0 0 6px;
   font-size: 12px;
-  color: #888888;
+  color: var(--text-muted);
 }
 
 .admin-self {
   margin-left: 4px;
   font-size: 12px;
   font-weight: normal;
-  color: #888888;
+  color: var(--text-muted);
 }
 
 .admin-user-badges {
@@ -255,20 +255,20 @@
 .admin-parse {
   padding: 3px 10px;
   border-radius: 12px;
-  background-color: #f5f5f5;
-  color: #555555;
+  background-color: var(--surface-2);
+  color: var(--text-sub);
   font-size: 12px;
 }
 
 .admin-parse b {
   font-size: 14px;
-  color: #333333;
+  color: var(--text);
 }
 
 /* 今日の解析が上限（30 回）に達した */
 .admin-parse.is-limit {
-  background-color: #ffebee;
-  color: #c62828;
+  background-color: var(--danger-soft);
+  color: var(--danger-dark);
 }
 
 .admin-toggles {
@@ -277,7 +277,7 @@
   gap: 16px;
   margin-top: 8px;
   padding-top: 8px;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--surface-2);
 }
 
 /* お知らせの重要度（小・中・高）・期限 */
@@ -315,7 +315,7 @@
 }
 
 .ann-level.is-high .ann-level-name {
-  color: #c62828;
+  color: var(--danger-dark);
 }
 
 .ann-level-place {
@@ -335,8 +335,8 @@
 }
 
 .ann-level.is-high.is-selected {
-  border-color: #e53935;
-  background: #ffebee;
+  border-color: var(--danger);
+  background: var(--danger-soft);
 }
 
 .ann-hint {
@@ -382,5 +382,5 @@
 }
 
 .ann-level-badge.is-high {
-  background: #e53935;
+  background: var(--danger);
 }

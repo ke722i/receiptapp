@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import './myStores.css';
-import ConfirmDialog from '../confirmDialog/confirmDialog';
+import { showUndoToast } from '../../utils/undoToast';
+import { SkeletonList } from '../common/common';
+import Icon from '../icon/icon';
 import {
   fetchMyStores,
   addMyStore,
@@ -21,9 +23,7 @@ export default function MyStores({ onBack }) {
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
-  // 確認中の操作: { type: 'add', storeName } / { type: 'remove', id, storeName }
-  const [pending, setPending] = useState(null);
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState(false); // 登録・削除の途中（続けて押せないように）
 
   const load = async () => {
     const [mine, all] = await Promise.all([fetchMyStores(), fetchComparableStores()]);
@@ -61,19 +61,39 @@ export default function MyStores({ onBack }) {
     [allStores, registered, query]
   );
 
-  const handleConfirm = async () => {
-    if (!pending) return;
+  // 登録・削除は、確認を出さずに、すぐ行う。数秒のあいだ「元に戻す」で取り消せる
+  //  （マイ店舗は店舗名だけなので、削除の取り消しは、同じ名前で登録し直す）
+  const removeByName = async (storeName) => {
+    const mine = await fetchMyStores();
+    const row = mine.success ? mine.data.find((s) => s.store_name === storeName) : null;
+    return row ? removeMyStore(row.id) : { success: true };
+  };
+
+  const runChange = async (action, message, undoAction) => {
     setBusy(true);
-    const result =
-      pending.type === 'add' ? await addMyStore(pending.storeName) : await removeMyStore(pending.id);
-    setBusy(false);
-    setPending(null);
+    const result = await action();
     if (!result.success) {
+      setBusy(false);
       setErrorMessage(result.error);
       return;
     }
     await load();
+    setBusy(false);
+    showUndoToast({
+      message,
+      onUndo: async () => {
+        const undo = await undoAction();
+        if (!undo.success) showUndoToast({ message: `元に戻せませんでした: ${undo.error}` });
+        await load();
+      },
+    });
   };
+
+  const handleAdd = (storeName) =>
+    runChange(() => addMyStore(storeName), `「${storeName}」を登録しました`, () => removeByName(storeName));
+
+  const handleRemove = (store) =>
+    runChange(() => removeMyStore(store.id), `「${store.store_name}」を削除しました`, () => addMyStore(store.store_name));
 
   return (
     <div className="my-stores-container">
@@ -94,7 +114,7 @@ export default function MyStores({ onBack }) {
         {errorMessage && <div className="my-stores-error">{errorMessage}</div>}
 
         {loading ? (
-          <div className="my-stores-message">データを読み込み中...</div>
+          <SkeletonList rows={3} thumb={false} />
         ) : (
           <>
             {/* 登録中の店舗 */}
@@ -106,12 +126,13 @@ export default function MyStores({ onBack }) {
                 <ul className="my-stores-card my-stores-list">
                   {myStores.map((store) => (
                     <li key={store.id} className="my-stores-row">
-                      <span className="my-stores-icon">⭐</span>
+                      <span className="my-stores-icon"><Icon name="star" size={18} filled /></span>
                       <span className="my-stores-name">{store.store_name}</span>
                       <button
                         type="button"
                         className="my-stores-remove"
-                        onClick={() => setPending({ type: 'remove', id: store.id, storeName: store.store_name })}
+                        disabled={busy}
+                        onClick={() => handleRemove(store)}
                       >
                         削除
                       </button>
@@ -146,9 +167,10 @@ export default function MyStores({ onBack }) {
                         <button
                           type="button"
                           className="my-stores-row my-stores-candidate"
-                          onClick={() => setPending({ type: 'add', storeName: name })}
+                          disabled={busy}
+                          onClick={() => handleAdd(name)}
                         >
-                          <span className="my-stores-icon">🏪</span>
+                          <span className="my-stores-icon"><Icon name="store" size={18} /></span>
                           <span className="my-stores-name">{name}</span>
                           <span className="my-stores-add">＋ 登録</span>
                         </button>
@@ -170,21 +192,6 @@ export default function MyStores({ onBack }) {
         )}
       </main>
 
-      {pending && (
-        <ConfirmDialog
-          title={pending.type === 'add' ? '店舗の登録' : '店舗の削除'}
-          message={
-            pending.type === 'add'
-              ? `「${pending.storeName}」をマイ店舗に登録しますか？`
-              : `「${pending.storeName}」をマイ店舗から削除しますか？`
-          }
-          confirmLabel={pending.type === 'add' ? '登録する' : '削除する'}
-          danger={pending.type === 'remove'}
-          busy={busy}
-          onConfirm={handleConfirm}
-          onCancel={() => setPending(null)}
-        />
-      )}
     </div>
   );
 }

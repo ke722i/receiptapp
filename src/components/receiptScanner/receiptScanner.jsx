@@ -1,6 +1,8 @@
 import { useRef, useState } from "react";
 import "./receiptScanner.css";
 import { fileToBase64 } from "../../utils/imageUtils";
+import ScanSteps from "../scanSteps/scanSteps";
+import Icon from "../icon/icon";
 
 export default function ReceiptScanner({ onBack, onImageSelected }) {
   const [errorMessage, setErrorMessage] = useState("");
@@ -43,6 +45,7 @@ export default function ReceiptScanner({ onBack, onImageSelected }) {
         <h1 className="scanner-title">レシートスキャン</h1>
         <div className="header-spacer" />
       </header>
+      <ScanSteps current={0} />
 
       {/* メインコンテンツ */}
       <main className="scanner-main">
@@ -51,15 +54,15 @@ export default function ReceiptScanner({ onBack, onImageSelected }) {
         {/* プレビュー表示のプレースホルダー */}
         <div className="preview-container">
           <div className="upload-placeholder">
-            <div className="placeholder-icon">📄</div>
+            <div className="placeholder-icon"><Icon name="receipt" size={44} strokeWidth={1.5} /></div>
             <p className="placeholder-text">
-              <br />
-              レシートを撮影するかアルバムから選択してください
-              <br />
-              <strong>
-                真上から１枚ずつ、全体が入るように撮影してください。
-              </strong>
+              レシートを撮影するか、アルバムから選んでください
             </p>
+            <ul className="scanner-tips">
+              <li><Icon name="check" size={16} strokeWidth={2.4} />真上から、1 枚ずつ</li>
+              <li><Icon name="check" size={16} strokeWidth={2.4} />レシート全体が入るように</li>
+              <li><Icon name="check" size={16} strokeWidth={2.4} />明るい所で、影が入らないように</li>
+            </ul>
           </div>
         </div>
 
@@ -90,14 +93,14 @@ export default function ReceiptScanner({ onBack, onImageSelected }) {
             className="action-button primary-btn"
             onClick={() => cameraInputRef.current?.click()}
           >
-            📷 カメラで撮影
+            <Icon name="camera" size={22} strokeWidth={2} /> カメラで撮影
           </button>
           <button
             type="button"
             className="action-button secondary-btn"
             onClick={() => galleryInputRef.current?.click()}
           >
-            🖼️ アルバムから選択
+            <Icon name="image" size={22} strokeWidth={2} /> アルバムから選択
           </button>
         </div>
       </main>

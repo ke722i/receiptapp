@@ -5,7 +5,7 @@
   min-height: 100vh;
   min-height: 100dvh; /* スマホのブラウザの、下のバーに隠れないように（上の 100vh は、古いブラウザ用） */
   width: 100%;
-  background-color: #f8f9fa;
+  background-color: var(--bg);
   box-sizing: border-box;
   text-align: left;
 }
@@ -17,7 +17,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 0 16px;
-  background-color: #e53935;
+  background-color: var(--primary);
   color: #ffffff;
   position: sticky;
   top: 0;
@@ -62,7 +62,7 @@
   margin: 0;
   font-size: 12px;
   line-height: 1.6;
-  color: #666666;
+  color: var(--text-sub);
 }
 
 .proposal-card {
@@ -71,7 +71,7 @@
   gap: 14px;
   padding: 16px;
   background-color: #ffffff;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border);
   border-radius: 12px;
 }
 
@@ -79,7 +79,7 @@
   margin: 0;
   font-size: 15px;
   font-weight: bold;
-  color: #333333;
+  color: var(--text);
 }
 
 .proposal-field {
@@ -91,7 +91,7 @@
 .proposal-label {
   font-size: 12px;
   font-weight: bold;
-  color: #757575;
+  color: var(--text-sub);
 }
 
 /* ラベルの中の、説明の区切りの余白（「。」の代わり） */
@@ -105,24 +105,24 @@
   box-sizing: border-box;
   padding: 10px 12px;
   font-size: 16px; /* iPhone で、入力のとき、拡大されない大きさ */
-  color: #333333;
+  color: var(--text);
   background-color: #ffffff;
-  border: 1px solid #cccccc;
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
   outline: none;
 }
 
 .proposal-input:focus {
-  border-color: #e53935;
+  border-color: var(--primary);
 }
 
 /* 選べない欄（大分類を選ぶまでの中分類）: 灰色の背景・薄い文字・矢印なし。iPhone でも、文字が薄くなるように指定する */
 .proposal-input:disabled {
-  background-color: #eeeeee;
-  border-color: #dddddd;
+  background-color: var(--border);
+  border-color: var(--border);
   border-style: dashed;
-  color: #aaaaaa;
-  -webkit-text-fill-color: #aaaaaa;
+  color: var(--text-muted);
+  -webkit-text-fill-color: var(--text-muted);
   opacity: 1;
   cursor: not-allowed;
   -webkit-appearance: none;
@@ -154,16 +154,16 @@
   align-items: center;
   gap: 10px;
   padding: 12px;
-  border: 1px solid #dddddd;
+  border: 1px solid var(--border);
   border-radius: 10px;
   background-color: #ffffff;
   font-size: 14px;
-  color: #333333;
+  color: var(--text);
   cursor: pointer;
 }
 
 .proposal-kind.is-selected {
-  border-color: #e53935;
+  border-color: var(--primary);
   background-color: #fff5f5;
   font-weight: bold;
 }
@@ -172,13 +172,13 @@
   margin: 0;
   width: 18px;
   height: 18px;
-  accent-color: #e53935;
+  accent-color: var(--primary);
   flex-shrink: 0;
 }
 
 /* 今ある分類: 最初は 1 行（「○○に、今ある中分類を表示する」）。押すと、中身が出る */
 .proposal-existing {
-  background-color: #f5f5f5;
+  background-color: var(--surface-2);
   border-radius: 8px;
 }
 
@@ -193,7 +193,7 @@
   background: none;
   font-size: 13px;
   font-weight: bold;
-  color: #555555;
+  color: var(--text-sub);
   text-align: left;
   cursor: pointer;
 }
@@ -201,7 +201,7 @@
 .proposal-existing-arrow {
   flex-shrink: 0;
   font-size: 10px;
-  color: #888888;
+  color: var(--text-muted);
 }
 
 .proposal-existing-list {
@@ -209,19 +209,19 @@
   padding: 0 12px 10px;
   font-size: 13px;
   line-height: 1.6;
-  color: #444444;
+  color: var(--text);
   word-break: break-word;
 }
 
 .proposal-error {
   font-size: 12px;
-  color: #c62828;
+  color: var(--danger-dark);
 }
 
 .proposal-error-box {
   margin: 0;
   padding: 10px 12px;
-  background-color: #ffebee;
+  background-color: var(--danger-soft);
   border-radius: 8px;
 }
 
@@ -249,7 +249,7 @@
   padding: 14px;
   border: none;
   border-radius: 24px;
-  background-color: #e53935;
+  background-color: var(--primary);
   color: #ffffff;
   font-size: 16px;
   font-weight: bold;
@@ -264,7 +264,7 @@
 .proposal-limit-note {
   margin: -6px 0 0;
   font-size: 12px;
-  color: #888888;
+  color: var(--text-muted);
   text-align: center;
 }
 
@@ -278,7 +278,7 @@
 .proposal-message {
   margin: 0;
   font-size: 13px;
-  color: #888888;
+  color: var(--text-muted);
 }
 
 .proposal-list {
@@ -297,7 +297,7 @@
   gap: 4px;
   padding: 12px 16px;
   background-color: #ffffff;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border);
   border-radius: 10px;
 }
 
@@ -313,7 +313,7 @@
   min-width: 0;
   font-size: 15px;
   font-weight: bold;
-  color: #333333;
+  color: var(--text);
   word-break: break-word;
 }
 
@@ -326,40 +326,40 @@
 }
 
 .proposal-status.is-pending {
-  background-color: #eeeeee;
-  color: #616161;
+  background-color: var(--border);
+  color: var(--text-sub);
 }
 
 .proposal-status.is-approved {
   background-color: #e8f5e9;
-  color: #2e7d32;
+  color: var(--primary-dark);
 }
 
 .proposal-status.is-rejected {
-  background-color: #ffebee;
-  color: #c62828;
+  background-color: var(--danger-soft);
+  color: var(--danger-dark);
 }
 
 .proposal-item-path,
 .proposal-item-date {
   font-size: 12px;
-  color: #888888;
+  color: var(--text-muted);
 }
 
 .proposal-item-admin {
   font-size: 12px;
-  color: #555555;
+  color: var(--text-sub);
   word-break: break-word;
 }
 
 .proposal-withdraw {
   margin-top: 4px;
   padding: 4px 12px;
-  border: 1px solid #cccccc;
+  border: 1px solid var(--border-strong);
   border-radius: 14px;
   background-color: #ffffff;
   font-size: 12px;
-  color: #666666;
+  color: var(--text-sub);
   cursor: pointer;
 }
 
@@ -368,12 +368,12 @@
   margin: 0;
   padding: 10px 2px 2px;
   font-size: 13px;
-  color: #888888;
+  color: var(--text-muted);
 }
 
 /* 必須の印（赤い「＊」） */
 .proposal-required {
   margin-left: 3px;
-  color: #e53935;
+  color: var(--danger);
   font-weight: bold;
 }

@@ -1,5 +1,6 @@
 import './announcementPopup.css';
 import { formatDateTime } from '../../utils/announcements';
+import Icon from '../icon/icon';
 
 /**
  * 重要度「高」のお知らせ（メンテナンスの時間など）。ログインしている間、どの画面の上にも出す
@@ -10,7 +11,7 @@ export default function AnnouncementPopup({ announcement: a, onConfirm }) {
   return (
     <div className="ann-popup-overlay">
       <div className="ann-popup-card" role="alertdialog" aria-modal="true" aria-labelledby="ann-popup-title">
-        <span className="ann-popup-icon" aria-hidden="true">⚠️</span>
+        <span className="ann-popup-icon" aria-hidden="true"><Icon name="alert" size={28} /></span>
         <p className="ann-popup-label">重要なお知らせ</p>
         <h2 id="ann-popup-title" className="ann-popup-title">{a.title}</h2>
         {a.body && <p className="ann-popup-body">{a.body}</p>}

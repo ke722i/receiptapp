@@ -23,7 +23,7 @@
 
 .store-field .info-label {
   font-size: 12px;
-  color: #757575;
+  color: var(--text-sub);
   font-weight: bold;
 }
 
@@ -32,11 +32,11 @@
   min-width: 0;
   box-sizing: border-box;
   padding: 6px 10px;
-  border: 1px solid #cccccc;
+  border: 1px solid var(--border-strong);
   border-radius: 6px;
   font-size: 14px;
   font-weight: bold;
-  color: #333333;
+  color: var(--text);
 }
 
 /* 初めて入力された名前: 入力欄の横の、赤い「!」 */
@@ -48,19 +48,19 @@
   padding: 0;
   border: none;
   border-radius: 50%;
-  background-color: #e53935;
+  background-color: var(--danger);
   color: #ffffff;
   font-size: 15px;
   font-weight: bold;
   line-height: 1;
   cursor: pointer;
-  box-shadow: 0 1px 4px rgba(229, 57, 53, 0.4);
+  box-shadow: 0 1px 4px rgba(217, 48, 37, 0.4);
   -webkit-tap-highlight-color: transparent;
 }
 
 .store-notice-button.is-open,
 .store-notice-button:active {
-  background-color: #b71c1c;
+  background-color: var(--danger-dark);
 }
 
 /* 注意の吹き出し: 小さな文字で、入力欄の下に重ねて出す（下の部品を押し下げない）。三角が「!」を指す */

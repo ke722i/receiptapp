@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../services/supabaseClient';
 import { fetchReceiptHistory, fetchReceiptImages } from './receiptDb';
 import { onReceiptsChanged } from './receiptChanges';
@@ -51,6 +51,20 @@ supabase.auth.onAuthStateChange((_event, session) => {
   if (!id) clearReceiptCache();
 });
 
+// 削除して「元に戻す」を待っているレシート（一覧に出さない。utils/undoToast.js）
+const hidden = new Set();
+const hiddenListeners = new Set();
+
+/** レシートを、一覧から隠す・戻す（削除の「元に戻す」を待つあいだ） */
+export const setReceiptHidden = (id, on) => {
+  const key = String(id);
+  if (on) hidden.add(key);
+  else hidden.delete(key);
+  hiddenListeners.forEach((fn) => fn());
+};
+
+const withoutHidden = (list) => (hidden.size === 0 ? list : list.filter((r) => !hidden.has(String(r.id))));
+
 /** 覚えている一覧（なければ null） */
 export const peekReceiptHistory = () => history?.data ?? null;
 
@@ -101,7 +115,16 @@ export function useReceiptHistory() {
     };
   }, []);
 
-  return state;
+  // 隠したレシートが変わったら、出し直す
+  const [hiddenVersion, setHiddenVersion] = useState(0);
+  useEffect(() => {
+    const fn = () => setHiddenVersion((v) => v + 1);
+    hiddenListeners.add(fn);
+    return () => hiddenListeners.delete(fn);
+  }, []);
+  const receipts = useMemo(() => withoutHidden(state.receipts), [state.receipts, hiddenVersion]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return { ...state, receipts };
 }
 
 // ---------- 画像 ----------

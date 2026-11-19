@@ -8,7 +8,7 @@
   overflow: hidden; /* コンテナ自体は全画面固定 */
   /* グローバルCSS（ダークモード等）に左右されないよう明示指定 */
   background-color: #ffffff;
-  color: #333333;
+  color: var(--text);
   color-scheme: light;
 }
 
@@ -20,7 +20,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 0 16px;
-  background-color: #e53935;
+  background-color: var(--primary);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -115,7 +115,7 @@
 
 /* ユーザー情報ヘッダー */
 .drawer-user-info {
-  background-color: #e53935;
+  background-color: var(--primary);
   color: #ffffff;
   padding: 32px 20px 20px;
   display: flex;
@@ -165,7 +165,7 @@
   border: none;
   font-size: 15px;
   font-weight: 600;
-  color: #333333;
+  color: var(--text);
   cursor: pointer;
   text-align: left;
   transition: background-color 0.2s;
@@ -173,8 +173,8 @@
 }
 
 .drawer-item:active {
-  background-color: #ffebee;
-  color: #e53935;
+  background-color: var(--primary-soft);
+  color: var(--primary);
 }
 
 .drawer-icon {
@@ -184,12 +184,12 @@
 }
 
 .drawer-footer {
-  border-top: 1px solid #eeeeee;
+  border-top: 1px solid var(--border);
   padding: 8px 0 24px;
 }
 
 .logout-item {
-  color: #d32f2f;
+  color: var(--danger);
 }
 
 /* --- 検索バー領域（クリアボタン） --- */
@@ -229,16 +229,16 @@
   width: 100%;
   display: flex;
   align-items: center;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border);
   border-radius: 24px;
-  background-color: #f9f9f9;
+  background-color: var(--surface-2);
   box-sizing: border-box;
   transition: border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
 }
 
 .search-input-wrapper:focus-within,
 .search-bar-container.is-focused .search-input-wrapper {
-  border-color: #e53935;
+  border-color: var(--primary);
   background-color: #ffffff;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
@@ -251,15 +251,15 @@
   height: 44px;
   padding: 0 20px 0 10px;
   border: none;
-  border-right: 1px solid #e0e0e0;
+  border-right: 1px solid var(--border);
   border-radius: 24px 0 0 24px;
   background-color: transparent;
   /* 下向きの矢印（色は灰色） */
-  background-image: linear-gradient(45deg, transparent 50%, #888888 50%), linear-gradient(135deg, #888888 50%, transparent 50%);
+  background-image: linear-gradient(45deg, transparent 50%, var(--text-muted) 50%), linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
   background-position: calc(100% - 11px) 50%, calc(100% - 6px) 50%;
   background-size: 5px 5px, 5px 5px;
   background-repeat: no-repeat;
-  color: #333333;
+  color: var(--text);
   font-size: 13px;
   font-weight: bold;
   text-overflow: ellipsis;
@@ -301,7 +301,7 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background-color: #cccccc;
+  background-color: var(--border-strong);
   color: #ffffff;
   border: none;
   display: flex;
@@ -315,7 +315,7 @@
 }
 
 .search-clear-button:active {
-  background-color: #e53935;
+  background-color: var(--primary);
 }
 
 /* --- メイン領域 --- */
@@ -342,7 +342,7 @@
 .section-title {
   font-size: 16px;
   font-weight: bold;
-  color: #333333;
+  color: var(--text);
   margin: 0;
   text-align: left;
 }
@@ -373,7 +373,7 @@
   align-items: center;
   gap: 8px;
   padding: 12px 8px;
-  border: 1px solid #eeeeee;
+  border: 1px solid var(--border);
   border-radius: 12px;
   background-color: #ffffff;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
@@ -384,18 +384,18 @@
   width: 60px;
   height: 60px;
   border-radius: 8px;
-  background-color: #f0f0f0;
+  background-color: var(--surface-2);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 12px;
-  color: #888888;
+  color: var(--text-muted);
 }
 
 .card-name {
   font-size: 13px;
   font-weight: 600;
-  color: #333333;
+  color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -411,7 +411,7 @@
 }
 
 .category-group {
-  border: 1px solid #eeeeee;
+  border: 1px solid var(--border);
   border-radius: 12px;
   overflow: hidden;
   background-color: #ffffff;
@@ -423,26 +423,26 @@
   justify-content: space-between;
   align-items: center;
   padding: 16px;
-  background-color: #f9f9f9;
+  background-color: var(--surface-2);
   border: none;
   cursor: pointer;
   text-align: left;
 }
 
 .category-main-button.is-open {
-  background-color: #ffebee;
-  border-bottom: 1px solid #ffcdd2;
+  background-color: var(--primary-soft);
+  border-bottom: 1px solid var(--primary-border);
 }
 
 .category-label {
   font-size: 15px;
   font-weight: 600;
-  color: #333333;
+  color: var(--text);
 }
 
 .category-arrow {
   font-size: 12px;
-  color: #888888;
+  color: var(--text-muted);
 }
 
 .sub-category-list {
@@ -453,7 +453,7 @@
 }
 
 .sub-category-group {
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--surface-2);
 }
 
 .sub-category-group:last-child {
@@ -470,26 +470,26 @@
   border: none;
   font-size: 14px;
   font-weight: 600;
-  color: #444444;
+  color: var(--text);
   cursor: pointer;
   text-align: left;
 }
 
 .sub-category-button.is-open {
-  color: #e53935;
+  color: var(--primary);
 }
 
 .sub-arrow {
   font-size: 10px;
-  color: #888888;
+  color: var(--text-muted);
 }
 
 .item-category-list {
   display: flex;
   flex-direction: column;
-  background-color: #fafafa;
+  background-color: var(--surface-2);
   padding-left: 16px;
-  border-top: 1px dashed #eeeeee;
+  border-top: 1px dashed var(--border);
 }
 
 .item-category-button {
@@ -497,10 +497,10 @@
   padding: 10px 16px;
   background: none;
   border: none;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--surface-2);
   text-align: left;
   font-size: 13px;
-  color: #666666;
+  color: var(--text-sub);
   cursor: pointer;
 }
 
@@ -509,8 +509,8 @@
 }
 
 .item-category-button:active {
-  color: #e53935;
-  background-color: #ffebee;
+  color: var(--primary);
+  background-color: var(--primary-soft);
 }
 
 /* --- カメラ丸型FABボタン --- */
@@ -521,13 +521,13 @@
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background-color: #e53935;
+  background-color: var(--primary);
   color: #ffffff;
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 10px rgba(229, 57, 53, 0.4);
+  box-shadow: 0 4px 10px rgba(var(--primary-rgb), 0.4);
   cursor: pointer;
   z-index: 100;
   transition: transform 0.1s;
@@ -575,10 +575,10 @@
   box-sizing: border-box;
   padding: 10px 8px 10px 16px;
   font-size: 15px;
-  color: #333333;
+  color: var(--text);
   text-align: left;
   cursor: pointer;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--surface-2);
   transition: background-color 0.2s;
   -webkit-tap-highlight-color: transparent;
 }
@@ -596,7 +596,7 @@
   width: 20px;
   text-align: center;
   font-size: 15px;
-  color: #888888;
+  color: var(--text-muted);
 }
 
 /* 検索したことのある商品（🕒）の、商品名の色 */
@@ -616,7 +616,7 @@
 
 .suggestion-path {
   font-size: 11px;
-  color: #999999;
+  color: var(--text-muted);
   font-weight: normal;
 }
 
@@ -628,7 +628,7 @@
   padding: 0;
   border: none;
   background: transparent;
-  color: #777777;
+  color: var(--text-sub);
   font-size: 18px;
   cursor: pointer;
   border-radius: 50%;
@@ -641,7 +641,7 @@
 .search-no-result {
   padding: 16px;
   font-size: 14px;
-  color: #888888;
+  color: var(--text-muted);
   text-align: center;
 }
 
@@ -690,17 +690,17 @@
 .proposal-tip-open {
   margin-top: 4px;
   padding: 6px 14px;
-  border: 1px solid #e53935;
+  border: 1px solid var(--primary);
   border-radius: 16px;
   background-color: #ffffff;
-  color: #e53935;
+  color: var(--primary);
   font-size: 13px;
   font-weight: bold;
   cursor: pointer;
 }
 
 .proposal-tip-open:active {
-  background-color: #ffebee;
+  background-color: var(--primary-soft);
 }
 
 .proposal-tip-close {
@@ -727,9 +727,9 @@
   padding: 8px 16px 4px;
   font-size: 11px;
   font-weight: bold;
-  color: #888888;
-  background-color: #fafafa;
-  border-bottom: 1px solid #f0f0f0;
+  color: var(--text-muted);
+  background-color: var(--surface-2);
+  border-bottom: 1px solid var(--surface-2);
   text-align: left;
 }
 
@@ -771,7 +771,7 @@
   box-sizing: border-box;
   border-radius: 9px;
   background-color: #ffeb3b;
-  color: #b71c1c;
+  color: var(--danger-dark);
   font-size: 11px;
   font-weight: bold;
   line-height: 18px;
@@ -802,7 +802,7 @@
   padding: 1px 8px;
   border-radius: 10px;
   background-color: #ffeb3b;
-  color: #b71c1c;
+  color: var(--primary-darker);
   font-size: 11px;
   font-weight: bold;
 }
@@ -811,7 +811,7 @@
 .drawer-section-label {
   margin: 10px 20px 2px;
   padding-top: 10px;
-  border-top: 1px solid #eeeeee;
+  border-top: 1px solid var(--border);
   font-size: 11px;
   font-weight: bold;
   color: #e65100;
@@ -873,5 +873,141 @@
 }
 
 .notice-dot.is-active {
-  background-color: #e53935;
+  background-color: var(--primary);
+}
+
+/* ---------- 2026-11 デザインの見直し（緑・下のタブ・検索を上に固定） ---------- */
+.home-header {
+  justify-content: space-between;
+}
+
+.header-logo-area {
+  gap: 8px;
+}
+
+.header-logo-mark {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-logo-placeholder {
+  letter-spacing: 0.04em;
+}
+
+.notice-bell {
+  color: #ffffff;
+}
+
+/* 検索バーは、ヘッダーのすぐ下に、いつも出す（下のカテゴリをスクロールしても、隠れない） */
+.home-search-sticky {
+  position: relative;
+  z-index: 20;
+  padding: 12px 16px;
+  background: var(--primary);
+  border-radius: 0 0 20px 20px;
+  box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.18);
+}
+
+.home-search-sticky .search-bar-container {
+  margin-bottom: 0;
+}
+
+.home-search-sticky .search-input-wrapper {
+  background-color: #ffffff;
+  border-color: transparent;
+}
+
+.home-search-sticky .search-suggestions-dropdown {
+  border-radius: 14px;
+}
+
+.suggestion-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+}
+
+.suggestion-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-clear-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.proposal-tip-icon {
+  color: var(--primary);
+  display: inline-flex;
+}
+
+.proposal-tip-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.home-main {
+  padding-top: 20px;
+}
+
+.favorites-empty {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px dashed var(--primary-border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text-sub);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.favorites-empty .icon {
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.frequent-card {
+  border-color: var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+}
+
+.category-accordion-list {
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.category-main-button {
+  background-color: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.category-arrow,
+.sub-arrow {
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-muted);
+  transition: transform 0.2s;
+}
+
+.category-arrow.is-open,
+.sub-arrow.is-open {
+  transform: rotate(180deg);
+  color: var(--primary);
 }

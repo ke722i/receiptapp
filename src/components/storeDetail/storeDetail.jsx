@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import './storeDetail.css';
+import { SkeletonList } from '../common/common';
 import { useReceiptHistory } from '../../utils/receiptCache';
 import { formatPurchaseDate } from '../../utils/purchaseDate';
 import { RECEIPT_SORT_OPTIONS, sortReceipts } from '../../utils/receiptSort';
@@ -67,9 +68,9 @@ export default function StoreDetail({ storeName, onBack, onSelectReceiptDetail }
       </header>
 
       <main className="store-detail-main">
-        {loading && <div className="store-detail-message">データを読み込み中...</div>}
+        {loading && <SkeletonList rows={4} />}
         {errorMessage && (
-          <div className="store-detail-message" style={{ color: '#c62828' }}>
+          <div className="store-detail-message" style={{ color: 'var(--danger)' }}>
             {errorMessage}
           </div>
         )}

@@ -19,7 +19,7 @@
   justify-content: center; /* 戻るボタンを無くしたのでタイトルを中央に */
   align-items: center;
   padding: 0 16px;
-  background-color: #e53935;
+  background-color: var(--primary);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -81,7 +81,7 @@
 }
 
 .image-placeholder {
-  color: #888888;
+  color: var(--text-muted);
   font-size: 14px;
 }
 
@@ -106,15 +106,15 @@
 }
 
 .crop-button:active {
-  background-color: #e53935;
-  border-color: #e53935;
+  background-color: var(--primary);
+  border-color: var(--primary);
 }
 
 /* 下部アクションエリア（トリミング画面の下部バーと同じ作り） */
 .bottom-action-bar {
   height: 70px;
   width: 100%;
-  background-color: #1a1a1a;
+  background-color: var(--text);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -129,7 +129,7 @@
 .confirm-cancel-button {
   background: none;
   border: none;
-  color: #aaaaaa;
+  color: var(--text-muted);
   font-size: 15px;
   cursor: pointer;
   padding: 8px 16px;
@@ -141,7 +141,7 @@
 }
 
 .analyze-button {
-  background-color: #e53935;
+  background-color: var(--primary);
   color: #ffffff;
   border: none;
   border-radius: 30px;
@@ -152,13 +152,13 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  box-shadow: 0 4px 12px rgba(229, 57, 53, 0.4);
+  box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.4);
   transition: transform 0.1s;
 }
 
 .analyze-button:active {
   transform: scale(0.95);
-  background-color: #d32f2f;
+  background-color: var(--primary-dark);
 }
 
 /* 中央画面注意ポップアップ（モーダル） */
@@ -193,13 +193,13 @@
 .alert-title {
   font-size: 16px;
   font-weight: bold;
-  color: #333333;
+  color: var(--text);
   margin: 0 0 12px;
 }
 
 .alert-message {
   font-size: 14px;
-  color: #555555;
+  color: var(--text-sub);
   margin: 0 0 20px;
   line-height: 1.5;
 }
@@ -220,21 +220,21 @@
 }
 
 .cancel-button {
-  background-color: #f0f0f0;
-  color: #666666;
+  background-color: var(--surface-2);
+  color: var(--text-sub);
 }
 
 .cancel-button:active {
-  background-color: #e0e0e0;
+  background-color: var(--border);
 }
 
 .confirm-button {
-  background-color: #e53935;
+  background-color: var(--primary);
   color: #ffffff;
 }
 
 .confirm-button:active {
-  background-color: #d32f2f;
+  background-color: var(--primary-dark);
 }
 
 /* ローディング全体枠（白背景・全画面） */
@@ -269,7 +269,7 @@
   width: 54px;
   height: 54px;
   border: 5px solid #f3f3f3;
-  border-top: 5px solid #e53935;
+  border-top: 5px solid var(--primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -282,7 +282,7 @@
 .loading-text {
   font-size: 18px;
   font-weight: bold;
-  color: #333333;
+  color: var(--text);
   margin: 0;
   letter-spacing: 0.05em;
 }
@@ -299,7 +299,7 @@
 
 .loading-notice-box {
   background-color: #fff8f8;
-  border: 1px solid #ffcdd2;
+  border: 1px solid var(--danger-border);
   border-radius: 12px;
   padding: 16px;
   box-sizing: border-box;
@@ -308,13 +308,13 @@
 .notice-title {
   font-size: 14px;
   font-weight: bold;
-  color: #d32f2f;
+  color: var(--danger);
   margin: 0 0 8px;
 }
 
 .notice-text {
   font-size: 12px;
-  color: #666666;
+  color: var(--text-sub);
   margin: 4px 0;
   line-height: 1.4;
 }
@@ -323,9 +323,9 @@
 .loading-cancel-button {
   width: 100%;
   padding: 14px;
-  background-color: #f5f5f5;
-  color: #666666;
-  border: 1px solid #e0e0e0;
+  background-color: var(--surface-2);
+  color: var(--text-sub);
+  border: 1px solid var(--border);
   border-radius: 25px;
   font-size: 15px;
   font-weight: bold;
@@ -334,5 +334,80 @@
 }
 
 .loading-cancel-button:active {
-  background-color: #e0e0e0;
+  background-color: var(--border);
+}
+/* ---------- 読み取り中: 進み具合を、文で順に出す ---------- */
+.loading-container .scan-steps {
+  margin: -24px -24px 0;
+}
+
+.loading-text {
+  font-size: 17px;
+  text-align: center;
+  min-height: 2.8em;
+}
+
+.loading-stage-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.loading-stage-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.loading-stage-list li.is-done {
+  color: var(--primary-dark);
+}
+
+.loading-stage-list li.is-current {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.loading-stage-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.loading-stage-list li.is-done .loading-stage-dot {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #ffffff;
+}
+
+.loading-stage-list li.is-current .loading-stage-dot {
+  border-color: var(--primary);
+}
+
+.loading-notice-box {
+  border-color: var(--warn-border);
+  background: var(--warn-soft);
+}
+
+.loading-notice-box .notice-title {
+  color: var(--warn);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.crop-icon,
+.analyze-icon {
+  display: inline-flex;
 }

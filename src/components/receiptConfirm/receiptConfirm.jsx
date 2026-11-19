@@ -11,6 +11,10 @@ import { useKnownStores } from "../storeNameFields/useKnownStores";
 import VolumeButton from "../volumeButton/volumeButton";
 import ConfirmDialog from "../confirmDialog/confirmDialog";
 import { createBlankItem, nextItemId, validateItemsForRegister } from '../../utils/manualReceipt';
+import { needsCheckReason } from '../../utils/needsCheck';
+import { showUndoToast, closeToast } from '../../utils/undoToast';
+import ScanSteps from '../scanSteps/scanSteps';
+import Icon from '../icon/icon';
 
 export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveComplete }) {
   // 店名（チェーン）と店舗名（支店）は別の入力欄。AI が読み取った「ディオ 和泉店」は、2 つに分けて入れる
@@ -49,8 +53,7 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
   const [volumeEditId, setVolumeEditId] = useState(null);
   // 「＋ 商品を追加」で開いた、新しい商品（保存するまで表には足さない。null = 追加ではない）
   const [draftItem, setDraftItem] = useState(null);
-  // 「選択した商品を削除」の確認ポップアップ
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [needsOnly, setNeedsOnly] = useState(false); // 未選択・その他の商品だけを出す
   // 同じ店・同じ日付・同じ合計のレシートがすでにあるときの確認ポップアップ
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
   // AI で解析できず、手で入力するとき（画像確認の「手動で入力する」から来たとき）
@@ -111,12 +114,20 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
     setDraftItem(null);
   };
 
-  // 選んだ商品を、表から消す（DB にはまだ保存していないので、表から消すだけ）
+  // 選んだ商品を、表から消す（DB にはまだ保存していないので、表から消すだけ）。
+  //  確認のポップアップは出さず、すぐ消して、「元に戻す」で消す前の表に戻せる
   const handleDeleteSelected = () => {
+    const before = items;
+    const count = selectedIds.length;
     setItems((prev) => prev.filter((item) => !selectedIds.includes(item.id)));
     setSelectedIds([]);
-    setShowDeleteModal(false);
+    showUndoToast({
+      message: `${count} 件の商品を削除しました`,
+      onUndo: () => setItems(before),
+    });
   };
+
+  const needsCount = items.filter((item) => needsCheckReason(item)).length;
 
   // 編集画面からの保存結果を反映
   const handleSaveEditedItems = (updatedSelectedItems) => {
@@ -203,6 +214,7 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
     setIsSaving(false);
 
     if (result.success) {
+      closeToast(); // 登録したあとは、商品の削除を「元に戻す」できない（お知らせを閉じる）
       if (onSaveComplete) onSaveComplete();
     } else {
       setErrorMessage(result.error);
@@ -232,10 +244,11 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
         <h1 className="header-title">レシート内容の確認</h1>
         <div className="header-right-spacer" />
       </header>
+      <ScanSteps current={3} />
 
       <main className="receipt-confirm-main">
         {errorMessage && (
-          <div style={{ color: '#c62828', backgroundColor: '#ffebee', padding: '10px', borderRadius: '8px', fontSize: '13px' }}>
+          <div style={{ color: 'var(--danger-dark)', backgroundColor: 'var(--danger-soft)', padding: '10px', borderRadius: '8px', fontSize: '13px' }}>
             {errorMessage}
           </div>
         )}
@@ -294,7 +307,7 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
             <button
               type="button"
               className="delete-cell-button"
-              onClick={() => setShowDeleteModal(true)}
+              onClick={handleDeleteSelected}
               disabled={selectedIds.length === 0}
             >
               削除
@@ -309,6 +322,31 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
             </button>
           </div>
         </div>
+
+        {/* 直してほしい商品（未選択・その他）。登録の前に、ここを直すと、価格を比べやすくなる */}
+        {items.length > 0 && (
+          needsCount > 0 ? (
+            <div className="needs-check-summary">
+              <span>
+                <Icon name="alert" size={15} strokeWidth={2.2} /> カテゴリを確認してほしい商品が {needsCount} 件あります
+              </span>
+              <button
+                type="button"
+                className={`needs-check-toggle ${needsOnly ? 'is-on' : ''}`}
+                aria-pressed={needsOnly}
+                onClick={() => setNeedsOnly((v) => !v)}
+              >
+                {needsOnly ? 'すべて表示' : 'その商品だけ表示'}
+              </button>
+            </div>
+          ) : (
+            <div className="needs-check-summary is-ok">
+              <span>
+                <Icon name="check" size={15} strokeWidth={2.4} /> すべての商品のカテゴリが決まっています
+              </span>
+            </div>
+          )
+        )}
 
         <section className="table-wrapper">
           <table className="receipt-table">
@@ -330,13 +368,16 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
             <tbody>
               {items.length === 0 ? (
                 <tr>
-                  <td colSpan="5" style={{ textAlign: 'center', color: '#888', padding: '16px' }}>
+                  <td colSpan="5" style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '16px' }}>
                     {isManual ? '「＋ 商品を追加」で、商品を入力してください' : '抽出された商品がありません'}
                   </td>
                 </tr>
               ) : (
-                items.map((item) => (
-                  <tr key={item.id}>
+                items.map((item) => {
+                  const reason = needsCheckReason(item);
+                  if (needsOnly && needsCount > 0 && !reason) return null;
+                  return (
+                  <tr key={item.id} className={reason && reason !== 'その他' ? 'needs-check' : ''}>
                     <td style={{ textAlign: 'center' }}>
                       <input
                         type="checkbox"
@@ -357,18 +398,20 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
                     <td className="category-cell">
                       {/* 大分類がその他なら中分類もその他なので、大分類の表示は省く */}
                       {item.mainCategory && item.mainCategory !== OTHER && (
-                        <div style={{ fontSize: '10px', color: '#999999' }}>{item.mainCategory}</div>
+                        <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{item.mainCategory}</div>
                       )}
                       {item.category}
                       {item.productName && (
                         <div className="product-label">{item.productName}</div>
                       )}
+                      {reason && <span className={`needs-check-badge ${reason === 'その他' ? 'is-other' : ''}`}>{reason}</span>}
                     </td>
                     <td className="discount-cell">
                       {item.isDiscount ? <span className="discount-yes">あり</span> : <span className="discount-none">－</span>}
                     </td>
                   </tr>
-                ))
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -412,17 +455,6 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
             setShowDuplicateModal(false);
             saveReceipt();
           }}
-        />
-      )}
-
-      {showDeleteModal && (
-        <ConfirmDialog
-          title="商品の削除"
-          message={`選択した ${selectedIds.length} 件の商品を、このレシートから削除しますか？`}
-          confirmLabel="削除する"
-          danger
-          onCancel={() => setShowDeleteModal(false)}
-          onConfirm={handleDeleteSelected}
         />
       )}
 

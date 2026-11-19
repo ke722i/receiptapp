@@ -1,7 +1,8 @@
-// アプリの解析と同じ指示文・カテゴリ表（番号つき）を、Gemini のチャットに貼る文字ファイルに書き出す。
+// アプリの解析と同じ指示文・カテゴリ表（中分類の M番号つき）を、Gemini のチャットに貼る文字ファイルに書き出す。
 // 使い方（プロジェクトの直下で）: node tools/export_gemini_prompt.mjs
-//  → tools/gemini_chat_prompt.txt ができる（Git には入れない）。番号は、アプリと同じ表から作るので、
-//    返ってきた JSON の P番号・M番号は、私（Claude）が、名前に戻せる。カテゴリ表を更新したら、作り直す。
+//  → tools/gemini_chat_prompt.txt ができる（Git には入れない）。アプリと同じ表から作る。
+//    返ってくる JSON は、中分類の M番号＋商品名（文字）。商品名は、表が変わっても、そのまま名前で戻せる（M番号だけは、作った指示文の版に合わせる）。
+//    カテゴリ表を更新したら（アプリ内の提案で商品が増えたときも）、作り直す。
 import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { PROMPT_TEXT } from '../supabase/functions/parse-receipt/catalog.js';
@@ -18,7 +19,7 @@ const FORMAT = `
     "purchase_date": "YYYY-MM-DD",
     "total": レシートに印字された合計金額（数値。読めなければ null）,
     "items": [
-      {"item_name": "…", "price": 198, "is_discount": false, "volume": null, "product_code": "P12", "mid_code": "M3"}
+      {"item_name": "…", "price": 198, "is_discount": false, "volume": null, "mid_code": "M12", "product_name": "牛乳"}
     ]
   }
 ]}

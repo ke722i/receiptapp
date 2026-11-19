@@ -4,7 +4,7 @@
   height: 100vh;
   height: 100dvh; /* スマホのブラウザの、下のバーに隠れないように（上の 100vh は、古いブラウザ用） */
   width: 100%;
-  background-color: #f8f9fa;
+  background-color: var(--bg);
   box-sizing: border-box;
 }
 
@@ -15,7 +15,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 0 16px;
-  background-color: #e53935;
+  background-color: var(--primary);
   color: #ffffff;
   position: sticky;
   top: 0;
@@ -62,7 +62,7 @@
   justify-content: space-between;
   align-items: center;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border);
 }
 
 /* 詳細画面だけ: 枠の一番上に、右寄せの「編集」ボタンの行を足す
@@ -88,7 +88,7 @@
   font-size: 13px;
   font-weight: bold;
   cursor: pointer;
-  border: 1.5px solid #e53935;
+  border: 1.5px solid var(--primary);
   transition: background-color 0.2s;
 }
 
@@ -101,22 +101,22 @@
 .info-action-edit,
 .info-action-cancel {
   background-color: #ffffff;
-  color: #e53935;
+  color: var(--primary);
 }
 
 .info-action-edit:active,
 .info-action-cancel:active:not(:disabled) {
-  background-color: #ffebee;
+  background-color: var(--primary-soft);
 }
 
 /* 保存: 赤の塗りつぶし */
 .info-action-save {
-  background-color: #e53935;
+  background-color: var(--primary);
   color: #ffffff;
 }
 
 .info-action-save:active:not(:disabled) {
-  background-color: #d32f2f;
+  background-color: var(--primary-dark);
 }
 
 .info-card-body {
@@ -141,23 +141,23 @@
 
 .info-label {
   font-size: 11px;
-  color: #757575;
+  color: var(--text-sub);
   font-weight: bold;
 }
 
 .info-value {
   font-size: 15px;
   font-weight: bold;
-  color: #333333;
+  color: var(--text);
 }
 
 .receipt-image-preview {
   width: 80px;
   height: 90px;
-  background-color: #f0f0f0;
+  background-color: var(--surface-2);
   border-radius: 8px;
   overflow: hidden;
-  border: 1px solid #dddddd;
+  border: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -172,7 +172,7 @@
 
 .no-image-text {
   font-size: 10px;
-  color: #999999;
+  color: var(--text-muted);
 }
 
 .table-wrapper {
@@ -180,7 +180,7 @@
   border-radius: 12px;
   overflow-x: auto;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border);
 }
 
 .receipt-table {
@@ -191,17 +191,17 @@
 }
 
 .receipt-table th {
-  background-color: #f5f5f5;
+  background-color: var(--surface-2);
   padding: 10px 8px;
   font-weight: bold;
-  color: #555555;
-  border-bottom: 1px solid #e0e0e0;
+  color: var(--text-sub);
+  border-bottom: 1px solid var(--border);
   white-space: nowrap;
 }
 
 .receipt-table td {
   padding: 12px 8px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--surface-2);
   vertical-align: middle;
 }
 
@@ -216,33 +216,33 @@
   position: sticky;
   top: 0;
   z-index: 2;
-  background-color: #616161;
+  background-color: var(--text-sub);
   color: #ffffff;
-  border-bottom-color: #616161;
+  border-bottom-color: var(--text-sub);
 }
 
 /* 横線の色は見出しの背景と同じ */
 .receipt-detail-main .receipt-table td {
-  border-bottom: 1px solid #616161;
+  border-bottom: 1px solid var(--text-sub);
 }
 
 .item-name-cell {
   font-weight: bold;
-  color: #333333;
+  color: var(--text);
 }
 
 .price-cell {
   font-weight: bold;
-  color: #e53935;
+  color: var(--primary);
 }
 
 .category-cell {
-  color: #666666;
+  color: var(--text-sub);
 }
 
 /* 小分類（商品名）。色は使わず、濃さと太さで目立たせる */
 .product-label {
-  color: #333333;
+  color: var(--text);
   font-size: 11px;
   font-weight: bold;
 }
@@ -258,7 +258,7 @@
 }
 
 .discount-none {
-  color: #757575;
+  color: var(--text-sub);
 }
 
 /* 枠線・背景なしの目立たない削除リンク領域 */
@@ -271,7 +271,7 @@
 .subtle-delete-button {
   background: none !important;
   border: none !important;
-  color: #888888;
+  color: var(--text-muted);
   font-size: 13px;
   cursor: pointer;
   padding: 8px 16px;
@@ -280,7 +280,7 @@
 }
 
 .subtle-delete-button:active {
-  color: #e53935;
+  color: var(--danger);
 }
 
 /* --- モーダルオーバーレイ（画面中央配置） --- */
@@ -330,13 +330,13 @@
 .custom-modal-title {
   font-size: 18px;
   font-weight: bold;
-  color: #333333;
+  color: var(--text);
   margin: 0 0 12px;
 }
 
 .custom-modal-message {
   font-size: 14px;
-  color: #666666;
+  color: var(--text-sub);
   line-height: 1.5;
   margin: 0 0 24px;
 }
@@ -361,21 +361,21 @@
 }
 
 .custom-modal-button.cancel-button {
-  background-color: #f0f0f0;
-  color: #666666;
+  background-color: var(--surface-2);
+  color: var(--text-sub);
 }
 
 .custom-modal-button.cancel-button:active {
-  background-color: #e0e0e0;
+  background-color: var(--border);
 }
 
 .custom-modal-button.delete-button {
-  background-color: #e53935;
+  background-color: var(--danger);
   color: #ffffff;
 }
 
 .custom-modal-button.delete-button:active {
-  background-color: #d32f2f;
+  background-color: var(--danger);
 }
 
 /* 完了ダイアログのOKボタン（青いOKボタンに統一） */
@@ -389,7 +389,7 @@
   width: auto !important;
   height: 42px !important;
   padding: 0 24px !important;
-  background: #007aff !important;
+  background: var(--primary) !important;
   color: #ffffff !important;
   font-size: 15px !important;
   font-weight: bold !important;
@@ -414,7 +414,7 @@
 .item-volume {
   font-size: 11px;
   font-weight: normal;
-  color: #888888;
+  color: var(--text-muted);
   margin-top: 2px;
 }
 
@@ -422,7 +422,7 @@
 
 /* 保存したときのメッセージ */
 .detail-save-message {
-  color: #2e7d32;
+  color: var(--primary-dark);
   background-color: #e8f5e9;
   padding: 10px;
   border-radius: 8px;
@@ -432,11 +432,11 @@
 
 .info-input {
   padding: 6px 10px;
-  border: 1px solid #cccccc;
+  border: 1px solid var(--border-strong);
   border-radius: 6px;
   font-size: 14px;
   font-weight: bold;
-  color: #333333;
+  color: var(--text);
 }
 
 /* 購入日時：見せるのは文字、操作するのは透明な日付入力欄 */
@@ -475,12 +475,12 @@
 }
 
 .selection-label {
-  color: #000000;
+  color: var(--text);
   font-weight: bold;
 }
 
 .selection-count {
-  color: #e53935;
+  color: var(--primary);
   font-weight: bold;
 }
 
@@ -488,8 +488,8 @@
 .edit-cell-button {
   padding: 8px 20px;
   background-color: #ffffff;
-  color: #e53935;
-  border: 1.5px solid #e53935;
+  color: var(--primary);
+  border: 1.5px solid var(--primary);
   border-radius: 25px;
   font-size: 13px;
   font-weight: bold;
@@ -498,12 +498,12 @@
 }
 
 .edit-cell-button:active:not(:disabled) {
-  background-color: #ffebee;
+  background-color: var(--primary-soft);
 }
 
 .edit-cell-button:disabled {
   background-color: #ffffff;
-  color: #bdbdbd;
-  border-color: #cccccc;
+  color: var(--text-muted);
+  border-color: var(--border-strong);
   cursor: not-allowed;
 }

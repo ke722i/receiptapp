@@ -8,7 +8,7 @@
 .msp-manage {
   background: none;
   border: none;
-  color: #e53935;
+  color: var(--primary);
   font-size: 13px;
   font-weight: bold;
   cursor: pointer;
@@ -26,17 +26,17 @@
 .msp-period {
   flex-shrink: 0;
   padding: 6px 12px;
-  border: 1px solid #cccccc;
+  border: 1px solid var(--border-strong);
   border-radius: 16px;
   background-color: #ffffff;
-  color: #333333;
+  color: var(--text);
   font-size: 13px;
   cursor: pointer;
 }
 
 .msp-period.is-active {
-  border-color: #e53935;
-  background-color: #e53935;
+  border-color: var(--primary);
+  background-color: var(--primary);
   color: #ffffff;
   font-weight: bold;
 }
@@ -53,34 +53,34 @@
 }
 
 .msp-badge-mine {
-  background-color: #e53935;
+  background-color: var(--primary);
   color: #ffffff;
 }
 
 .msp-badge-others {
-  background-color: #eeeeee;
-  color: #616161;
+  background-color: var(--border);
+  color: var(--text-sub);
 }
 
 .msp-message {
   font-size: 13px;
-  color: #888888;
+  color: var(--text-muted);
   text-align: center;
   padding: 8px 0;
 }
 
 .msp-error {
-  color: #c62828;
+  color: var(--danger-dark);
 }
 
 .msp-empty {
   background-color: #ffffff;
   border-radius: 10px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border);
   padding: 16px;
   text-align: center;
   font-size: 13px;
-  color: #666666;
+  color: var(--text-sub);
 }
 
 .msp-empty p {
@@ -89,10 +89,10 @@
 
 .msp-register {
   padding: 8px 16px;
-  border: 1px solid #e53935;
+  border: 1px solid var(--primary);
   border-radius: 20px;
   background-color: #ffffff;
-  color: #e53935;
+  color: var(--primary);
   font-size: 13px;
   font-weight: bold;
   cursor: pointer;
@@ -120,7 +120,7 @@
 .msp-store-name {
   font-size: 14px;
   font-weight: bold;
-  color: #333333;
+  color: var(--text);
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -130,25 +130,25 @@
 .msp-min {
   flex-shrink: 0;
   font-size: 12px;
-  color: #666666;
+  color: var(--text-sub);
 }
 
 .msp-min b {
   font-size: 16px;
-  color: #e53935;
+  color: var(--primary);
 }
 
 /* 自分のカード・他のユーザーのカード（別々の枠。左の太線の色でも見分ける） */
 .msp-card {
   background-color: #ffffff;
   border-radius: 10px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border);
   border-left-width: 4px;
   overflow: hidden;
 }
 
 .msp-card-mine {
-  border-left-color: #e53935;
+  border-left-color: var(--primary);
 }
 
 .msp-card-others {
@@ -160,27 +160,27 @@
   align-items: center;
   gap: 8px;
   padding: 10px 16px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--surface-2);
 }
 
 .msp-card-note {
   flex: 1;
   min-width: 0;
   font-size: 12px;
-  color: #888888;
+  color: var(--text-muted);
   text-align: left;
 }
 
 .msp-card-count {
   flex-shrink: 0;
   font-size: 12px;
-  color: #888888;
+  color: var(--text-muted);
 }
 
 .msp-no-data {
   padding: 12px 16px;
   font-size: 12px;
-  color: #999999;
+  color: var(--text-muted);
 }
 
 .msp-list {
@@ -195,16 +195,16 @@
 }
 
 .msp-item + .msp-item {
-  border-top: 1px solid #f5f5f5;
+  border-top: 1px solid var(--surface-2);
 }
 
 .msp-toggle {
   width: 100%;
   padding: 10px;
   border: none;
-  border-top: 1px solid #f0f0f0;
-  background-color: #fafafa;
-  color: #333333;
+  border-top: 1px solid var(--surface-2);
+  background-color: var(--surface-2);
+  color: var(--text);
   font-size: 13px;
   font-weight: bold;
   cursor: pointer;
@@ -217,5 +217,5 @@
 
 .msp-sort-note {
   font-size: 11px;
-  color: #999999;
+  color: var(--text-muted);
 }

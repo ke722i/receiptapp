@@ -5,7 +5,7 @@
   min-height: 100vh;
   min-height: 100dvh; /* スマホのブラウザの、下のバーに隠れないように（上の 100vh は、古いブラウザ用） */
   width: 100%;
-  background-color: #f8f9fa;
+  background-color: var(--bg);
   box-sizing: border-box;
 }
 
@@ -16,7 +16,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 0 16px;
-  background-color: #e53935;
+  background-color: var(--primary);
   color: #ffffff;
   position: sticky;
   top: 0;
@@ -60,13 +60,13 @@
 .my-stores-note {
   font-size: 12px;
   line-height: 1.6;
-  color: #888888;
+  color: var(--text-muted);
   margin: 0;
 }
 
 .my-stores-error {
-  color: #c62828;
-  background-color: #ffebee;
+  color: var(--danger-dark);
+  background-color: var(--danger-soft);
   padding: 10px;
   border-radius: 8px;
   font-size: 13px;
@@ -74,7 +74,7 @@
 
 .my-stores-message {
   text-align: center;
-  color: #888888;
+  color: var(--text-muted);
   margin-top: 40px;
   font-size: 14px;
 }
@@ -88,14 +88,14 @@
 .my-stores-section-title {
   font-size: 15px;
   font-weight: bold;
-  color: #333333;
+  color: var(--text);
   margin: 0;
 }
 
 .my-stores-card {
   background-color: #ffffff;
   border-radius: 12px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   overflow: hidden;
 }
@@ -103,7 +103,7 @@
 .my-stores-empty {
   padding: 16px;
   font-size: 13px;
-  color: #888888;
+  color: var(--text-muted);
   text-align: center;
 }
 
@@ -114,7 +114,7 @@
 }
 
 .my-stores-list li + li {
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--surface-2);
 }
 
 .my-stores-row {
@@ -135,7 +135,7 @@
 }
 
 .my-stores-candidate:active {
-  background-color: #f5f5f5;
+  background-color: var(--surface-2);
 }
 
 .my-stores-icon {
@@ -148,7 +148,7 @@
   min-width: 0;
   font-size: 14px;
   font-weight: bold;
-  color: #333333;
+  color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -157,31 +157,31 @@
 .my-stores-add {
   font-size: 12px;
   font-weight: bold;
-  color: #e53935;
+  color: var(--primary);
   flex-shrink: 0;
 }
 
 .my-stores-remove {
   flex-shrink: 0;
   padding: 6px 12px;
-  border: 1px solid #e53935;
+  border: 1px solid var(--danger);
   border-radius: 16px;
   background-color: #ffffff;
-  color: #e53935;
+  color: var(--danger);
   font-size: 12px;
   font-weight: bold;
   cursor: pointer;
 }
 
 .my-stores-remove:active {
-  background-color: #ffebee;
+  background-color: var(--danger-soft);
 }
 
 .my-stores-search {
   width: 100%;
   padding: 12px 16px;
   font-size: 14px;
-  border: 1px solid #cccccc;
+  border: 1px solid var(--border-strong);
   border-radius: 24px;
   background-color: #ffffff;
   box-sizing: border-box;
@@ -189,12 +189,17 @@
 }
 
 .my-stores-search:focus {
-  border-color: #e53935;
+  border-color: var(--primary);
 }
 
 .my-stores-more {
   font-size: 12px;
-  color: #888888;
+  color: var(--text-muted);
   margin: 0;
   text-align: center;
+}
+
+.my-stores-icon {
+  display: inline-flex;
+  color: var(--primary);
 }

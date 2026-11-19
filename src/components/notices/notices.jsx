@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import './notices.css';
 import { noticePlace } from '../../utils/notices';
 import { formatPurchaseDate } from '../../utils/purchaseDate';
+import Icon from '../icon/icon';
 
 // DB の日時（UTC）を、日本時間の日付に
 const toJstDate = (value) => {
@@ -85,7 +86,7 @@ function NoticeRow({ notice: n, isUnread, isOpen, onOpen, onMarkRead, onMarkUnre
         onTouchCancel={onTouchEnd}
         onClick={() => isOpen && onOpen(null)}
       >
-        <span className="notice-mail" aria-hidden="true">{isReassign ? '🔄' : isAnnouncement ? '📢' : isUnread ? '✉️' : '📭'}</span>
+        <span className="notice-mail" aria-hidden="true"><Icon name={isReassign ? 'undo' : isAnnouncement ? 'megaphone' : isUnread ? 'mail' : 'check'} size={20} /></span>
         <div className="notice-body">
           {isReassign ? (
             <>

@@ -41,6 +41,23 @@ import { createManualReceiptData } from './utils/manualReceipt';
 import { loadFavorites, saveFavorites, toggleFavorite, isFavorite } from './utils/favorites';
 import { decidedNotices, buildNoticeItems, loadReadIds, saveReadIds, unreadIds } from './utils/notices';
 import { fetchMyProposals } from './utils/categoryProposalDb';
+import TabBar from './components/tabBar/tabBar';
+import UndoToast from './components/undoToast/undoToast';
+
+// 下のタブを出す画面と、そのタブ（ほかの画面は、戻るボタンで戻る）
+const TAB_OF_SCREEN = {
+  home: 'home',
+  receiptHistoryList: 'receipts',
+  storeList: 'stores',
+  settings: 'settings',
+};
+const SCREEN_OF_TAB = {
+  home: 'home',
+  receipts: 'receiptHistoryList',
+  camera: 'receiptScanner',
+  stores: 'storeList',
+  settings: 'settings',
+};
 
 const STORAGE_KEY_VIEW_HISTORY = 'receipt_app_view_history'; // 閲覧履歴は廃止（お気に入りに変えた）。以前の保存だけを消す
 const STORAGE_KEY_USER_ID = 'receipt_app_user_id';
@@ -278,8 +295,15 @@ function App() {
     setCurrentScreen('receiptHistoryDetail');
   };
 
+  const handleLogout = () => {
+    clearReceiptCache();
+    setCurrentScreen('login');
+  };
+
+  const activeTab = TAB_OF_SCREEN[currentScreen] || null;
+
   return (
-    <div className="app">
+    <div className={`app ${activeTab ? 'has-tabbar' : ''}`}>
       {/* ログイン・新規登録 */}
       {currentScreen === 'login' && (
         <Login
@@ -298,43 +322,35 @@ function App() {
       {currentScreen === 'home' && (
         <Home
           userId={userId}
-          avatarId={avatarId}
           favorites={favorites}
-          isAdmin={isAdmin}
-          onOpenAdminHome={() => setCurrentScreen('adminHome')}
           announcements={homeAnnouncements}
           onCloseAnnouncement={closeAnnouncement}
           unreadCount={unreadList.length}
           onOpenNotices={() => {
             setCurrentScreen('notices');
           }}
-          onLogout={() => {
-            clearReceiptCache();
-            setCurrentScreen('login');
-          }}
-          onNavigateToSettings={() => setCurrentScreen('settings')}
           onOpenCategoryProposal={() => {
             setProposalBackScreen('home');
             setCurrentScreen('categoryProposal');
           }}
-          onNavigateToHistory={() => setCurrentScreen('receiptHistoryList')}
-          onNavigateToStores={() => setCurrentScreen('storeList')}
-          onNavigateToMyStores={() => {
-            setMyStoresBackScreen('home');
-            setCurrentScreen('myStores');
-          }}
           onNavigateToCategory={handleSelectProduct}
           onSelectProduct={handleSelectProduct}
-          onOpenCamera={() => setCurrentScreen('receiptScanner')} // Scanner画面へ遷移
         />
       )}
 
       {/* 設定・商品詳細・履歴 */}
       {currentScreen === 'settings' && (
         <Settings
+          userId={userId}
           avatarId={avatarId}
           onAvatarChange={changeAvatar}
           onBack={() => setCurrentScreen('home')}
+          onLogout={handleLogout}
+          onOpenMyStores={() => {
+            setMyStoresBackScreen('settings');
+            setCurrentScreen('myStores');
+          }}
+          onOpenAdminHome={() => setCurrentScreen('adminHome')}
           onDeleteAccount={() => setCurrentScreen('login')}
           onOpenCategoryProposal={() => {
             setProposalBackScreen('settings');
@@ -355,10 +371,7 @@ function App() {
           onOpenAnnouncements={() => setCurrentScreen('adminAnnouncements')}
           onOpenUsers={() => setCurrentScreen('adminUsers')}
           onOpenGeneralHome={() => setCurrentScreen('home')}
-          onLogout={() => {
-            clearReceiptCache();
-            setCurrentScreen('login');
-          }}
+          onLogout={handleLogout}
         />
       )}
       {currentScreen === 'adminProposals' && <AdminProposals onBack={() => setCurrentScreen('adminHome')} />}
@@ -472,6 +485,7 @@ function App() {
       {currentScreen === 'receiptSuccess' && (
         <ReceiptSuccess
           onGoHome={() => setCurrentScreen('home')}
+          onScanAgain={() => setCurrentScreen('receiptScanner')}
         />
       )}
 
@@ -479,6 +493,7 @@ function App() {
       {currentScreen === 'receiptHistoryList' && (
         <ReceiptHistoryList
           onBack={() => setCurrentScreen('home')}
+          onOpenCamera={() => setCurrentScreen('receiptScanner')}
           onSelectReceiptDetail={(receipt) => {
             setSelectedReceipt(receipt);
             setReceiptDetailBackScreen('receiptHistoryList');
@@ -490,6 +505,11 @@ function App() {
       {currentScreen === 'storeList' && (
         <StoreList
           onBack={() => setCurrentScreen('home')}
+          onOpenCamera={() => setCurrentScreen('receiptScanner')}
+          onOpenMyStores={() => {
+            setMyStoresBackScreen('storeList');
+            setCurrentScreen('myStores');
+          }}
           openChain={storeListOpenChain}
           onOpenChainChange={setStoreListOpenChain}
           onSelectStore={(name) => {
@@ -517,6 +537,10 @@ function App() {
           onUpdate={setSelectedReceipt} // 編集して保存した内容を、親が持つレシートにも反映
         />
       )}
+      {/* 下のタブ（ホーム・レシート・撮影・店舗・設定の画面だけ） */}
+      {activeTab && <TabBar active={activeTab} onSelect={(tab) => setCurrentScreen(SCREEN_OF_TAB[tab])} />}
+      {/* 削除・上書きのあとの「元に戻す」 */}
+      <UndoToast raised={!!activeTab} />
       {/* 重要度「高」のお知らせ（ログインしている間、どの画面でも出す） */}
       {popupAnnouncement && <AnnouncementPopup announcement={popupAnnouncement} onConfirm={() => confirmAnnouncement(popupAnnouncement)} />}
     </div>

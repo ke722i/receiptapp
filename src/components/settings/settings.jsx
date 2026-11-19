@@ -6,12 +6,16 @@ import { TERMS, PRIVACY, SHARING_SUMMARY } from '../../constants/legal';
 import LegalModal from '../legalModal/legalModal';
 import Avatar from '../avatar/avatar';
 import { AVATARS } from '../../constants/avatars';
+import Icon from '../icon/icon';
 import './settings.css';
 
 export default function Settings({
   avatarId = '',
   onAvatarChange,
   onBack,
+  onLogout,
+  onOpenMyStores,
+  onOpenAdminHome,
   onDeleteReceiptData,
   onDeleteAccount,
   onOpenCategoryProposal,
@@ -179,6 +183,34 @@ export default function Settings({
           </div>
         </section>
 
+        {/* よく使うもの（以前は、ホームの左上のメニューにあったもの） */}
+        <section className="settings-section">
+          <h2 className="section-header">メニュー</h2>
+          <div className="settings-card settings-menu">
+            {onOpenMyStores && (
+              <button type="button" className="settings-menu-row" onClick={onOpenMyStores}>
+                <span className="settings-menu-icon"><Icon name="star" size={20} /></span>
+                <span className="settings-menu-text">
+                  <span className="settings-menu-label">マイ店舗</span>
+                  <span className="settings-menu-sub">よく行く店舗を登録して、価格を比べる</span>
+                </span>
+                <Icon name="chevronRight" size={18} className="settings-menu-arrow" />
+              </button>
+            )}
+            {/* 管理者のアカウントだけに出る（一般のユーザーの画面とは分ける） */}
+            {isAdmin && onOpenAdminHome && (
+              <button type="button" className="settings-menu-row" onClick={onOpenAdminHome}>
+                <span className="settings-menu-icon is-admin"><Icon name="shield" size={20} /></span>
+                <span className="settings-menu-text">
+                  <span className="settings-menu-label">管理者ホーム</span>
+                  <span className="settings-menu-sub">提案の承認・お知らせ・利用状況</span>
+                </span>
+                <Icon name="chevronRight" size={18} className="settings-menu-arrow" />
+              </button>
+            )}
+          </div>
+        </section>
+
         {/* 2. 価格データの共有（オプトイン） */}
         <section className="settings-section">
           <h2 className="section-header">価格データの共有</h2>
@@ -283,6 +315,13 @@ export default function Settings({
             </button>
           </div>
         </section>
+
+        {onLogout && (
+          <button type="button" className="settings-logout" onClick={onLogout}>
+            <Icon name="logout" size={20} />
+            ログアウト
+          </button>
+        )}
       </main>
 
       {legalDoc && <LegalModal doc={legalDoc} onClose={() => setLegalDoc(null)} />}
