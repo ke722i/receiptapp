@@ -13,6 +13,7 @@ import {
 } from '../../utils/searchUtils';
 import { fetchMyItemNames } from '../../utils/receiptDb';
 import Icon from '../icon/icon';
+import appLogo from '../../assets/logo.png';
 import ProductIcon from '../productIcon/productIcon';
 import {
   findProductPaths,
@@ -429,9 +430,7 @@ export default function Home({
       {/* ヘッダー */}
       <header className="home-header">
         <div className="header-logo-area">
-          <span className="header-logo-mark" aria-hidden="true">
-            <Icon name="receipt" size={20} strokeWidth={2} />
-          </span>
+          <img src={appLogo} alt="" className="header-logo-image" aria-hidden="true" />
           <span className="header-logo-placeholder">レシート即！メモ</span>
         </div>
 

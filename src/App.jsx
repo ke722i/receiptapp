@@ -43,6 +43,8 @@ import { decidedNotices, buildNoticeItems, loadReadIds, saveReadIds, unreadIds }
 import { fetchMyProposals } from './utils/categoryProposalDb';
 import TabBar from './components/tabBar/tabBar';
 import UndoToast from './components/undoToast/undoToast';
+import { restoreSession, signOutHere, rememberRegistered } from './utils/authSession';
+import { supabase } from './services/supabaseClient';
 
 // 下のタブを出す画面と、そのタブ（ほかの画面は、戻るボタンで戻る）
 const TAB_OF_SCREEN = {
@@ -65,7 +67,8 @@ const ANNOUNCEMENT_POLL_MS = 30000; // お知らせを読み直す間隔（ロ�
 const STORAGE_KEY_AVATAR = 'receipt_app_avatar'; // 選んだアイコン（すぐ表示するための控え。本体は、アカウントの情報）
 
 function App() {
-  const [currentScreen, setCurrentScreen] = useState('login');
+  // 'boot' = 開いた直後（保存されたログイン状態を確かめている間）。ログインしていれば、ホームから始める
+  const [currentScreen, setCurrentScreen] = useState('boot');
   const [selectedImage, setSelectedImage] = useState(null);
   // トリミング画面の「キャンセル」で戻る画面（撮影直後は撮影画面、画像確認からは画像確認）
   const [cropReturnScreen, setCropReturnScreen] = useState('receiptScanner');
@@ -124,7 +127,7 @@ function App() {
 
   // 管理者が配信したお知らせ（小・中・高）。ログインしている間は、30 秒ごと・アプリに戻ったとき・ホームを開いたときに読む（軽い問い合わせ）
   //  小 = 通知の画面 / 中 = ホームのスライド（「✕」で閉じても、通知の画面に残る） / 高 = ポップアップ（「OK」を押すまで）
-  const loggedIn = currentScreen !== 'login' && currentScreen !== 'register';
+  const loggedIn = currentScreen !== 'login' && currentScreen !== 'register' && currentScreen !== 'boot';
   const [announcements, setAnnouncements] = useState([]);
   const announcementRequest = useRef(0);
   const refreshAnnouncements = useCallback(() => {
@@ -256,8 +259,40 @@ function App() {
       });
   };
 
+  // アプリを開いたとき: 保存されたログイン状態があれば、ログイン画面を出さずに、そのまま始める
+  //  （ログアウトするのは、ログアウトボタンを押したときだけ。utils/authSession.js）
+  useEffect(() => {
+    let cancelled = false;
+    restoreSession().then((user) => {
+      if (cancelled) return;
+      if (!user) {
+        setCurrentScreen('login');
+        return;
+      }
+      // ユーザー ID は、前に入力した表記（大文字・小文字）を使う。別のアカウントなら、メールアドレスから
+      const emailId = user.email?.split('@')[0] || '';
+      const savedId = localStorage.getItem(STORAGE_KEY_USER_ID) || '';
+      handleLoginSuccess(user, savedId && savedId.toLowerCase() === emailId.toLowerCase() ? savedId : '');
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ログイン状態が切れたとき（ほかの理由でログアウトされたとき）は、ログイン画面に戻す
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') {
+        clearReceiptCache();
+        setCurrentScreen((screen) => (screen === 'register' ? screen : 'login'));
+      }
+    });
+    return () => data?.subscription?.unsubscribe();
+  }, []);
+
   // 新規登録成功ハンドラー
   const handleRegisterSuccess = (userObj, rawInputUserId) => {
+    rememberRegistered(); // 新規登録のあとは、自動ログイン
     clearReceiptCache(); // 前のアカウントのレシート（覚えた一覧・画像）を出さない
     const extractedId =
       rawInputUserId ||
@@ -295,8 +330,11 @@ function App() {
     setCurrentScreen('receiptHistoryDetail');
   };
 
-  const handleLogout = () => {
+  // ログアウト: この端末のログイン状態を消してから、ログイン画面へ（以前は画面を戻すだけで、ログイン状態が残っていた）
+  const handleLogout = async () => {
     clearReceiptCache();
+    setIsAdmin(false);
+    await signOutHere();
     setCurrentScreen('login');
   };
 
@@ -304,6 +342,13 @@ function App() {
 
   return (
     <div className={`app ${activeTab ? 'has-tabbar' : ''}`}>
+      {/* 開いた直後（ログイン状態を確かめている間） */}
+      {currentScreen === 'boot' && (
+        <div className="boot-screen" aria-busy="true" aria-label="読み込み中">
+          <span className="boot-spinner" />
+        </div>
+      )}
+
       {/* ログイン・新規登録 */}
       {currentScreen === 'login' && (
         <Login
@@ -351,7 +396,7 @@ function App() {
             setCurrentScreen('myStores');
           }}
           onOpenAdminHome={() => setCurrentScreen('adminHome')}
-          onDeleteAccount={() => setCurrentScreen('login')}
+          onDeleteAccount={handleLogout}
           onOpenCategoryProposal={() => {
             setProposalBackScreen('settings');
             setCurrentScreen('categoryProposal');

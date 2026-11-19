@@ -432,3 +432,74 @@ input:-webkit-autofill:active {
   align-items: center;
   gap: 6px;
 }
+
+/* ---------- ボタンの大きさ（全画面でそろえる） ----------
+   下の操作バーの主ボタン（読み取る・完了）は、高さ 40px。丸が、バーから途切れない大きさ。
+   画面の幅いっぱいの主ボタン（登録する・ホームに戻る・撮影など）は、高さ 44px */
+.app .analyze-button,
+.app .crop-done-button {
+  height: 40px;
+  padding: 0 20px !important;
+  font-size: 15px !important;
+  font-weight: 700;
+  border-radius: 999px !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  line-height: 1;
+}
+
+.app .bottom-action-bar,
+.app .crop-bottom-bar {
+  height: 64px;
+}
+
+.app .confirm-cancel-button,
+.app .crop-cancel-button {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.app .submit-receipt-button,
+.app .go-home-button,
+.app .loading-cancel-button,
+.app .scan-again-button,
+.app .action-button,
+.app .login-button,
+.app .submit-button {
+  min-height: 44px;
+  height: auto;
+  padding-top: 0;
+  padding-bottom: 0;
+  font-size: 15px;
+  border-radius: 999px;
+}
+
+.app .receipt-confirm-footer {
+  padding: 12px 16px calc(12px + var(--safe-bottom));
+}
+
+/* 開いた直後（ログイン状態を確かめている間） */
+.boot-screen {
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+}
+
+.boot-spinner {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 3px solid var(--primary-border);
+  border-top-color: var(--primary);
+  animation: boot-spin 0.8s linear infinite;
+}
+
+@keyframes boot-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

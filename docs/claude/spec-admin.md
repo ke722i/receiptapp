@@ -22,3 +22,8 @@
 - `components/adminProposals/adminProposals.jsx`（提案の承認。docs/claude/proposal-approval.md）。
 - `components/settings/settings.jsx`: 「メニュー」の「管理者ホーム」（`isAdmin` のときだけ。11/19 にホームのハンバーガーメニューを廃止し、下のタブ `components/tabBar` に変えたため、設定へ移した）。設定のユーザー情報に「管理者」の印（`.admin-badge`）。`components/home/home.jsx`:公開中のお知らせを、ホームの上に出す（`.announcement-card`、本文は改行そのまま）。
 - `utils/adminDb.js`（rpc の呼び出しと、エラーの日本語化）、`utils/announcements.js`（公開中のお知らせ、閉じた印は `receipt_app_closed_announcements_<userId>` に `id:updated_at` で保存 → 直されたら再表示）。
+
+## ログイン状態（11/19〜。`src/utils/authSession.js`）
+- ログイン状態は Supabase が localStorage に保存する。App は `'boot'` から始まり、`restoreSession()` でログイン状態があればホーム（管理者は管理者ホーム）へ。画面の更新ではログアウトしない。
+- ログアウトはボタンのときだけ `signOutHere()`（`supabase.auth.signOut({ scope: 'local' })`。以前は画面を戻すだけで、ログイン状態が残っていた）。`SIGNED_OUT` を受けたらログイン画面へ。
+- ログイン画面の「自動ログイン」（`receipt_app_auto_login`、初期オン）: オフなら sessionStorage の印（`receipt_app_session_alive`）が無いとき（タブを閉じたあと）に signOut。「ユーザーIDを保存」（`receipt_app_saved_user_id`）は ID だけ。パスワードはアプリで保存しない（`autoComplete` でブラウザに任せる）。
