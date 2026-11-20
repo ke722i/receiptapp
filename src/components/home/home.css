@@ -749,17 +749,14 @@
   box-shadow: var(--shadow-card);
 }
 
-.category-accordion-list {
+/* 外側の枠は無し。大分類ごとのカードだけ（カードの間は、すきま） */
+.category-group {
   border-radius: var(--radius);
-  overflow: hidden;
-  border: 1px solid var(--border);
-  background: var(--surface);
   box-shadow: var(--shadow-card);
 }
 
 .category-main-button {
   background-color: var(--surface);
-  border-bottom: 1px solid var(--border);
 }
 
 .category-arrow,
