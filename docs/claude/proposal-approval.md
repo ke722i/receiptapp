@@ -2,7 +2,7 @@
 # カテゴリの提案: 承認・見送り・表への反映（Claude の作業手順）
 
 ## 前提（変えてはいけないこと）
-- Claude は DB に接続できない。SQL はユーザーが実行する。承認・見送りは、ユーザーが管理者画面で行う（Claude は行わない）。
+- Claude は、集計のビューを、読み取り専用で調べられる（`node tools/db_query.mjs`。docs/manual/db-readonly.md）。それ以外の読み書きの SQL は、ユーザーが実行する。承認・見送りは、ユーザーが管理者画面で行う（Claude は行わない）。
 - 提案の種類 `kind`: `category`（新しい中分類。小分類も任意）／`sub`（今ある中分類に新しい小分類）／`product`（今ある小分類に新しい商品名）。
 - DB: テーブル `category_proposals`。登録は関数 `submit_category_proposal`（6 引数）だけ。`status` を変えられるのは管理者だけ（関数 `admin_decide_proposals`、判定 `is_app_admin`、表 `app_admins`）。
 - 管理者画面: `src/components/adminProposals/adminProposals.jsx`、呼び出し `src/utils/adminDb.js`、CSV `src/utils/proposalCsv.js`。migrations: `20261113000000_category_proposals_product.sql`、`20261116000000_admin_proposals.sql`。
