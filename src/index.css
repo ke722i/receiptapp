@@ -503,3 +503,14 @@ input:-webkit-autofill:active {
     transform: rotate(360deg);
   }
 }
+
+/* 確認画面・レシート詳細: 中身は縮めず、画面全体をスクロールする（商品の表が、縮んで、中で切れないように） */
+.app .receipt-confirm-main > *,
+.app .receipt-detail-main > * {
+  flex-shrink: 0;
+}
+
+.app .receipt-confirm-main .table-wrapper,
+.app .receipt-detail-main .table-wrapper {
+  overflow-y: visible;
+}
