@@ -580,7 +580,15 @@ function App() {
         />
       )}
       {/* 下のタブ（ホーム・レシート・撮影・店舗・設定の画面だけ） */}
-      {activeTab && <TabBar active={activeTab} onSelect={(tab) => setCurrentScreen(SCREEN_OF_TAB[tab])} />}
+      {activeTab && (
+        <TabBar
+          active={activeTab}
+          onSelect={(tab) => {
+            clearScreenState(); // タブで開くときは、前の「戻る位置」を使わない（いちばん上から）
+            setCurrentScreen(SCREEN_OF_TAB[tab]);
+          }}
+        />
+      )}
       {/* 削除・上書きのあとの「元に戻す」 */}
       <UndoToast raised={!!activeTab} />
       {/* 重要度「高」のお知らせ（ログインしている間、どの画面でも出す） */}
