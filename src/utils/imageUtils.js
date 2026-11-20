@@ -8,6 +8,66 @@ export const fileToBase64 = (file) => {
   });
 };
 
+/**
+ * canvas の領域を、すぐ手放す（iPhone の Safari は、使い終わった canvas を、なかなか解放しない。
+ *  何度も撮影・トリミングを繰り返すと、領域が足りなくなり、あとの画像が真っ黒になることがある）
+ */
+export const releaseCanvas = (canvas) => {
+  try {
+    canvas.width = 0;
+    canvas.height = 0;
+  } catch {
+    // 手放せなくても、画像の処理には影響しない
+  }
+};
+
+/** canvas が、真っ黒（または、完全な透明）になっていないか。小さく縮めて、数か所の色を見る */
+export const isCanvasBlank = (canvas) => {
+  try {
+    const probe = document.createElement('canvas');
+    probe.width = 16;
+    probe.height = 16;
+    const ctx = probe.getContext('2d');
+    ctx.drawImage(canvas, 0, 0, 16, 16);
+    const { data } = ctx.getImageData(0, 0, 16, 16);
+    releaseCanvas(probe);
+    for (let i = 0; i < data.length; i += 4) {
+      if (data[i] + data[i + 1] + data[i + 2] > 12 && data[i + 3] > 0) return false; // 明るい点が 1 つでもあれば、描けている
+    }
+    return true;
+  } catch {
+    return false; // 調べられないときは、そのまま使う
+  }
+};
+
+/**
+ * 画像の一部を切り抜いて、JPEG（データ URL）にする
+ *  ・出力は、長い辺が maxSide（既定 2400px）まで（このあと 1280px に縮めるので、画質は足りる。canvas の大きさの上限に引っかからない）
+ *  ・真っ黒になったときは、小さくして、作り直す（2 回まで）
+ * @param {HTMLImageElement} img
+ * @param {{ x: number, y: number, width: number, height: number }} rect 元の画像の上の、切り抜く範囲
+ */
+export const cropImageToDataUrl = (img, rect, maxSide = 2400, quality = 0.9) => {
+  const { x, y, width, height } = rect;
+  let scale = Math.min(1, maxSide / Math.max(width, height));
+  let result = '';
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(width * scale));
+    canvas.height = Math.max(1, Math.round(height * scale));
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff'; // 透明な部分が、黒くならないように、白で塗っておく
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, x, y, width, height, 0, 0, canvas.width, canvas.height);
+    const blank = isCanvasBlank(canvas);
+    result = canvas.toDataURL('image/jpeg', quality);
+    releaseCanvas(canvas);
+    if (!blank) return result;
+    scale *= 0.5; // 真っ黒だった: 小さくして、やり直す
+  }
+  return result;
+};
+
 // 大容量画像をCanvasでリサイズ（AI解析のレスポンス速度と送信容量を最適化）
 export const resizeImage = (dataUrl, maxWidth = 1200, maxHeight = 1200, quality = 0.8) => {
   return new Promise((resolve, reject) => {
@@ -34,9 +94,12 @@ export const resizeImage = (dataUrl, maxWidth = 1200, maxHeight = 1200, quality 
       canvas.height = height;
 
       const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff'; // 透明な部分が、黒くならないように
+      ctx.fillRect(0, 0, width, height);
       ctx.drawImage(img, 0, 0, width, height);
 
       const resizedDataUrl = canvas.toDataURL('image/jpeg', quality);
+      releaseCanvas(canvas);
       resolve(resizedDataUrl);
     };
     img.onerror = (error) => reject(error);
@@ -83,7 +146,9 @@ export const rotateImage = (src, degrees) => {
       ctx.translate(canvas.width / 2, canvas.height / 2);
       ctx.rotate((turns * Math.PI) / 2);
       ctx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
-      resolve(canvas.toDataURL('image/jpeg', 0.92));
+      const rotated = canvas.toDataURL('image/jpeg', 0.92);
+      releaseCanvas(canvas);
+      resolve(rotated);
     };
     img.onerror = reject;
     img.src = src;

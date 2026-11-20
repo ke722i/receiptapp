@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import './cropImage.css';
-import { rotateImage, rotateCropBox } from '../../utils/imageUtils';
+import { rotateImage, rotateCropBox, cropImageToDataUrl } from '../../utils/imageUtils';
 import ScanSteps from '../scanSteps/scanSteps';
 
 export default function CropImage({ imageSrc, onCancel, onCropComplete }) {
@@ -158,25 +158,9 @@ export default function CropImage({ imageSrc, onCancel, onCropComplete }) {
     cropWidth = Math.round(cropWidth);
     cropHeight = Math.round(cropHeight);
 
-    const canvas = document.createElement('canvas');
-    canvas.width = cropWidth;
-    canvas.height = cropHeight;
+    // 切り抜く（長い辺は 2400px まで。真っ黒になったら、小さくして作り直す。utils/imageUtils.js）
+    const croppedImageUrl = cropImageToDataUrl(img, { x: cropX, y: cropY, width: cropWidth, height: cropHeight });
 
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(
-      img,
-      cropX,
-      cropY,
-      cropWidth,
-      cropHeight,
-      0,
-      0,
-      cropWidth,
-      cropHeight
-    );
-
-    const croppedImageUrl = canvas.toDataURL('image/jpeg', 0.9);
-    
     if (onCropComplete) {
       onCropComplete(croppedImageUrl);
     }
