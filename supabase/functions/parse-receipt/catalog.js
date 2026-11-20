@@ -1,4 +1,5 @@
 import { CATEGORY_TREE } from '../_shared/categoryData.js';
+import { PRINT_NAME_DICTIONARY } from './printNameDictionary.js';
 
 /*
  * AI に渡すカテゴリ表を作る。
@@ -131,7 +132,30 @@ const normalizeVolume = (value) => {
   return text;
 };
 
-/** AI の答えの番号を 4階層の名前に変換する（表に無い番号はここで捨てる） */
+/**
+ * 印字名の辞書（printNameDictionary.js。分類の間違いの記録から作る）で、AI の答えを直す
+ *  ・辞書に、その印字名（foldName で畳んで、ぴったり同じもの）があれば、辞書の分類にする
+ *  ・辞書が小分類・中分類までのとき: AI の答えが、その中に入っていれば、AI の答え（商品名まで）をそのまま使う。外れていれば、辞書の分類（商品名なし）にする
+ *  ・辞書の分類が、今のカテゴリ表に無くなっていたら（表を変えたとき）、使わない
+ * @param {string} itemName レシートの印字名
+ * @param {{ main_category, category, sub_category, product_name }} result AI の答えを名前にしたもの
+ */
+export const applyPrintNameDictionary = (itemName, result) => {
+  const hit = PRINT_NAME_DICTIONARY[foldName(itemName)];
+  if (!hit || !hasMid(hit)) return result;
+  if (hit.product) {
+    const found = findProduct(hit, hit.product);
+    return found && found.category === hit.category ? toResult(found) : result;
+  }
+  const inside =
+    result.main_category === hit.main &&
+    result.category === hit.category &&
+    (!hit.sub || result.sub_category === hit.sub);
+  if (inside) return result;
+  return { main_category: hit.main, category: hit.category, sub_category: hit.sub || null, product_name: null };
+};
+
+/** AI の答えの番号を 4階層の名前に変換する（表に無い番号はここで捨てる）。印字名の辞書に当たれば、辞書で直す */
 export const resolveItems = (parsedData) => {
   if (!parsedData || !Array.isArray(parsedData.items)) return parsedData;
   return {
@@ -141,7 +165,7 @@ export const resolveItems = (parsedData) => {
       price: item.price,
       is_discount: item.is_discount,
       volume: normalizeVolume(item.volume),
-      ...resolveCategory(item),
+      ...applyPrintNameDictionary(item.item_name, resolveCategory(item)),
     })),
   };
 };
