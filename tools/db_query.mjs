@@ -73,7 +73,7 @@ const run = async () => {
   await client.connect();
   await client.query('set default_transaction_read_only = on');
   const q = async (sql, values) => (await client.query(sql, values)).rows;
-  console.log(`対象: ${scope === 'test' ? 'テスト用アカウントだけ' : scope === 'general' ? 'テスト用以外' : '全アカウント'}\n`);
+  if (!args.includes("--json")) console.log(`対象: ${scope === 'test' ? 'テスト用アカウントだけ' : scope === 'general' ? 'テスト用以外' : '全アカウント'}\n`);
 
   switch (command) {
     case 'categories': {
@@ -147,7 +147,9 @@ const run = async () => {
     case 'sql': {
       const sql = params.join(' ');
       if (!/^\s*(select|with)\b/i.test(sql)) throw new Error('select（または with）で始まる問い合わせだけ使えます。');
-      table(await q(sql));
+      const rows = await q(sql);
+      if (args.includes("--json")) console.log(JSON.stringify(rows));
+      else table(rows);
       break;
     }
     default:

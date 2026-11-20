@@ -8,6 +8,7 @@ import ReceiptImagePreview from '../receiptImagePreview/receiptImagePreview';
 import { useReceiptImage, setReceiptHidden } from '../../utils/receiptCache';
 import { showUndoToast } from '../../utils/undoToast';
 import { needsCheckReason } from '../../utils/needsCheck';
+import { recordCategoryCorrections, pathOf } from '../../utils/categoryCorrectionDb';
 import Icon from '../icon/icon';
 import { splitStoreName, joinStoreName } from '../../utils/storeNameNormalizer';
 import ReceiptEdit from '../receiptEdit/receiptEdit';
@@ -229,8 +230,16 @@ export default function ReceiptHistoryDetail({ receipt, onBack, onDelete, onUpda
     if (onUpdate) onUpdate(next);
     exitEdit();
     // 上書きは、確認を出さずに保存し、「元に戻す」で前の内容を保存し直せるようにする
+    // 分類を直した行（「元に戻す」をしなかったときだけ、記録する。管理者が確認して、辞書にする）
+    const corrections = changedItems
+      .map((item) => {
+        const old = beforeById.get(item.id);
+        return old ? { itemName: old.printName, from: pathOf(old), to: pathOf(item) } : null;
+      })
+      .filter(Boolean);
     showUndoToast({
       message: '保存しました',
+      onCommit: () => recordCategoryCorrections(corrections, 'detail'),
       onUndo: async () => {
         const undo = await updateReceiptInDatabase(
           before.id,

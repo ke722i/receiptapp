@@ -21,7 +21,7 @@ const STAT_ITEMS = [
  *  ・「一般の画面を見る」で、一般のユーザーと同じホームに行ける（展示・動作の確認用）
  *  ・権限は、DB の関数が確かめる（migrations/20261116000000・20261116100000）
  */
-export default function AdminHome({ userId, onOpenProposals, onOpenAnnouncements, onOpenUsers, onOpenGeneralHome, onLogout }) {
+export default function AdminHome({ userId, onOpenProposals, onOpenCorrections, onOpenAnnouncements, onOpenUsers, onOpenGeneralHome, onLogout }) {
   const [stats, setStats] = useState(null);
   const [error, setError] = useState('');
   const [reloadKey, setReloadKey] = useState(0);
@@ -92,6 +92,16 @@ export default function AdminHome({ userId, onOpenProposals, onOpenAnnouncements
               {pending > 0 && <span className="admin-menu-count">{pending}</span>}
               <span className="admin-menu-arrow">›</span>
             </button>
+            {onOpenCorrections && (
+              <button type="button" className="admin-menu-item" onClick={onOpenCorrections}>
+                <span className="admin-menu-icon" aria-hidden="true"><Icon name="tag" size={22} /></span>
+                <span className="admin-menu-text">
+                  <span className="admin-menu-title">分類の修正</span>
+                  <span className="admin-menu-sub">ユーザーが直した分類を確認して、次の読み取りから自動で使う</span>
+                </span>
+                <span className="admin-menu-arrow">›</span>
+              </button>
+            )}
             <button type="button" className="admin-menu-item" onClick={onOpenAnnouncements}>
               <span className="admin-menu-icon" aria-hidden="true"><Icon name="megaphone" size={22} /></span>
               <span className="admin-menu-text">

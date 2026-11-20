@@ -8,6 +8,11 @@
   レシートの解析（Edge Function）と、JSON の取り込み（tools/receipt_json_to_sql.mjs）が、AI の答えのあとに使う。
   作り直したら、npm run deploy-functions でデプロイする。
 
+もう 1 つの入力: tools/dictionary_candidates.xlsx（DB の未選択・中分類までの印字名の候補。ユーザーが確認して、書き込んだもの）
+  ・シート「候補」: G 列「採用」が ○ なら、D 列の候補の分類を使う。○ 以外の文字（例: 肉>豚肉>…>豚こま切れ）なら、その分類を使う。× や空は、使わない
+  ・シート「候補なし」: E 列「正しい分類」に書いた分類を使う（空は使わない）
+  ・同じ印字名で、wrongCategory.xlsx と食い違ったら、「食い違い」として入れない
+
 記録の読み方（シート「ミス」。1 件 = 2 行。結合セル）
   ・J 列 = 商品名（レシートの印字名）
   ・T 列 = カテゴリ。上の行 = 間違っていた分類、下の行 = 正しい分類（「？」は不明）
@@ -30,6 +35,7 @@ import openpyxl
 
 ROOT = Path(__file__).resolve().parent.parent
 XLSX = ROOT / 'tools' / 'wrongCategory.xlsx'
+CANDIDATES = ROOT / 'tools' / 'dictionary_candidates.xlsx'
 OUT = ROOT / 'supabase' / 'functions' / 'parse-receipt' / 'printNameDictionary.js'
 SHEET = 'ミス'
 COL_ITEM = 'J'
@@ -100,10 +106,32 @@ def read_records():
     return records
 
 
+def read_candidate_records():
+    """dictionary_candidates.xlsx で、ユーザーが採用した行"""
+    if not CANDIDATES.exists():
+        return []
+    wb = openpyxl.load_workbook(CANDIDATES, data_only=True)
+    records = []
+    if '候補' in wb.sheetnames:
+        for i, row in enumerate(wb['候補'].iter_rows(min_row=2, values_only=True), 2):
+            item, cand, adopt = row[0], row[3], row[6]
+            adopt = str(adopt or '').strip()
+            if not item or not adopt or adopt in ('×', 'x', 'X'):
+                continue
+            right = str(cand or '').strip() if adopt in ('○', '〇', 'o', 'O') else adopt
+            records.append({'row': i, 'item': str(item).strip(), 'wrong': '候補表', 'right': right})
+    if '候補なし' in wb.sheetnames:
+        for i, row in enumerate(wb['候補なし'].iter_rows(min_row=2, values_only=True), 2):
+            item, right = row[0], str(row[4] or '').strip()
+            if item and right:
+                records.append({'row': i, 'item': str(item).strip(), 'wrong': '候補なし表', 'right': right})
+    return records
+
+
 def main():
     check_only = '--check' in sys.argv
     index = build_index(load_tree())
-    records = read_records()
+    records = read_records() + read_candidate_records()
 
     by_key = {}  # 畳んだ印字名 -> {'item', 'paths': {path_json: count}, 'wrong': set()}
     skipped = []
