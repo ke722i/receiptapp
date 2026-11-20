@@ -44,6 +44,7 @@ import { decidedNotices, buildNoticeItems, loadReadIds, saveReadIds, unreadIds }
 import { fetchMyProposals } from './utils/categoryProposalDb';
 import TabBar from './components/tabBar/tabBar';
 import UndoToast from './components/undoToast/undoToast';
+import UpdateBanner from './components/updateBanner/updateBanner';
 import { restoreSession, signOutHere, rememberRegistered } from './utils/authSession';
 import { clearScreenState } from './utils/screenState';
 import { forgetLocalUserData } from './utils/accountDb';
@@ -592,6 +593,8 @@ function App() {
           }}
         />
       )}
+      {/* 新しい版が公開されたら、上に「更新する」を出す */}
+      <UpdateBanner />
       {/* 削除・上書きのあとの「元に戻す」 */}
       <UndoToast raised={!!activeTab} />
       {/* 重要度「高」のお知らせ（ログインしている間、どの画面でも出す） */}
