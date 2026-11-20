@@ -9,6 +9,13 @@
     "lint": "eslint .",
     "sync-categories": "node tools/sync_category_data.mjs",
     "deploy-functions": "npm run sync-categories && npx supabase functions deploy parse-receipt --use-api",
+    "dictionary": "python tools/build_print_dictionary.py --check && python tools/build_print_dictionary.py",
+    "dictionary:deploy": "python tools/build_print_dictionary.py && npm run deploy-functions",
+    "import-json": "node tools/import_json.mjs",
+    "import-json:done": "node tools/import_json.mjs --done",
+    "fix-stores": "node tools/fix_store_names.mjs --from-db",
+    "db": "node tools/db_query.mjs",
+    "manual": "python tools/export_manual.py",
     "preview": "vite preview"
   },
   "dependencies": {

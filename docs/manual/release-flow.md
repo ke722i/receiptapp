@@ -7,7 +7,7 @@
 | 手順 | やること | だれが |
 |---|---|---|
 | ① | 変更をコミットして、`fujita` ブランチに送る（push） | Claude（「コミットして」と言う） |
-| ② | GitHub で、`main` への PR を作る | あなた |
+| ② | `main` への PR を作る | Claude（`gh` を入れてあるとき）。入れていないときは、あなた |
 | ③ | PR を `main` にマージする | あなた |
 | ④ | 公開サイトが、自動で更新される（数分） | （自動） |
 | ⑤ | 必要なら `npm run deploy-functions` を実行する | あなた |
@@ -17,13 +17,30 @@
 Claude に、「**コミットして**」と言います。
 - コミットの名前は、`26/11/16 変更の内容` の形で、Claude が付けます。
 - そのまま、`fujita` ブランチに送られます。
+- `gh` を入れてあれば、PR まで、Claude が作ります（下の「`gh` の準備」）。
 
 ## ② PR を作る
 
+**`gh` を入れてあるとき**: ① で、自動で作られます。PR の画面（リンクが出ます）を開いて、確認するだけです。
+
+**入れていないとき**:
 1. このリンクを開く: https://github.com/ke722i/receiptapp/compare/main...fujita
 2. 「Create pull request」を押す
 3. タイトルと説明を書く（Claude に、案を頼めます）
 4. 作成する
+
+## `gh` の準備（1 回だけ。PR を自動で作るため）
+
+1. ターミナルで、次を実行する（Windows）
+   ```
+   winget install --id GitHub.cli -e
+   ```
+2. ターミナルを、開き直す
+3. 次を実行して、画面の案内どおりに、GitHub にログインする（「GitHub.com」→「HTTPS」→「Login with a web browser」）
+   ```
+   gh auth login
+   ```
+4. 確認する: `gh auth status` で、ログイン中と出れば完了
 
 ## ③ マージする
 

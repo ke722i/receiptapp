@@ -2,23 +2,49 @@
 //  例: 「TRIAL 阪南店」→「トライアル 阪南店」（辞書に入る前の保存や、手入力の表記ゆれ）
 //
 // 使い方（プロジェクトの直下で）:
-//  1. Supabase の SQL Editor で、次を実行して、結果を CSV で保存する（列: store_name, n）
-//       select store_name, count(*) as n from public.receipts group by store_name order by store_name;
-//  2. node tools/fix_store_names.mjs 保存したCSV
-//     → 直る店舗名の一覧（前 → 後・件数）を表示し、同じフォルダに「<CSV名>.fix.sql」を作る
-//  3. 一覧を見て、直してよいものだけにしたいときは、不要な行を .fix.sql から消す
-//  4. .fix.sql を、Supabase の SQL Editor で実行する
+//  A. DB から直接（おすすめ。docs/manual/db-readonly.md の準備が済んでいるとき）
+//       node tools/fix_store_names.mjs --from-db
+//     → 直る店舗名の一覧（前 → 後・件数）を表示し、tools/receipt_json/store_names.fix.sql を作る
+//  B. CSV から
+//       1. Supabase の SQL Editor で、次を実行して、結果を CSV で保存する（列: store_name, n）
+//            select store_name, count(*) as n from public.receipts group by store_name order by store_name;
+//       2. node tools/fix_store_names.mjs 保存したCSV
+//          → 同じフォルダに「<CSV名>.fix.sql」を作る
+//  どちらも: 一覧を見て、直してよいものだけにしたいときは、不要な行を .fix.sql から消し、
+//  .fix.sql を Supabase の SQL Editor で実行する
 //
 //  ・直すのは receipts.store_name と、マイ店舗（my_stores.store_name。同じ名前がすでにあるときは、飛ばす）
 //  ・店舗名が変わらないもの・「店舗名未登録」・空は、対象外
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import pg from 'pg';
 import { normalizeStoreName, splitStoreName, joinStoreName } from '../src/utils/storeNameNormalizer.js';
 
-const file = process.argv[2];
-if (!file) {
-  console.error('使い方: node tools/fix_store_names.mjs 店舗名のCSV（列: store_name, n）');
+const fromDb = process.argv.includes('--from-db');
+const file = fromDb ? null : process.argv[2];
+if (!fromDb && !file) {
+  console.error('使い方: node tools/fix_store_names.mjs --from-db   または   node tools/fix_store_names.mjs 店舗名のCSV（列: store_name, n）');
   process.exit(1);
 }
+
+// DB から、店舗名と件数を読む（読み取り専用の窓口。tools/db_query.mjs と同じ接続）
+const readFromDb = async () => {
+  const urlFile = fileURLToPath(new URL('../.db-readonly.url', import.meta.url));
+  const connectionString = process.env.DB_READONLY_URL || (existsSync(urlFile) ? readFileSync(urlFile, 'utf8').trim() : '');
+  if (!connectionString) {
+    console.error('接続の設定がありません。docs/manual/db-readonly.md の手順で、.db-readonly.url を作ってください。');
+    process.exit(1);
+  }
+  const client = new pg.Client({ connectionString, ssl: { rejectUnauthorized: false }, statement_timeout: 15000 });
+  try {
+    await client.connect();
+    await client.query('set default_transaction_read_only = on');
+    const res = await client.query('select store_name, sum(receipts)::int as n from analytics.store_name_counts group by store_name order by store_name');
+    return [['store_name', 'n'], ...res.rows.map((r) => [r.store_name ?? '', String(r.n)])];
+  } finally {
+    await client.end().catch(() => {});
+  }
+};
 
 // CSV を読む（先頭行は見出し。"…" で囲まれた値・"" のエスケープに対応）
 const parseCsv = (text) => {
@@ -53,7 +79,7 @@ const parseCsv = (text) => {
   return rows.filter((r) => r.some((v) => v.trim() !== ''));
 };
 
-const rows = parseCsv(readFileSync(file, 'utf8').replace(/^﻿/, ''));
+const rows = fromDb ? await readFromDb() : parseCsv(readFileSync(file, 'utf8').replace(/^﻿/, ''));
 const header = rows.shift().map((h) => h.trim().toLowerCase());
 const nameCol = header.indexOf('store_name');
 const countCol = header.indexOf('n');
@@ -98,6 +124,6 @@ const sql = [
   '',
 ].join('\n');
 
-const out = file.replace(/\.csv$/i, '') + '.fix.sql';
+const out = fromDb ? fileURLToPath(new URL('./receipt_json/store_names.fix.sql', import.meta.url)) : file.replace(/\.csv$/i, '') + '.fix.sql';
 writeFileSync(out, sql, 'utf8');
 console.log(`\n書き出しました: ${out}`);

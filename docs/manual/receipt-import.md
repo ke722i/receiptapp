@@ -39,25 +39,40 @@ node tools/export_gemini_prompt.mjs
 
 ## ③ JSON を保存する
 
-1. 返ってきた JSON を、ファイルに保存する（例: `tools/receipt_json/welcia/welcia_1.json`）
-2. 店ごとにフォルダを分けると、整理しやすい
-3. ファイルが崩れているとき（` ```json ` や `[cite: 1]` が混ざる）は、次で直す
-   ```
-   node tools/fix_receipt_json.mjs tools/receipt_json/welcia/welcia_1.json
-   ```
+1. 返ってきた JSON を、`tools/receipt_json/` に保存する（ファイル名は、何でもよい。Gemini が付けた名前のままでよい）
+2. **崩れた JSON（` ```json ` や `[cite: 1]` が混ざる）は、次の ④ のコマンドが、自動で直す**
 
-## ④ SQL を作る
+## ④ SQL を作る（1 つのコマンド）
+
+準備（1 回だけ）: プロジェクトの直下に、`.import-uid` というファイルを作り、取り込み先の UID（Supabase の Authentication → Users）を、1 行で書く。
 
 ```
-node tools/receipt_json_to_sql.mjs tools/receipt_json/welcia
+npm run import-json
 ```
-`tools/receipt_json/import.sql` ができます。
 
-- カテゴリは、**商品名（文字）を、今のカテゴリ表で探して**入れます（中分類の番号は、既定は `tools/gemini_chat_prompt.txt`、フォルダに `prompt.txt` があれば、そちらで読みます）。今のカテゴリ表に無い商品名は、中分類までになります。前の形（商品の番号）の JSON も、今までどおり読めます。
+これで、次のことを、自動で行います。
+1. 崩れた JSON を直す（元のファイルは `misc/JSON元ファイル_日付/` に残る）
+2. SQL を作る（レシート 45 枚ごとに分ける。`tools/receipt_json/import_1.sql`、`import_2.sql` …）
+3. SQL の `ここにあなたのUID` を、`.import-uid` の UID に書き換える
+4. 重なっているレシート（JSON どうし）と、商品の合計がレシートの合計と大きく違うレシートを、画面に出す
+
+- カテゴリは、**商品名（文字）を、今のカテゴリ表で探して**入れます。表に無い商品名は、中分類までになります。
+- **印字名の辞書**（分類の間違いの記録から作ったもの）に当たる商品は、辞書の分類になります。
 - 店名は、アプリと同じ辞書で、「チェーン名 支店名」にそろいます。
-- 同じ店・同じ購入日・同じ合計のレシートがあれば、飛ばします。
+- 同じ店・同じ購入日・同じ合計のレシートが、DB にすでにあれば、飛ばします。
 
-## ④-2 すでに入れたレシートの「分類」だけを直す（更新モード）
+## ⑤ SQL を実行する
+
+1. VSCode で、`import_1.sql` を開き、全部コピーする（UID は、入っています）
+2. Supabase の SQL Editor に貼り付けて、実行する → `Success` と出れば成功
+3. `import_2.sql`、`import_3.sql` … も、**番号の順番に**、1 つずつ実行する
+4. アプリのレシート一覧で、入ったか確認する
+5. 終わったら、次のコマンドで、JSON と SQL を、`misc/` に移す（次回、二重に取り込まないため）
+   ```
+   npm run import-json:done
+   ```
+
+## すでに入れたレシートの「分類」だけを直す（更新モード）
 
 指示文を作り直して、JSON を作り直したときに、**すでに DB にあるレシートの分類**を、新しい分類に直します。レシートは、入れ直しません（消しません）。
 
@@ -85,7 +100,7 @@ node tools/receipt_json_to_sql.mjs --update --all
 
 ## 二重登録を防ぐために
 
-- **入れ終わった JSON は、次の SQL を作るフォルダから外す**（次は新しいフォルダ）
+- **入れ終わったら、`npm run import-json:done` を実行する**（JSON と SQL が、`misc/` に移り、次回、二重に取り込まれません）
 - 入れたあとに、アプリでレシートを直していると、同じ JSON をもう一度入れたときに、二重になることがあります。
 
 ## 知っておくこと

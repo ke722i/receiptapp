@@ -1,51 +1,64 @@
-# Claude への指示の一覧
+# コマンド早見表
 
-言い方 → 動き
+## 自分で実行するコマンド（ターミナルで、プロジェクトの直下から）
 
-## 保存・公開
-- コミットして → GitHub にコミット・push する（PR の案も渡す）
-- PR つくって → PR 作成ページのリンクを渡す
+| コマンド | 何をするか | いつ使う |
+|---|---|---|
+| `npm run dev` | 画面を、手元で動かす | 画面を試したいとき |
+| `npm run build` | 公開用に作る（エラーの確認） | 確認したいとき（Claude が、ふだん実行している） |
+| `npm run lint` | 書き方の確認 | 同上 |
+| `npm run deploy-functions` | レシート解析（Edge Function）を、公開する | 解析の仕組み・カテゴリ表を変えたあと |
+| `npm run dictionary` | 分類の間違いの記録から、印字名の辞書を作る（結果を表示してから作る） | 記録・候補の Excel を直したあと |
+| `npm run dictionary:deploy` | 辞書を作って、そのまま公開する | 上と、公開まで続けたいとき |
+| `npm run import-json` | JSON を直して、SQL にして、UID も入れる | Gemini の JSON を取り込むとき |
+| `npm run import-json:done` | 取り込み済みの JSON と SQL を、`misc/` に移す | SQL の実行が終わったあと |
+| `npm run fix-stores` | 店舗名の表記ゆれを直す SQL を、DB から作る | 店舗名が分かれているとき |
+| `npm run db -- zero` | 登録が 0 件のカテゴリ | 調べたいとき |
+| `npm run db -- categories` | 中分類ごとの件数 | 同上 |
+| `npm run db -- unclassified` | 未選択・その他・商品名なしの件数 | 同上 |
+| `npm run db -- unclassified-names` | 未選択などの印字名（多い順） | 同上 |
+| `npm run db -- stores` | 店舗名の件数と、表記ゆれの候補 | 同上 |
+| `npm run db -- check` | DB の接続設定の確認 | つながらないとき |
+| `npm run manual` | このマニュアル（Excel）を作り直す | 文章を直したあと |
+
+- `npm run db -- 〇〇` の `--` は、必要です（そのあとに、調べたいものを書く）。末尾に `--test` で、テスト用アカウントだけ、`--general` で、それ以外だけ。
+- `npm run import-json` と `npm run fix-stores` と `npm run db` は、事前の準備（UID のファイル・DB の接続）が要ります。手順は、それぞれのタブにあります。
+
+## Claude への指示の言い方（Claude に、チャットで言う）
+
+### 保存・公開
+- コミットして → GitHub にコミット・push する。PR も作る（`gh` を入れてあるとき。無いときは、PR 作成ページのリンクと、タイトル・本文を渡す）
 - push して → GitHub に送る
-- デプロイして → `npm run deploy-functions` のやり方を教える（実行はあなた）
+- PR つくって → PR を作る（上と同じ）
 
-## 記録・ファイル
+### 記録・ファイル
 - 引継ぎして → PROGRESS.md と TEST_ITEMS.md を更新する
 - エクセル作って → テスト項目書（TEST_ITEMS.xlsx）を作る
+- マニュアル作り直して → このマニュアル（マニュアル.xlsx）を作り直す
 - 画面仕様書を作って → 画面仕様書の Excel を作る
 - 取り扱い店舗の Excel を作って → 店舗の Excel を作る
 - ファイルを整理して → 使っていないファイルを `misc/` に移す
 
-## カテゴリ・店名
+### カテゴリ・店名
 - 提案を確認して → 承認待ちの提案を見て、採否の案を出す
 - 承認したものを追加して → 承認した提案を、カテゴリ表に足す
 - カテゴリ表を更新して → Excel から、アプリ用のカテゴリ表を作り直す
 - 店名を追加して → 店名の辞書に足す
 - アイコン → 商品アイコンの対応表を作り直す
 
-## DB を調べるコマンド（自分で実行する。最新の状態を読む）
-- `node tools/db_query.mjs zero` → 登録が 0 件のカテゴリ・商品
-- `node tools/db_query.mjs categories` → 中分類ごとの件数
-- `node tools/db_query.mjs unclassified` → 未選択・その他・商品名なしの件数
-- `node tools/db_query.mjs unclassified-names` → 未選択などの印字名（多い順）
-- `node tools/db_query.mjs stores` → 店舗名の件数と、表記ゆれの候補
-- `node tools/db_query.mjs check` → 接続の設定の確認
-- 末尾に `--test` → テスト用アカウントだけ
-- 末尾に `--general` → テスト用以外だけ
-- 小分類・商品ごとの件数 → Claude に頼む
-
-## レシートの取り込み
+### レシートの取り込み
 - 指示文を作り直して → Gemini のチャットに貼る指示文を作り直す
-- JSON 置いた／import 作って → 取り込み用の SQL を作る
+- JSON 置いた／import 作って → `npm run import-json` と同じことを、Claude が行って、結果を報告する
 - 分類の間違いを見直して → 間違いを探して、直す SQL を作る
-- 辞書を作り直して → 分類の間違いの記録から、印字名の辞書を作り直す
+- 辞書を作り直して → 辞書を作り直して、結果を見せる
 
-## 確認・調査
-- DB を調べて → 件数・未選択・店舗名の表記などを、読み取り専用で調べる（Claude に頼む）
+### 確認・調査
+- DB を調べて → 件数・未選択・店舗名の表記などを、読み取り専用で調べる
 - 確認して → build・lint などで確認する
 - 画面の写真 → 直す場所を探して直す
 - 〇〇の案ありますか → 案を出す（選ぶまで、実装しない）
 
-## モデルの切り替え
+### モデルの切り替え
 - 大きな変更の前 → Claude が、Opus への切り替えをお願いする
 - Opus の作業のあと → Sonnet に戻すよう伝える
 
