@@ -6,7 +6,7 @@
   min-height: 100vh;
   min-height: 100dvh; /* スマホのブラウザの、下のバーに隠れないように（上の 100vh は、古いブラウザ用） */
   width: 100%;
-  background-color: #ffffff; /* 背景色: 白 */
+  background-color: var(--surface); /* 背景色: 白 */
   padding: 20px;
   box-sizing: border-box;
 }
@@ -92,7 +92,7 @@
 
 .form-group input:focus {
   border-color: var(--primary); /* 差し色: 赤 */
-  background-color: #ffffff;
+  background-color: var(--surface);
 }
 
 /* 作成ボタン（赤色） */
@@ -101,7 +101,7 @@
   padding: 14px;
   margin-top: 12px;
   background-color: var(--primary); /* 差し色: 赤 */
-  color: #ffffff;
+  color: var(--on-primary);
   border: none;
   border-radius: 12px;
   font-size: 16px;

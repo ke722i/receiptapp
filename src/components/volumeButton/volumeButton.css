@@ -20,7 +20,7 @@
 /* 容量が空: 点線の枠で「＋容量」 */
 .volume-button.is-empty {
   border: 1px dashed var(--primary);
-  background-color: #ffffff;
+  background-color: var(--surface);
   color: var(--primary);
 }
 

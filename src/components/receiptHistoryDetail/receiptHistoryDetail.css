@@ -16,7 +16,7 @@
   align-items: center;
   padding: 0 16px;
   background-color: var(--primary);
-  color: #ffffff;
+  color: var(--on-primary);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -55,7 +55,7 @@
 }
 
 .receipt-info-card {
-  background-color: #ffffff;
+  background-color: var(--surface);
   border-radius: 12px;
   padding: 16px;
   display: flex;
@@ -100,7 +100,7 @@
 /* 編集: 白背景に赤の枠（確認画面の「選択した商品を編集」と同じ） */
 .info-action-edit,
 .info-action-cancel {
-  background-color: #ffffff;
+  background-color: var(--surface);
   color: var(--primary);
 }
 
@@ -112,7 +112,7 @@
 /* 保存: 赤の塗りつぶし */
 .info-action-save {
   background-color: var(--primary);
-  color: #ffffff;
+  color: var(--on-primary);
 }
 
 .info-action-save:active:not(:disabled) {
@@ -176,7 +176,7 @@
 }
 
 .table-wrapper {
-  background-color: #ffffff;
+  background-color: var(--surface);
   border-radius: 12px;
   overflow-x: auto;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
@@ -216,14 +216,14 @@
   position: sticky;
   top: 0;
   z-index: 2;
-  background-color: var(--text-sub);
+  background-color: var(--table-head);
   color: #ffffff;
-  border-bottom-color: var(--text-sub);
+  border-bottom-color: var(--table-head);
 }
 
 /* 横線の色は見出しの背景と同じ */
 .receipt-detail-main .receipt-table td {
-  border-bottom: 1px solid var(--text-sub);
+  border-bottom: 1px solid var(--table-head);
 }
 
 .item-name-cell {
@@ -304,7 +304,7 @@
 .custom-modal-card {
   width: 100%;
   max-width: 320px;
-  background-color: #ffffff;
+  background-color: var(--surface);
   border-radius: 16px;
   padding: 24px 20px;
   box-sizing: border-box;
@@ -371,7 +371,7 @@
 
 .custom-modal-button.delete-button {
   background-color: var(--danger);
-  color: #ffffff;
+  color: var(--on-danger);
 }
 
 .custom-modal-button.delete-button:active {
@@ -390,7 +390,7 @@
   height: 42px !important;
   padding: 0 24px !important;
   background: var(--primary) !important;
-  color: #ffffff !important;
+  color: var(--on-primary) !important;
   font-size: 15px !important;
   font-weight: bold !important;
   border: none !important;
@@ -423,7 +423,7 @@
 /* 保存したときのメッセージ */
 .detail-save-message {
   color: var(--primary-dark);
-  background-color: #e8f5e9;
+  background-color: var(--primary-soft);
   padding: 10px;
   border-radius: 8px;
   font-size: 13px;
@@ -487,7 +487,7 @@
 /* 「選択した商品を編集」。白背景に赤の枠と文字。商品を選ぶまではグレーで押せない */
 .edit-cell-button {
   padding: 8px 20px;
-  background-color: #ffffff;
+  background-color: var(--surface);
   color: var(--primary);
   border: 1.5px solid var(--primary);
   border-radius: 25px;
@@ -502,7 +502,7 @@
 }
 
 .edit-cell-button:disabled {
-  background-color: #ffffff;
+  background-color: var(--surface);
   color: var(--text-muted);
   border-color: var(--border-strong);
   cursor: not-allowed;

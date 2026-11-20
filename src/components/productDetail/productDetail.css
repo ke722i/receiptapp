@@ -62,7 +62,7 @@
 
 /* 商品タイトルカード */
 .product-title-card {
-  background-color: #ffffff;
+  background-color: var(--surface);
   border-radius: 12px;
   padding: 16px 20px;
   border: 1px solid var(--border);
@@ -135,7 +135,7 @@
 
 /* 直近の購入カード */
 .recent-purchase-card {
-  background-color: #ffffff;
+  background-color: var(--surface);
   border-radius: 10px; /* 購入履歴のカードと同じ */
   padding: 16px;
   border: 2px solid var(--primary); /* 最安値だけ、赤い枠で強調 */
@@ -260,7 +260,7 @@
   font-size: 13px;
   border: 1px solid var(--border-strong);
   border-radius: 8px;
-  background-color: #ffffff;
+  background-color: var(--surface);
   color: var(--text);
   outline: none;
 }
@@ -282,7 +282,7 @@
 .view-all-button {
   width: 100%;
   padding: 12px;
-  background-color: #ffffff;
+  background-color: var(--surface);
   color: var(--text);
   border: 1px solid var(--border-strong);
   border-radius: 20px;
@@ -326,7 +326,7 @@
   font-size: 16px; /* iPhone で、入力のとき、拡大されない大きさ */
   border: 1px solid var(--border);
   border-radius: 24px;
-  background-color: #ffffff;
+  background-color: var(--surface);
   color: var(--text);
   outline: none;
   -webkit-appearance: none;
@@ -412,7 +412,7 @@
 }
 
 .best-price-banner:active:not(:disabled) {
-  background: #dff2e7;
+  background: var(--primary-soft);
 }
 
 .best-price-icon {
@@ -420,7 +420,7 @@
   height: 40px;
   border-radius: 12px;
   background: var(--primary);
-  color: #ffffff;
+  color: var(--on-primary);
   display: inline-flex;
   align-items: center;
   justify-content: center;

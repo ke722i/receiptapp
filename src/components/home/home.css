@@ -7,7 +7,7 @@
   flex-direction: column;
   overflow: hidden; /* コンテナ自体は全画面固定 */
   /* グローバルCSS（ダークモード等）に左右されないよう明示指定 */
-  background-color: #ffffff;
+  background-color: var(--surface);
   color: var(--text);
   color-scheme: light;
 }
@@ -92,7 +92,7 @@
 .search-input-wrapper:focus-within,
 .search-bar-container.is-focused .search-input-wrapper {
   border-color: var(--primary);
-  background-color: #ffffff;
+  background-color: var(--surface);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
@@ -202,7 +202,7 @@
   padding: 12px 8px;
   border: 1px solid var(--border);
   border-radius: 12px;
-  background-color: #ffffff;
+  background-color: var(--surface);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
   box-sizing: border-box;
 }
@@ -241,7 +241,7 @@
   border: 1px solid var(--border);
   border-radius: 12px;
   overflow: hidden;
-  background-color: #ffffff;
+  background-color: var(--surface);
 }
 
 .category-main-button {
@@ -275,7 +275,7 @@
 .sub-category-list {
   display: flex;
   flex-direction: column;
-  background-color: #ffffff;
+  background-color: var(--surface);
   padding-left: 12px;
 }
 
@@ -352,7 +352,7 @@
   overflow-y: auto;
   overscroll-behavior: contain; /* 一覧の端まで来ても、後ろの画面は動かさない */
   -webkit-overflow-scrolling: touch;
-  background-color: #ffffff;
+  background-color: var(--surface);
   border-radius: 12px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
   z-index: 100;
@@ -386,7 +386,7 @@
 }
 
 .search-suggestion-item:active {
-  background-color: #f2f2f2;
+  background-color: var(--surface-2);
 }
 
 .suggestion-icon {
@@ -433,7 +433,7 @@
 }
 
 .suggestion-action:active {
-  background-color: #e8e8e8;
+  background-color: var(--border);
 }
 
 .search-no-result {
@@ -451,8 +451,8 @@
   gap: 10px;
   margin-bottom: 20px;
   padding: 12px 40px 12px 14px;
-  background-color: #fff8e1;
-  border: 1px solid #ffe082;
+  background-color: var(--warn-soft);
+  border: 1px solid var(--warn-border);
   border-radius: 12px;
   text-align: left;
 }
@@ -475,7 +475,7 @@
   margin: 0;
   font-size: 14px;
   font-weight: bold;
-  color: #5d4300;
+  color: var(--warn);
 }
 
 .proposal-tip-text {
@@ -490,7 +490,7 @@
   padding: 6px 14px;
   border: 1px solid var(--primary);
   border-radius: 16px;
-  background-color: #ffffff;
+  background-color: var(--surface);
   color: var(--primary);
   font-size: 13px;
   font-weight: bold;
@@ -534,7 +534,7 @@
 /* 検索から開いた分類（少しのあいだ、色を付ける） */
 .category-main-button.is-highlighted,
 .sub-category-button.is-highlighted {
-  background-color: #fff3c4;
+  background-color: var(--warn-soft);
   box-shadow: 0 0 0 2px #ffb300 inset;
   transition: background-color 0.3s;
 }
@@ -594,12 +594,12 @@
 
 /* 管理者が配信したお知らせ（提案のお知らせと同じ形で、青系） */
 .announcement-card {
-  background-color: #e3f2fd;
-  border-color: #90caf9;
+  background-color: var(--info-soft);
+  border-color: var(--info-border);
 }
 
 .announcement-card .proposal-tip-title {
-  color: #0d47a1;
+  color: var(--info);
 }
 
 .announcement-card .announcement-text {
@@ -644,7 +644,7 @@
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background-color: #d0d0d0;
+  background-color: var(--border-strong);
 }
 
 .notice-dot.is-active {
@@ -673,7 +673,7 @@
   position: relative;
   z-index: 20;
   padding: 12px 16px;
-  background: var(--primary);
+  background: var(--header);
   border-radius: 0 0 20px 20px;
   box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.18);
 }
@@ -683,7 +683,7 @@
 }
 
 .home-search-sticky .search-input-wrapper {
-  background-color: #ffffff;
+  background-color: var(--surface);
   border-color: transparent;
 }
 
@@ -779,7 +779,7 @@
   height: 32px;
   border: 2px solid #ffffff; /* 緑のヘッダーの上で、緑のロゴが埋もれないように、白い縁で囲う */
   border-radius: 11px;
-  background: #ffffff;
+  background: var(--surface);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
 

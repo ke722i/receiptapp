@@ -42,6 +42,19 @@
   --shadow-card: 0 1px 2px rgba(16, 40, 28, 0.06), 0 2px 8px rgba(16, 40, 28, 0.05);
   --shadow-pop: 0 8px 28px rgba(16, 40, 28, 0.18);
 
+  /* ダークモードで色が変わる、そのほかの面 */
+  --on-primary: #ffffff; /* 緑のボタンの上の文字 */
+  --on-danger: #ffffff; /* 赤のボタンの上の文字 */
+  --header: #1e9e5a; /* 画面の上の帯 */
+  --ink: #1f2a24; /* 写真を見る画面（トリミングなど）の暗い背景 */
+  --table-head: #56635c; /* 商品の表の見出し */
+  --info: #1565c0;
+  --info-soft: #e3f2fd;
+  --info-border: #90caf9;
+  --tabbar-bg: rgba(255, 255, 255, 0.96);
+  --toast-bg: #1f2a24;
+  --skeleton-shine: #e6ece8;
+
   /* 下のタブの高さ（画面の下の余白に使う） */
   --tabbar-h: 64px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -55,6 +68,88 @@
   -webkit-text-size-adjust: 100%;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---------- ダークモード ----------
+   設定の「表示」で選ぶ（utils/theme.js）。「自動」はスマホの設定に合わせる（data-theme なし）。
+   「ライト」「ダーク」を選ぶと、<html data-theme="light|dark"> になる。
+   色は、ここの変数だけを変える（各画面の CSS は、変数を使っているので、そのまま切り替わる） */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --primary: #34c27a;
+    --primary-rgb: 52, 194, 122;
+    --primary-dark: #2aa866;
+    --primary-darker: #8ee4b1;
+    --primary-soft: #173626;
+    --primary-border: #265a3d;
+    --danger: #ff7a6e;
+    --danger-dark: #ff9d93;
+    --danger-soft: #3a1f1d;
+    --danger-border: #6b2f2a;
+    --warn: #f2b04a;
+    --warn-soft: #352a12;
+    --warn-border: #5c4720;
+    --text: #e6efe9;
+    --text-sub: #a6b8ac;
+    --text-muted: #7c8f83;
+    --bg: #0f1613;
+    --surface: #17211b;
+    --surface-2: #1e2b24;
+    --border: #2a3a31;
+    --border-strong: #3a4d42;
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.25);
+    --shadow-pop: 0 8px 28px rgba(0, 0, 0, 0.55);
+    --on-primary: #04150b;
+    --on-danger: #2a0c09;
+    --header: #14301f;
+    --ink: #0b100d;
+    --table-head: #2a3a31;
+    --info: #7cb8ff;
+    --info-soft: #14263a;
+    --info-border: #2a4a6e;
+    --tabbar-bg: rgba(23, 33, 27, 0.96);
+    --toast-bg: #2a3a31;
+    --skeleton-shine: #2a3a31;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --primary: #34c27a;
+  --primary-rgb: 52, 194, 122;
+  --primary-dark: #2aa866;
+  --primary-darker: #8ee4b1;
+  --primary-soft: #173626;
+  --primary-border: #265a3d;
+  --danger: #ff7a6e;
+  --danger-dark: #ff9d93;
+  --danger-soft: #3a1f1d;
+  --danger-border: #6b2f2a;
+  --warn: #f2b04a;
+  --warn-soft: #352a12;
+  --warn-border: #5c4720;
+  --text: #e6efe9;
+  --text-sub: #a6b8ac;
+  --text-muted: #7c8f83;
+  --bg: #0f1613;
+  --surface: #17211b;
+  --surface-2: #1e2b24;
+  --border: #2a3a31;
+  --border-strong: #3a4d42;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.25);
+  --shadow-pop: 0 8px 28px rgba(0, 0, 0, 0.55);
+  --on-primary: #04150b;
+  --on-danger: #2a0c09;
+  --header: #14301f;
+  --ink: #0b100d;
+  --table-head: #2a3a31;
+  --info: #7cb8ff;
+  --info-soft: #14263a;
+  --info-border: #2a4a6e;
+  --tabbar-bg: rgba(23, 33, 27, 0.96);
+  --toast-bg: #2a3a31;
+  --skeleton-shine: #2a3a31;
+  color-scheme: dark;
 }
 
 body {
@@ -142,7 +237,7 @@ input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
   -webkit-text-fill-color: var(--text) !important;
-  -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
+  -webkit-box-shadow: 0 0 0px 1000px var(--surface) inset !important;
   transition: background-color 5000s ease-in-out 0s;
 }
 
@@ -164,7 +259,7 @@ input:-webkit-autofill:active {
 .app .proposal-header,
 .app .receipt-edit-header {
   height: 56px;
-  background-color: var(--primary);
+  background-color: var(--header);
   color: #ffffff;
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
 }
@@ -243,7 +338,7 @@ input:-webkit-autofill:active {
 }
 
 .skeleton-block {
-  background: linear-gradient(90deg, var(--surface-2) 0%, #e6ece8 50%, var(--surface-2) 100%);
+  background: linear-gradient(90deg, var(--surface-2) 0%, var(--skeleton-shine) 50%, var(--surface-2) 100%);
   background-size: 200% 100%;
   animation: skeleton-shine 1.2s ease-in-out infinite;
   border-radius: 6px;
@@ -324,7 +419,7 @@ input:-webkit-autofill:active {
   border: none;
   border-radius: 999px;
   background: var(--primary);
-  color: #ffffff;
+  color: var(--on-primary);
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
@@ -376,7 +471,7 @@ input:-webkit-autofill:active {
 .needs-check-toggle.is-on {
   background: var(--warn);
   border-color: var(--warn);
-  color: #ffffff;
+  color: var(--surface);
 }
 
 .needs-check-summary {
@@ -513,4 +608,16 @@ input:-webkit-autofill:active {
 .app .receipt-confirm-main .table-wrapper,
 .app .receipt-detail-main .table-wrapper {
   overflow-y: visible;
+}
+
+/* ダークのとき、商品のアイコン（黒い線の絵）を反転して、暗い背景で見えるようにする。
+   hue-rotate で、色付きのアイコンの色味は、おおよそ保つ */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .product-icon-image {
+    filter: invert(1) hue-rotate(180deg);
+  }
+}
+
+:root[data-theme='dark'] .product-icon-image {
+  filter: invert(1) hue-rotate(180deg);
 }

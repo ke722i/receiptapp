@@ -2,7 +2,7 @@
 .notices-container {
   min-height: 100vh;
   min-height: 100dvh;
-  background-color: #f7f8fa;
+  background-color: var(--surface-2);
   display: flex;
   flex-direction: column;
 }
@@ -14,7 +14,7 @@
   align-items: center;
   padding: 0 16px;
   background-color: var(--primary);
-  color: #ffffff;
+  color: var(--on-primary);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -70,7 +70,7 @@
   display: flex;
   gap: 12px;
   padding: 14px;
-  background-color: #ffffff;
+  background-color: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
   text-align: left;
@@ -78,7 +78,7 @@
 
 /* 未読: 赤い枠と、うすい赤の背景で目立たせる */
 .notice-item.is-unread {
-  background-color: #fff5f5;
+  background-color: var(--danger-soft);
   border: 1.5px solid var(--primary);
 }
 
@@ -105,7 +105,7 @@
   padding: 1px 7px;
   border-radius: 10px;
   background-color: var(--primary);
-  color: #ffffff;
+  color: var(--on-primary);
   font-size: 11px;
   vertical-align: 1px;
 }
@@ -145,7 +145,7 @@
 }
 
 .notice-result.is-rejected {
-  background-color: var(--text-sub);
+  background-color: var(--table-head);
 }
 
 .notices-toolbar {
@@ -165,7 +165,7 @@
   padding: 7px 14px;
   border: 1.5px solid var(--primary);
   border-radius: 18px;
-  background-color: #ffffff;
+  background-color: var(--surface);
   color: var(--primary);
   font-size: 13px;
   font-weight: bold;
@@ -190,7 +190,7 @@
   border: none;
   border-radius: 16px;
   background-color: var(--primary);
-  color: #ffffff;
+  color: var(--on-primary);
   font-size: 11px;
   font-weight: bold;
   cursor: pointer;
@@ -202,7 +202,7 @@
 }
 
 .notice-item:not(.is-unread) {
-  background-color: #f7f7f7;
+  background-color: var(--surface-2);
 }
 
 .notice-item:not(.is-unread) .notice-title,
@@ -271,7 +271,7 @@
   padding: 6px 14px;
   border: 1.5px solid var(--primary);
   border-radius: 16px;
-  background-color: #ffffff;
+  background-color: var(--surface);
   color: var(--primary);
   font-size: 12px;
   font-weight: bold;
@@ -288,7 +288,7 @@
   padding: 0;
   border: none;
   background: none;
-  color: #1565c0;
+  color: var(--info);
   font-size: 12px;
   font-weight: bold;
   text-align: left;

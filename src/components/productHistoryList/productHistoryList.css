@@ -78,7 +78,7 @@
   font-size: 13px;
   border: 1px solid var(--border-strong);
   border-radius: 8px;
-  background-color: #ffffff;
+  background-color: var(--surface);
   color: var(--text);
   outline: none;
 }

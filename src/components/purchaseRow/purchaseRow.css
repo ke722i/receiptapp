@@ -9,7 +9,7 @@
 
 /* 1 行を、単独のカードにする（購入履歴） */
 .purchase-row.is-card {
-  background-color: #ffffff;
+  background-color: var(--surface);
   border-radius: 10px;
   padding: 12px 16px;
   border: 1px solid var(--border);

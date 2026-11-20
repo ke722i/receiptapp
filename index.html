@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <!-- スマホのブラウザの上の帯の色（アプリのメインの色・緑） -->
     <meta name="theme-color" content="#1e9e5a" />
+    <!-- 表示（ライト・ダーク）の印を、画面を描く前に付ける（ちらつかないように。src/utils/theme.js と同じキー） -->
+    <script>
+      try {
+        var t = localStorage.getItem('receipt_app_theme');
+        if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {}
+    </script>
     <title>レシート即！メモ</title>
 
     <!-- タブのロゴ（ログイン画面と同じ画像。ビルド時に Vite が同じファイルとしてまとめる） -->

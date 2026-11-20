@@ -51,7 +51,7 @@
 .scan-step.is-done .scan-step-dot {
   background: var(--primary);
   border-color: var(--primary);
-  color: #ffffff;
+  color: var(--on-primary);
 }
 
 .scan-step.is-current {

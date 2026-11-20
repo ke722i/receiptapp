@@ -5,7 +5,7 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background-color: #ffffff;
+  background-color: var(--surface);
   overflow: hidden;
   line-height: 1;
   user-select: none;
