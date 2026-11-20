@@ -15,6 +15,7 @@
 | `receipt-import.md` | Gemini のチャットで、レシートを入力する方法 |
 | `category-table.md` | カテゴリ表（Excel）の更新、店名の追加 |
 | `icons.md` | 商品アイコンの追加 |
+| `commands.md` | Claude への指示の一覧（「コミットして」「引継ぎして」「エクセル作って」などの言い方と、その動き） |
 
 ## Claude 向け（`claude/`）
 
