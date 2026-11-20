@@ -140,8 +140,26 @@ const normalizeVolume = (value) => {
  * @param {string} itemName レシートの印字名
  * @param {{ main_category, category, sub_category, product_name }} result AI の答えを名前にしたもの
  */
-export const applyPrintNameDictionary = (itemName, result) => {
-  const hit = PRINT_NAME_DICTIONARY[foldName(itemName)];
+/**
+ * DB の辞書（管理者が承認した、ユーザーの修正。list_print_name_rules）を、引きやすい形にする
+ * @param {{ item_name, main_category, category, sub_category, product_name }[]} rows
+ * @returns {Map<string, { main, category, sub, product }>}
+ */
+export const buildRuleMap = (rows) => {
+  const map = new Map();
+  (rows || []).forEach((r) => {
+    if (!r?.item_name || !r.main_category || !r.category) return;
+    map.set(foldName(r.item_name), { main: r.main_category, category: r.category, sub: r.sub_category || null, product: r.product_name || null });
+  });
+  return map;
+};
+
+/**
+ * @param {Map} [rules] DB の辞書（buildRuleMap）。ファイルの辞書より先に使う（管理者が、あとから承認した、新しい判断のため）
+ */
+export const applyPrintNameDictionary = (itemName, result, rules = null) => {
+  const key = foldName(itemName);
+  const hit = rules?.get(key) || PRINT_NAME_DICTIONARY[key];
   if (!hit || !hasMid(hit)) return result;
   if (hit.product) {
     const found = findProduct(hit, hit.product);
@@ -155,8 +173,11 @@ export const applyPrintNameDictionary = (itemName, result) => {
   return { main_category: hit.main, category: hit.category, sub_category: hit.sub || null, product_name: null };
 };
 
-/** AI の答えの番号を 4階層の名前に変換する（表に無い番号はここで捨てる）。印字名の辞書に当たれば、辞書で直す */
-export const resolveItems = (parsedData) => {
+/**
+ * AI の答えの番号を 4階層の名前に変換する（表に無い番号はここで捨てる）。印字名の辞書に当たれば、辞書で直す
+ * @param {Map} [rules] DB の辞書（管理者が承認したもの。buildRuleMap）
+ */
+export const resolveItems = (parsedData, rules = null) => {
   if (!parsedData || !Array.isArray(parsedData.items)) return parsedData;
   return {
     ...parsedData,
@@ -165,7 +186,7 @@ export const resolveItems = (parsedData) => {
       price: item.price,
       is_discount: item.is_discount,
       volume: normalizeVolume(item.volume),
-      ...applyPrintNameDictionary(item.item_name, resolveCategory(item)),
+      ...applyPrintNameDictionary(item.item_name, resolveCategory(item), rules),
     })),
   };
 };

@@ -22,6 +22,17 @@
 - 店名を追加して → 店名の辞書に足す
 - アイコン → 商品アイコンの対応表を作り直す
 
+## DB を調べるコマンド（自分で実行する。最新の状態を読む）
+- `node tools/db_query.mjs zero` → 登録が 0 件のカテゴリ・商品
+- `node tools/db_query.mjs categories` → 中分類ごとの件数
+- `node tools/db_query.mjs unclassified` → 未選択・その他・商品名なしの件数
+- `node tools/db_query.mjs unclassified-names` → 未選択などの印字名（多い順）
+- `node tools/db_query.mjs stores` → 店舗名の件数と、表記ゆれの候補
+- `node tools/db_query.mjs check` → 接続の設定の確認
+- 末尾に `--test` → テスト用アカウントだけ
+- 末尾に `--general` → テスト用以外だけ
+- 小分類・商品ごとの件数 → Claude に頼む
+
 ## レシートの取り込み
 - 指示文を作り直して → Gemini のチャットに貼る指示文を作り直す
 - JSON 置いた／import 作って → 取り込み用の SQL を作る
@@ -29,7 +40,7 @@
 - 辞書を作り直して → 分類の間違いの記録から、印字名の辞書を作り直す
 
 ## 確認・調査
-- DB を調べて → 件数・未選択・店舗名の表記などを、読み取り専用で調べる
+- DB を調べて → 件数・未選択・店舗名の表記などを、読み取り専用で調べる（Claude に頼む）
 - 確認して → build・lint などで確認する
 - 画面の写真 → 直す場所を探して直す
 - 〇〇の案ありますか → 案を出す（選ぶまで、実装しない）

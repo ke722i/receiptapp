@@ -21,6 +21,7 @@ import AdminProposals from './components/adminProposals/adminProposals';
 import AdminHome from './components/adminHome/adminHome';
 import AdminAnnouncements from './components/adminHome/adminAnnouncements';
 import AdminUsers from './components/adminHome/adminUsers';
+import AdminCorrections from './components/adminCorrections/adminCorrections';
 import {
   fetchAnnouncements,
   announcementKey,
@@ -410,6 +411,7 @@ function App() {
         <AdminHome
           userId={userId}
           onOpenProposals={() => setCurrentScreen('adminProposals')}
+          onOpenCorrections={() => setCurrentScreen('adminCorrections')}
           onOpenAnnouncements={() => setCurrentScreen('adminAnnouncements')}
           onOpenUsers={() => setCurrentScreen('adminUsers')}
           onOpenGeneralHome={() => setCurrentScreen('home')}
@@ -417,6 +419,7 @@ function App() {
         />
       )}
       {currentScreen === 'adminProposals' && <AdminProposals onBack={() => setCurrentScreen('adminHome')} />}
+      {currentScreen === 'adminCorrections' && <AdminCorrections onBack={() => setCurrentScreen('adminHome')} />}
       {currentScreen === 'adminAnnouncements' && <AdminAnnouncements onBack={() => setCurrentScreen('adminHome')} />}
       {currentScreen === 'adminUsers' && <AdminUsers currentLoginId={userId} onBack={() => setCurrentScreen('adminHome')} />}
       {currentScreen === 'notices' && (

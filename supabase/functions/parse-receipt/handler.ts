@@ -1,4 +1,4 @@
-import { PROMPT_TEXT, RESPONSE_SCHEMA, resolveItems } from './catalog.js';
+import { PROMPT_TEXT, RESPONSE_SCHEMA, resolveItems, buildRuleMap } from './catalog.js';
 
 // モデルは古くなると新しいユーザーに提供されなくなる（gemini-2.5-flash がそうだった）。
 // 変えたいときは Supabase のシークレット GEMINI_MODEL を設定すれば、コードを直さずに切り替えられる。
@@ -78,6 +78,35 @@ const consumeQuota = async (authorization: string, apikey: string) => {
     return 'error';
   }
   return (await res.json()) === true ? 'ok' : 'exceeded';
+};
+
+/**
+ * 管理者が承認した「印字名 → 分類」の辞書（DB の list_print_name_rules）を読む。
+ *  ・ユーザーのトークンのまま呼ぶ。1 分のあいだは、読んだものを使い回す（読み取りのたびに DB を読まない）
+ *  ・読めなかったときは、空（ファイルの辞書と AI の答えだけで続ける。解析は止めない）
+ */
+let ruleCache: { at: number; map: Map<string, unknown> } | null = null;
+const RULE_CACHE_MS = 60_000;
+const loadRules = async (authorization: string, apikey: string) => {
+  if (ruleCache && Date.now() - ruleCache.at < RULE_CACHE_MS) return ruleCache.map;
+  try {
+    const res = await fetch(`${Deno.env.get('SUPABASE_URL')}/rest/v1/rpc/list_print_name_rules`, {
+      method: 'POST',
+      headers: { Authorization: authorization, apikey, 'Content-Type': 'application/json' },
+      body: '{}',
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) {
+      console.error('rules load failed', res.status);
+      return ruleCache?.map ?? new Map();
+    }
+    const map = buildRuleMap(await res.json());
+    ruleCache = { at: Date.now(), map };
+    return map;
+  } catch (error) {
+    console.error('rules load failed', error instanceof Error ? error.message : 'unknown');
+    return ruleCache?.map ?? new Map();
+  }
 };
 
 const callGemini = async (apiKey: string, base64Image: string, model: string, timeoutMs: number) => {
@@ -210,7 +239,8 @@ export const handleRequest = async (req: Request): Promise<Response> => {
   if (quota === 'error') return fail(500, 'server_error', 'レシートの解析に失敗しました。');
 
   try {
-    return json(200, { data: resolveItems(await parseWithRetry(geminiKey, image)) });
+    const [parsed, rules] = await Promise.all([parseWithRetry(geminiKey, image), loadRules(authorization, apikey)]);
+    return json(200, { data: resolveItems(parsed, rules) });
   } catch (error) {
     // 画像やキーはログに出さない
     console.error('receipt parse failed', error instanceof Error ? error.message : 'unknown');

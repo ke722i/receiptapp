@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import './receiptConfirm.css';
 import { saveReceiptToDatabase, hasDuplicateReceipt } from '../../utils/receiptDb';
 import { formatPurchaseDate } from '../../utils/purchaseDate';
@@ -14,6 +14,7 @@ import { createBlankItem, nextItemId, validateItemsForRegister } from '../../uti
 import { needsCheckReason } from '../../utils/needsCheck';
 import { showUndoToast, closeToast } from '../../utils/undoToast';
 import ScanSteps from '../scanSteps/scanSteps';
+import { recordCategoryCorrections, pathOf } from '../../utils/categoryCorrectionDb';
 import Icon from '../icon/icon';
 
 export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveComplete }) {
@@ -44,6 +45,13 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
     }
     return [];
   });
+
+  // AI が付けた分類（行の id → 印字名と分類）。登録のときに、ユーザーが直した分類と比べて、記録する（管理者が確認して、辞書にする）
+  //  ・削除した行は、ここからも消す（あとで「＋ 商品を追加」で同じ id になっても、AI の行と取り違えない）
+  //  ・手で入力したレシート（AI の答えが無い）は、記録しない
+  const aiOriginals = useRef(
+    new Map(items.map((item) => [item.id, { itemName: item.printName, path: pathOf(item) }]))
+  );
 
   // チェックされた項目の ID 一覧
   const [selectedIds, setSelectedIds] = useState([]);
@@ -119,11 +127,18 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
   const handleDeleteSelected = () => {
     const before = items;
     const count = selectedIds.length;
+    const removed = selectedIds
+      .filter((id) => aiOriginals.current.has(id))
+      .map((id) => [id, aiOriginals.current.get(id)]);
+    removed.forEach(([id]) => aiOriginals.current.delete(id));
     setItems((prev) => prev.filter((item) => !selectedIds.includes(item.id)));
     setSelectedIds([]);
     showUndoToast({
       message: `${count} 件の商品を削除しました`,
-      onUndo: () => setItems(before),
+      onUndo: () => {
+        removed.forEach(([id, original]) => aiOriginals.current.set(id, original));
+        setItems(before);
+      },
     });
   };
 
@@ -215,6 +230,18 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
 
     if (result.success) {
       closeToast(); // 登録したあとは、商品の削除を「元に戻す」できない（お知らせを閉じる）
+      // AI の分類を直した行を、記録する（待たない。記録できなくても、登録は終わっている）
+      if (!isManual) {
+        recordCategoryCorrections(
+          items
+            .filter((item) => aiOriginals.current.has(item.id))
+            .map((item) => {
+              const original = aiOriginals.current.get(item.id);
+              return { itemName: original.itemName, from: original.path, to: pathOf(item) };
+            }),
+          'confirm'
+        );
+      }
       if (onSaveComplete) onSaveComplete();
     } else {
       setErrorMessage(result.error);

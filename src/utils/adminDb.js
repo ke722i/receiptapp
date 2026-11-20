@@ -101,3 +101,35 @@ export const saveAnnouncement = ({ id = null, title, body, active, level = 'mid'
   );
 
 export const deleteAnnouncement = (id) => rpc('admin_delete_announcement', { p_id: id }, 'お知らせを消せませんでした。');
+
+// ---------- 分類の修正（ユーザーが直した分類を確認して、次の読み取りの辞書にする） ----------
+
+/** 修正の一覧（印字名 × 直した後の分類ごとに、人数・回数でまとめたもの）。status: pending ／ rejected */
+export const fetchCategoryCorrections = async (status = 'pending') => {
+  const result = await rpc('admin_list_category_corrections', { p_status: status }, '分類の修正を読み込めませんでした。');
+  return result.success ? { success: true, data: result.data || [] } : result;
+};
+
+/** 承認（辞書に入れる）・見送り。row は fetchCategoryCorrections の 1 行 */
+export const decideCategoryCorrection = (row, action) =>
+  rpc(
+    'admin_decide_category_correction',
+    {
+      p_item_key: row.item_key,
+      p_to_main: row.to_main,
+      p_to_category: row.to_category,
+      p_to_sub: row.to_sub,
+      p_to_product: row.to_product,
+      p_action: action,
+    },
+    action === 'approve' ? '承認できませんでした。' : '見送りにできませんでした。'
+  );
+
+/** 承認した辞書の一覧 */
+export const fetchPrintNameRules = async () => {
+  const result = await rpc('admin_list_print_name_rules', {}, '承認した辞書を読み込めませんでした。');
+  return result.success ? { success: true, data: result.data || [] } : result;
+};
+
+/** 承認した辞書を取り消す（その印字名の記録は、確認待ちに戻る） */
+export const deletePrintNameRule = (id) => rpc('admin_delete_print_name_rule', { p_id: id }, '取り消せませんでした。');

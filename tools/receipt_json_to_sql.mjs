@@ -6,6 +6,8 @@
 //       ・同じ店・購入日・印字名・値段の明細が対象（自分のレシートだけ）。店名・購入日・値段・容量などは変えない
 //       ・JSON に、使える商品番号・中分類番号が無い明細は、飛ばす（今の分類を、そのままにする）
 //       ・新しい指示文で作り直した JSON で、まちがった分類を直すときに使う（入れ直しなので、レシートは消さない）
+//    node tools/receipt_json_to_sql.mjs --chunk 45 tools/receipt_json   … レシート 45 枚ごとに、SQL を分ける（import_1.sql, import_2.sql …。順番に実行する）。数が多いとき用
+//       ・分けても、中身（分類・店名・重複の確認）は同じ。重複の確認は、実行した時点の DB で行うので、順番に実行すれば、前の SQL で入れたレシートも、重複として飛ばす
 //  既定のフォルダ: tools/receipt_json/trial → 出力: tools/receipt_json/import.sql（Git には入れない）
 //  ・今の指示文（11/19〜）の JSON は「M番号＋商品名（文字）」。商品名は、今の表で探すので、表が変わっても、ずれない（M番号は、下と同じく、指示文の版で読む）
 //  ・P番号・M番号は、Gemini に貼った指示文の番号（既定: tools/gemini_chat_prompt.txt。JSON のフォルダに prompt.txt があれば、そちら）で、
@@ -25,10 +27,19 @@ import { CATEGORY_TREE } from '../src/constants/categoryData.js';
 
 const baseDir = fileURLToPath(new URL('./receipt_json/', import.meta.url));
 const updateMode = process.argv.includes('--update');
-const out = join(baseDir, updateMode ? 'update.sql' : 'import.sql');
+const chunkIndex = process.argv.indexOf('--chunk');
+const chunkSize = chunkIndex >= 0 ? Number(process.argv[chunkIndex + 1]) : 0; // 0 = 分けない
+if (chunkIndex >= 0 && !(chunkSize > 0)) {
+  console.error('--chunk のあとに、1 つの SQL に入れるレシートの数を書いてください（例: --chunk 45）');
+  process.exit(1);
+}
+const baseName = updateMode ? 'update' : 'import';
+const out = join(baseDir, `${baseName}.sql`);
 
 // ---- 読むフォルダ ----
-const args = process.argv.slice(2).filter((a) => !a.startsWith('--') || a === '--all');
+const args = process.argv
+  .slice(2)
+  .filter((a, i, all) => (!a.startsWith('--') || a === '--all') && !(all[i - 1] === '--chunk'));
 let dirs;
 if (args.includes('--all')) {
   dirs = readdirSync(baseDir)
@@ -111,6 +122,7 @@ let receiptCount = 0;
 let itemCount = 0;
 let unselected = 0;
 let skippedUnselected = 0;
+const seenReceipts = new Map(); // 同じ店・購入日・商品の合計 -> 見つかった JSON の場所（JSON どうしの重複の確認）
 
 for (const dir of dirs) {
   const folder = basename(dir);
@@ -145,6 +157,9 @@ for (const dir of dirs) {
       });
       const sum = resolved.reduce((s, i) => s + Number(i.price || 0), 0);
       const storeName = r.store_name ? normalizeStoreName(r.store_name) : '';
+      const dupKey = `${storeName}|${r.purchase_date}|${sum}`;
+      if (!seenReceipts.has(dupKey)) seenReceipts.set(dupKey, []);
+      seenReceipts.get(dupKey).push(label);
       resolved.forEach((i) => {
         if (!i.main_category) unselected += 1;
       });
@@ -210,10 +225,13 @@ ${items};
   perFolder.push({ folder, receipts: folderReceipts, items: folderItems, files: files.length });
 }
 
-const sql = updateMode
-  ? `-- Gemini のチャットで作った JSON の番号で、すでに DB にある明細の「分類」だけを直す（tools/receipt_json_to_sql.mjs --update で作成）
+const BLOCK_SEP = '\n\n'; // レシートごとの SQL の区切り（空行）
+const header = (n, total) => (n ? ` （${n} / ${total} 番目。順番に実行する）` : '');
+const makeSql = (blockList, count, items, partNo, partTotal) =>
+  updateMode
+    ? `-- Gemini のチャットで作った JSON の番号で、すでに DB にある明細の「分類」だけを直す（tools/receipt_json_to_sql.mjs --update で作成）${header(partNo, partTotal)}
 --  使い方: 「ここにあなたのUID」を、自分のユーザー ID（Supabase の Authentication > Users の UID）に直して、SQL Editor で実行する
---  フォルダ ${perFolder.length} 個・レシート ${receiptCount} 枚・分類を直す明細 ${itemCount} 件（番号が無い・使えない ${skippedUnselected} 件は、飛ばした）
+--  レシート ${count} 枚・分類を直す明細 ${items} 件（番号が無い・使えない ${skippedUnselected} 件は、飛ばした）
 --  同じ店・購入日・印字名・値段の明細が対象。レシートは入れない。2 回実行しても、同じ結果になる
 --  実行後、メッセージ（NOTICE）に、「更新した明細: ○ 件」と、DB に見つからなかったレシートが出る
 do $$
@@ -222,25 +240,49 @@ declare
   v_n integer;
   v_total integer := 0;
 begin
-${blocks.join('\n\n')}
+${blockList.join(BLOCK_SEP)}
   raise notice '更新した明細: % 件', v_total;
 end $$;
 `
-  : `-- Gemini のチャットで作ったレシートを、DB に入れる（tools/receipt_json_to_sql.mjs で作成）
+    : `-- Gemini のチャットで作ったレシートを、DB に入れる（tools/receipt_json_to_sql.mjs で作成）${header(partNo, partTotal)}
 --  使い方: 「ここにあなたのUID」を、自分のユーザー ID（Supabase の Authentication > Users の UID）に直して、SQL Editor で実行する
---  フォルダ ${perFolder.length} 個・レシート ${receiptCount} 枚・商品 ${itemCount} 件。画像は入らない（画像なしのレシートになる）
+--  レシート ${count} 枚・商品 ${items} 件。画像は入らない（画像なしのレシートになる）
 --  同じ店・購入日・商品の合計のレシートが、すでに DB にあれば、飛ばす（飛ばしたものは、実行後のメッセージ「NOTICE」に出る）
 do $$
 declare
   v_uid uuid := 'ここにあなたのUID'::uuid;
   v_id public.receipts.id%type;
 begin
-${blocks.join('\n\n')}
+${blockList.join(BLOCK_SEP)}
 end $$;
 `;
-writeFileSync(out, sql, 'utf8');
 
-console.log(`SQL を作りました: ${out}（${(sql.length / 1024).toFixed(0)}KB）`);
+// 1 つの SQL にするか、レシート chunkSize 枚ごとに分ける
+const written = [];
+if (chunkSize > 0 && blocks.length > chunkSize) {
+  const parts = Math.ceil(blocks.length / chunkSize);
+  for (let p = 0; p < parts; p += 1) {
+    const slice = blocks.slice(p * chunkSize, (p + 1) * chunkSize);
+    const itemsInSlice = slice.reduce((sum, b) => sum + (b.match(/^ {6}\(/gm) || []).length, 0);
+    const file = join(baseDir, `${baseName}_${p + 1}.sql`);
+    const sqlPart = makeSql(slice, slice.length, itemsInSlice, p + 1, parts);
+    writeFileSync(file, sqlPart, 'utf8');
+    written.push({ file, receipts: slice.length, kb: (sqlPart.length / 1024).toFixed(0) });
+  }
+} else {
+  const sqlAll = makeSql(blocks, receiptCount, itemCount, 0, 0);
+  writeFileSync(out, sqlAll, 'utf8');
+  written.push({ file: out, receipts: receiptCount, kb: (sqlAll.length / 1024).toFixed(0) });
+}
+
+console.log(`SQL を作りました（${written.length} 個）:`);
+written.forEach((w) => console.log(`  ${w.file}（レシート ${w.receipts} 枚・${w.kb}KB）`));
 perFolder.forEach((f) => console.log(`  ${f.folder}: ファイル ${f.files} 個 → レシート ${f.receipts} 枚 / 商品 ${f.items} 件`));
 console.log(`合計: フォルダ ${perFolder.length} 個 / レシート ${receiptCount} 枚 / 商品 ${itemCount} 件 / カテゴリが「未選択」の商品 ${unselected} 件`);
+const dups = [...seenReceipts.entries()].filter(([, labels]) => labels.length > 1);
+if (dups.length > 0) {
+  console.log(`
+同じ店・購入日・合計のレシートが、JSON どうしで重なっているもの: ${dups.length} 組（SQL の実行時に、2 枚目以降は、自動で飛ばされる）`);
+  dups.forEach(([key, labels]) => console.log(`  ${key.replace(/\|/g, ' / ')}: ${labels.join('、')}`));
+}
 warnings.forEach((w) => console.log(`★ ${w}`));

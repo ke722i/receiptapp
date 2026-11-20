@@ -33,3 +33,8 @@
 - 関数は本人（`auth.uid()`）だけを消す: receipt_items → receipts を明示的に消し、`auth.users` を消す（ほかの表は on delete cascade）。管理者（`app_admins`）は消せない（`admin_account`）。
 - 消したあと、端末の控え（`receipt_app_〇〇_<ユーザーID>`、保存した ID）を消して、ログアウト。
 - 「レシートの保存期間」は、何もしていなかったので廃止した。
+
+## 分類の修正（11/21〜。管理者ホーム →「分類の修正」。`components/adminCorrections`・`utils/categoryCorrectionDb.js`・migration `20261121000000_category_corrections.sql`）
+- 記録: 確認画面は、登録が成功したとき、AI の行（`aiOriginals`。削除した行は外す。手入力のレシートは記録しない）の「AI の印字名・AI の分類 → 直した分類」。レシート詳細は、保存の「元に戻す」が確定したとき（`onCommit`）、「直す前の印字名・分類 → 直した分類」。`record_category_corrections`（1 回 50 行・1 人 1 日 300 行まで。分類が同じ・直した後が未選択／その他は捨てる。店・日付・値段は送らない）。
+- 管理者: `admin_list_category_corrections`（印字名 × 直し先ごとに、人数・回数・直す前の要約。直し先が分かれている数・今の辞書）、`admin_decide_category_correction`（承認 → `print_name_rules` に入れる。同じ印字名は置き換え）、`admin_list_print_name_rules`・`admin_delete_print_name_rule`（取り消すと記録は確認待ちに戻る）。ユーザー ID は返さない。自動の承認はしない。
+- 読み取り: Edge Function が `list_print_name_rules` をユーザーのトークンで読み（1 分キャッシュ、読めなければ空で続ける）、`resolveItems(parsed, rules)` → `applyPrintNameDictionary` が、DB の辞書 → ファイルの辞書の順に当てる（印字名がぴったり同じ・表に無い分類は使わない）。承認はすぐ効く（再デプロイ不要。ただし、この仕組みの初回だけ deploy-functions が必要）。
