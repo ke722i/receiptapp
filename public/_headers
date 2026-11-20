@@ -1,0 +1,14 @@
+# Cloudflare Pages の、キャッシュの設定（ブラウザが古い画面を覚えすぎないように）
+#  ・index.html と version.json は、毎回、新しいものを確かめる
+#  ・assets/ のファイルは、名前に中身の印が付いているので、長く覚えてよい
+/
+  Cache-Control: no-cache
+
+/index.html
+  Cache-Control: no-cache
+
+/version.json
+  Cache-Control: no-store
+
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
