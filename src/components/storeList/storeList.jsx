@@ -1,10 +1,13 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import './storeList.css';
 import { useReceiptHistory } from '../../utils/receiptCache';
 import { getChainName } from '../../utils/storeNameNormalizer';
 import { formatPurchaseDate } from '../../utils/purchaseDate';
 import Icon from '../icon/icon';
 import { SkeletonList, EmptyState } from '../common/common';
+import { rememberScreenState, peekScreenState, clearScreenState } from '../../utils/screenState';
+
+const STATE_KEY = 'storeList'; // 店舗詳細から戻ったとき、開いた店舗の行まで戻す（utils/screenState.js）
 
 const UNREGISTERED = '店舗名未登録';
 
@@ -19,6 +22,8 @@ const UNREGISTERED = '店舗名未登録';
 export default function StoreList({ onBack, onSelectStore, openChain = null, onOpenChainChange, onOpenMyStores, onOpenCamera }) {
   const { receipts, loading, errorMessage } = useReceiptHistory(); // 覚えた一覧を使う（画像は読まない。utils/receiptCache.js）
   const [localOpen, setLocalOpen] = useState(null); // 親が開いたチェーンを持たないときの控え
+  const [returned] = useState(() => peekScreenState(STATE_KEY)); // 店舗詳細から戻ってきたか
+  const scrolledRef = useRef(false);
   const openName = onOpenChainChange ? openChain : localOpen;
   const setOpenName = onOpenChainChange || setLocalOpen;
 
@@ -50,6 +55,16 @@ export default function StoreList({ onBack, onSelectStore, openChain = null, onO
       })
       .sort((a, b) => b.receipts.length - a.receipts.length || b.latest.localeCompare(a.latest));
   }, [receipts]);
+
+  // 戻ってきたら、開いた店舗の行が見える位置まで動かす（一覧が並んだあとに、1 回だけ）
+  useEffect(() => {
+    if (loading || scrolledRef.current) return;
+    scrolledRef.current = true;
+    if (!returned) return;
+    const row = Array.from(document.querySelectorAll('[data-store-name]')).find((el) => el.getAttribute('data-store-name') === returned.storeName);
+    row?.scrollIntoView({ block: 'center' });
+    clearScreenState(STATE_KEY);
+  }, [loading, returned]);
 
   return (
     <div className="store-list-container">
@@ -122,7 +137,15 @@ export default function StoreList({ onBack, onSelectStore, openChain = null, onO
                     <ul className="store-receipt-list">
                       {chain.stores.map((store) => (
                         <li key={store.name}>
-                          <button type="button" className="store-receipt-row" onClick={() => onSelectStore && onSelectStore(store.name)}>
+                          <button
+                            type="button"
+                            className="store-receipt-row"
+                            data-store-name={store.name}
+                            onClick={() => {
+                              rememberScreenState(STATE_KEY, { storeName: store.name });
+                              if (onSelectStore) onSelectStore(store.name);
+                            }}
+                          >
                             <span className="store-receipt-store">{store.name}</span>
                             <span className="store-branch-meta">
                               {store.count}件{store.latest && ` ・ 最新 ${formatPurchaseDate(store.latest)}`}
