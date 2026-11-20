@@ -18,6 +18,7 @@
 - docs は 2 種類（入口は docs/README.md）:
   - docs/claude/ = Claude が読む。正確さ優先（条件・コマンド・ファイル名を省かない）。上の一覧は、すべてここ。
   - docs/manual/ = 人間（管理者・開発者）が読む。表・番号つきの手順・短い文で、分かりやすく書く（release-flow／admin／proposal-approval／receipt-import／category-table／icons）。
+- ユーザーが読むのは `マニュアル.xlsx`（docs/manual/*.md から `npm run manual` で作る。Git に入れない）。docs/manual を直したら、頼まれたとき・「引継ぎして」のときに、作り直す。
 - 仕様・手順を変えたら、該当する docs のファイルを短く直す（両方に関係するなら、manual と claude の両方）。この CLAUDE.md には書き足さない。
 - DB は、`node tools/db_query.mjs`（読み取り専用・集計のビューだけ。docs/manual/db-readonly.md）でだけ調べる。`.db-readonly.url` は読まない・表示しない。書き込み・個人の購入履歴の閲覧はしない（SQL はユーザーが実行）。
 - 変えてはいけない基本ルール: .env を読まない／API キーとプロンプトをブラウザに出さない／categoryData.js は生成物（直接編集しない）／他のユーザーのデータは DB の関数経由だけ（RLS を緩めない）／「その他」は Excel に入れない。
@@ -48,6 +49,7 @@
 - 1 行目（タイトル）: `YY/MM/DD 変更の内容を表す短いタイトル`（例: `26/11/07 購入日の表示を統一`）。日付は作業した日。
 - 2 行目は空ける。3 行目以降（短い詳細 = description）: 何を変えたかを 1〜3 行ほどの箇条書きか短い文で書く。
 - 最後にシステムから指示された Co-Authored-By の行を付ける。
+- push のあと、`gh` が使える（`gh auth status` が通る）ときは、`gh pr create` で PR まで作る（本文の最後にシステムから指示された行を付ける。すでに同じブランチの PR があれば、作らず、そのリンクを渡す）。使えないときは、PR 作成ページのリンクと、タイトル・本文の案を渡す。
 
 # 12. 使用量を抑える（ユーザーの指示）
 - PROGRESS.md・TEST_ITEMS.md は「引き継ぎして」のときだけ更新する。TEST_ITEMS.xlsx は頼まれたときだけ作る。
