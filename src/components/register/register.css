@@ -26,7 +26,8 @@
   text-align: center;
   width: 100%;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
 }
 
 .app-logo {
@@ -183,4 +184,21 @@
   background-color: var(--border-strong);
   cursor: not-allowed;
   transform: none;
+}
+
+/* ロゴは絵だけ。アプリの名前は、文字で添える */
+.app-logo {
+  width: 96px;
+  height: 96px;
+  border-radius: 22px;
+  box-shadow: 0 6px 16px rgba(var(--primary-rgb), 0.3);
+}
+
+.app-name {
+  margin: 10px 0 0;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--primary-dark);
+  text-align: center;
 }

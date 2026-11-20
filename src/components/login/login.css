@@ -26,7 +26,8 @@
   text-align: center;
   width: 100%;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
 }
 
 /* ロゴ画像を設定する際のスタイリング */
@@ -253,4 +254,21 @@ input[type="email"]::placeholder {
   border: 1px solid var(--warn-border);
   border-radius: var(--radius-sm);
   padding: 8px 10px;
+}
+
+/* ロゴは絵だけ。アプリの名前は、文字で添える */
+.app-logo {
+  width: 112px;
+  height: 112px;
+  border-radius: 26px;
+  box-shadow: 0 6px 16px rgba(var(--primary-rgb), 0.3);
+}
+
+.app-name {
+  margin: 12px 0 0;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--primary-dark);
+  text-align: center;
 }

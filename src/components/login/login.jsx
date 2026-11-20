@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../services/supabaseClient';
 import './login.css';
-import appLogo from '../../assets/logo.png';
+import appLogo from '../../assets/logo.svg';
 import { fetchLoginAnnouncements, formatDateTime } from '../../utils/announcements';
 import Icon from '../icon/icon';
 import { loadLoginPrefs, rememberLoginPrefs } from '../../utils/authSession';
@@ -62,7 +62,8 @@ export default function Login({ onNavigateToRegister, onLoginSuccess }) {
     <div className="login-container">
       <div className="login-card">
         <div className="logo-section">
-          <img src={appLogo} alt="レシート即！メモ" className="app-logo" />
+          <img src={appLogo} alt="" className="app-logo" />
+          <h1 className="app-name">レシート即！メモ</h1>
         </div>
 
         {notes.length > 0 && (
