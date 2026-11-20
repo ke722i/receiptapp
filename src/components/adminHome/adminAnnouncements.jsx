@@ -149,10 +149,6 @@ export default function AdminAnnouncements({ onBack }) {
       </header>
 
       <main className="proposal-main">
-        <p className="proposal-intro">
-          重要度で、出る場所が変わります。期限を過ぎると、だれにも出ません。内容を直すと、閉じた人にも、もう一度出ます。
-        </p>
-
         <form className="proposal-card" onSubmit={handleSave}>
           <h2 className="proposal-section-title">{form.id ? 'お知らせを直す' : '新しいお知らせ'}</h2>
 

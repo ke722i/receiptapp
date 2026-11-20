@@ -291,8 +291,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: 10px 4px;
+  justify-content: center;
+  gap: 2px;
+  min-height: 64px;
+  padding: 6px 4px;
   border: 2px solid var(--border);
   border-radius: 10px;
   background: var(--surface);
@@ -301,7 +303,7 @@
 }
 
 .ann-level-name {
-  font-size: 22px;
+  font-size: 18px;
   font-weight: bold;
   line-height: 1;
 }
@@ -319,9 +321,10 @@
 }
 
 .ann-level-place {
-  font-size: 11px;
+  font-size: 10.5px;
   color: var(--text-sub);
-  line-height: 1.35;
+  line-height: 1.3;
+  text-align: center;
 }
 
 .ann-level.is-low.is-selected {
