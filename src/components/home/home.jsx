@@ -13,7 +13,7 @@ import {
 } from '../../utils/searchUtils';
 import { fetchMyItemNames } from '../../utils/receiptDb';
 import Icon from '../icon/icon';
-import appLogo from '../../assets/logo.png';
+import appLogo from '../../assets/logo.svg';
 import ProductIcon from '../productIcon/productIcon';
 import {
   findProductPaths,

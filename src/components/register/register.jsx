@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../../services/supabaseClient';
 import './register.css';
-import appLogo from '../../assets/logo.png';
+import appLogo from '../../assets/logo.svg';
 import { TERMS, PRIVACY, LEGAL_VERSION } from '../../constants/legal';
 import LegalModal from '../legalModal/legalModal';
 
@@ -102,7 +102,8 @@ export default function Register({ onNavigateToLogin, onRegisterSuccess }) {
     <div className="register-container">
       <div className="register-card">
         <div className="logo-section">
-          <img src={appLogo} alt="レシート即！メモ" className="app-logo" />
+          <img src={appLogo} alt="" className="app-logo" />
+          <h1 className="app-name">レシート即！メモ</h1>
         </div>
 
         <h2 className="register-title">新規アカウント登録</h2>

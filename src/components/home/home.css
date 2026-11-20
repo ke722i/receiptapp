@@ -778,10 +778,10 @@
 
 /* ヘッダー左のアプリのロゴ（ログイン画面と同じ画像） */
 .header-logo-image {
-  width: 36px;
-  height: 36px;
-  border-radius: 9px;
-  object-fit: cover;
+  width: 32px;
+  height: 32px;
+  border: 2px solid #ffffff; /* 緑のヘッダーの上で、緑のロゴが埋もれないように、白い縁で囲う */
+  border-radius: 11px;
   background: #ffffff;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
