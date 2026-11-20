@@ -5,7 +5,7 @@
   height: 100vh;
   height: 100dvh; /* スマホのブラウザの、下のバーに隠れないように（上の 100vh は、古いブラウザ用） */
   width: 100%;
-  background-color: var(--text);
+  background-color: var(--ink);
   box-sizing: border-box;
   position: relative;
   overflow: hidden;
@@ -19,12 +19,12 @@
   justify-content: center; /* 戻るボタンを無くしたのでタイトルを中央に */
   align-items: center;
   padding: 0 16px;
-  background-color: var(--text);
+  background-color: var(--ink);
   position: sticky;
   top: 0;
   z-index: 10;
   box-sizing: border-box;
-  border-bottom: 1px solid var(--text);
+  border-bottom: 1px solid var(--ink);
 }
 
 .back-button {
@@ -241,7 +241,7 @@
 .crop-bottom-bar {
   height: 70px;
   width: 100%;
-  background-color: var(--text);
+  background-color: var(--ink);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -269,7 +269,7 @@
 /* 完了ボタン（緑。大きさは、画像確認の「読み取る」と同じ。index.css の「ボタンの大きさ」で決める） */
 .crop-done-button {
   background-color: var(--primary) !important;
-  color: #ffffff !important;
+  color: var(--on-primary) !important;
   border: none !important;
   cursor: pointer !important;
   opacity: 1 !important;
@@ -280,7 +280,7 @@
 .crop-done-button:hover,
 .crop-done-button:focus {
   background-color: var(--primary) !important;
-  color: #ffffff !important;
+  color: var(--on-primary) !important;
 }
 
 .crop-done-button:active {
@@ -331,7 +331,7 @@
   z-index: 20;
   margin: 0;
   padding: 8px 16px;
-  background-color: var(--text);
+  background-color: var(--ink);
   color: #ff8a80;
   font-size: 12px;
   text-align: center;

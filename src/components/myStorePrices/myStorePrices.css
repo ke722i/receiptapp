@@ -28,7 +28,7 @@
   padding: 6px 12px;
   border: 1px solid var(--border-strong);
   border-radius: 16px;
-  background-color: #ffffff;
+  background-color: var(--surface);
   color: var(--text);
   font-size: 13px;
   cursor: pointer;
@@ -37,7 +37,7 @@
 .msp-period.is-active {
   border-color: var(--primary);
   background-color: var(--primary);
-  color: #ffffff;
+  color: var(--on-primary);
   font-weight: bold;
 }
 
@@ -54,7 +54,7 @@
 
 .msp-badge-mine {
   background-color: var(--primary);
-  color: #ffffff;
+  color: var(--on-primary);
 }
 
 .msp-badge-others {
@@ -74,7 +74,7 @@
 }
 
 .msp-empty {
-  background-color: #ffffff;
+  background-color: var(--surface);
   border-radius: 10px;
   border: 1px solid var(--border);
   padding: 16px;
@@ -91,7 +91,7 @@
   padding: 8px 16px;
   border: 1px solid var(--primary);
   border-radius: 20px;
-  background-color: #ffffff;
+  background-color: var(--surface);
   color: var(--primary);
   font-size: 13px;
   font-weight: bold;
@@ -140,7 +140,7 @@
 
 /* 自分のカード・他のユーザーのカード（別々の枠。左の太線の色でも見分ける） */
 .msp-card {
-  background-color: #ffffff;
+  background-color: var(--surface);
   border-radius: 10px;
   border: 1px solid var(--border);
   border-left-width: 4px;

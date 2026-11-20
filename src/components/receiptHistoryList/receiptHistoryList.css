@@ -18,7 +18,7 @@
   align-items: center;
   padding: 0 16px;
   background-color: var(--primary);
-  color: #ffffff;
+  color: var(--on-primary);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -82,7 +82,7 @@
   font-size: 13px;
   border: 1px solid var(--border-strong);
   border-radius: 8px;
-  background-color: #ffffff;
+  background-color: var(--surface);
   color: var(--text);
   outline: none;
 }
@@ -103,7 +103,7 @@
   border: 1px solid var(--border);
   border-radius: 20px;
   font-size: 14px;
-  background-color: #ffffff;
+  background-color: var(--surface);
 }
 
 .receipt-filter-input:focus {

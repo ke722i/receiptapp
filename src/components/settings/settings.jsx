@@ -8,6 +8,7 @@ import Avatar from '../avatar/avatar';
 import { AVATARS } from '../../constants/avatars';
 import Icon from '../icon/icon';
 import { deleteMyAccount } from '../../utils/accountDb';
+import { THEME_OPTIONS, loadTheme, saveTheme } from '../../utils/theme';
 import './settings.css';
 import '../confirmDialog/confirmDialog.css';
 
@@ -30,6 +31,12 @@ export default function Settings({
   const [shareSaving, setShareSaving] = useState(false);
   const [shareError, setShareError] = useState('');
   const [legalDoc, setLegalDoc] = useState(null); // 表示中の利用規約 / プライバシーポリシー
+  // 表示（自動・ライト・ダーク）。押すと、すぐ切り替わり、端末に覚える（utils/theme.js）
+  const [theme, setTheme] = useState(loadTheme);
+  const changeTheme = (value) => {
+    setTheme(value);
+    saveTheme(value);
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -224,6 +231,31 @@ export default function Settings({
                 <Icon name="chevronRight" size={18} className="settings-menu-arrow" />
               </button>
             )}
+          </div>
+        </section>
+
+        {/* 表示の明るさ */}
+        <section className="settings-section">
+          <h2 className="section-header">表示</h2>
+          <div className="settings-card">
+            <div className="theme-choices" role="radiogroup" aria-label="表示の明るさ">
+              {THEME_OPTIONS.map((o) => (
+                <button
+                  key={o.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={theme === o.value}
+                  className={`theme-choice ${theme === o.value ? 'is-selected' : ''}`}
+                  onClick={() => changeTheme(o.value)}
+                >
+                  <Icon name={o.value === 'dark' ? 'moon' : o.value === 'light' ? 'sun' : 'auto'} size={20} />
+                  {o.label}
+                </button>
+              ))}
+            </div>
+            <div className="settings-note settings-note-last">
+              <p>「自動」は、スマホの設定（ダークモード）に合わせます。</p>
+            </div>
           </div>
         </section>
 

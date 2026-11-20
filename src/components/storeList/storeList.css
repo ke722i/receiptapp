@@ -17,7 +17,7 @@
   align-items: center;
   padding: 0 16px;
   background-color: var(--primary);
-  color: #ffffff;
+  color: var(--on-primary);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -67,7 +67,7 @@
 
 /* チェーンのカード（レシートカードと同じ白・角丸・枠線・影） */
 .store-chain-card {
-  background-color: #ffffff;
+  background-color: var(--surface);
   border-radius: 12px;
   border: 1px solid var(--border);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
@@ -213,7 +213,7 @@
 }
 
 .store-mystores-link:active {
-  background: #dff2e7;
+  background: var(--primary-soft);
 }
 
 .store-mystores-icon {

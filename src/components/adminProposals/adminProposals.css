@@ -10,7 +10,7 @@
   padding: 8px 0;
   border: 1.5px solid var(--border);
   border-radius: 20px;
-  background-color: #ffffff;
+  background-color: var(--surface);
   color: var(--text-sub);
   font-size: 13px;
   font-weight: bold;
@@ -20,7 +20,7 @@
 .admin-tab.is-active {
   border-color: var(--primary);
   background-color: var(--primary);
-  color: #ffffff;
+  color: var(--on-primary);
 }
 
 .admin-list {
@@ -56,8 +56,8 @@
   flex-shrink: 0;
   padding: 2px 8px;
   border-radius: 10px;
-  background-color: #fff3e0;
-  color: #e65100;
+  background-color: var(--warn-soft);
+  color: var(--warn);
   font-size: 12px;
   font-weight: bold;
 }
@@ -99,8 +99,8 @@
 .admin-template {
   padding: 8px 6px;
   border-radius: 8px;
-  border: 1px solid #d1d5db;
-  background: #fff;
+  border: 1px solid var(--border);
+  background: var(--surface);
   font-size: 13px;
   cursor: pointer;
 }
@@ -112,7 +112,7 @@
 
 .admin-template.is-reject {
   border-color: #6b7280;
-  color: #4b5563;
+  color: var(--text-sub);
 }
 
 .admin-note-input {
@@ -139,18 +139,18 @@
 .admin-approve {
   border: none;
   background-color: var(--primary-dark);
-  color: #ffffff;
+  color: var(--on-primary);
 }
 
 .admin-reject {
   border: 1.5px solid #9e9e9e;
-  background-color: #ffffff;
+  background-color: var(--surface);
   color: var(--text-sub);
 }
 
 .admin-undo {
   border: 1.5px solid var(--primary);
-  background-color: #ffffff;
+  background-color: var(--surface);
   color: var(--primary);
 }
 

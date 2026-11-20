@@ -11,7 +11,7 @@
   gap: 12px;
   width: 100%;
   padding: 10px;
-  background-color: #ffffff;
+  background-color: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);

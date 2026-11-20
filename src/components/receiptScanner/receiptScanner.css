@@ -13,7 +13,7 @@
   height: 56px;
   padding: 0 16px;
   background-color: var(--primary);
-  color: #ffffff;
+  color: var(--on-primary);
 }
 
 .back-button {
@@ -59,7 +59,7 @@
 .preview-container {
   flex: 1;
   min-height: 320px;
-  background-color: #ffffff;
+  background-color: var(--surface);
   border: 2px dashed var(--border-strong);
   border-radius: 12px;
   display: flex;
@@ -143,11 +143,11 @@
 
 .primary-btn, .analyze-btn {
   background-color: var(--primary);
-  color: #ffffff;
+  color: var(--on-primary);
 }
 
 .secondary-btn {
-  background-color: #ffffff;
+  background-color: var(--surface);
   color: var(--text);
   border: 1px solid var(--border-strong);
 }

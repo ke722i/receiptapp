@@ -6,7 +6,7 @@
   position: sticky;
   bottom: 0;
   padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
-  background-color: #ffffff;
+  background-color: var(--surface);
   border-top: 1px solid var(--border);
 }
 

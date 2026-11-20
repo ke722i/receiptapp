@@ -14,7 +14,7 @@
 .confirm-dialog-card {
   width: 100%;
   max-width: 300px;
-  background-color: #ffffff;
+  background-color: var(--surface);
   border-radius: 16px;
   padding: 20px;
   box-sizing: border-box;
@@ -69,7 +69,7 @@
 
 .confirm-dialog-ok {
   background-color: var(--primary);
-  color: #ffffff;
+  color: var(--on-primary);
 }
 
 .confirm-dialog-ok:active {
@@ -78,7 +78,7 @@
 
 .confirm-dialog-danger {
   background-color: var(--danger);
-  color: #ffffff;
+  color: var(--on-danger);
 }
 
 .confirm-dialog-danger:active {

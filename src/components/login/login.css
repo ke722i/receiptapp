@@ -6,7 +6,7 @@
   min-height: 100vh;
   min-height: 100dvh; /* スマホのブラウザの、下のバーに隠れないように（上の 100vh は、古いブラウザ用） */
   width: 100%;
-  background-color: #ffffff; /* 背景色: 白 */
+  background-color: var(--surface); /* 背景色: 白 */
   padding: 20px;
   box-sizing: border-box;
 }
@@ -86,7 +86,7 @@
 
 .form-group input:focus {
   border-color: var(--primary); /* 差し色: 赤 */
-  background-color: #ffffff;
+  background-color: var(--surface);
 }
 
 /* ログインボタン（赤色のメインボタン） */
@@ -95,7 +95,7 @@
   padding: 14px;
   margin-top: 10px;
   background-color: var(--primary); /* 差し色: 赤 */
-  color: #ffffff;
+  color: var(--on-primary);
   border: none;
   border-radius: 12px;
   font-size: 16px;
@@ -149,7 +149,7 @@ input[type="text"],
 input[type="password"],
 input[type="email"] {
   color: var(--text) !important;                     /* テキスト色を濃いグレー/黒に固定 */
-  background-color: #ffffff !important;           /* 背景色を白に固定 */
+  background-color: var(--surface) !important;           /* 背景色を白に固定 */
   -webkit-text-fill-color: var(--text) !important;   /* iOS Safariでの白塗りつぶし対策 */
 }
 
@@ -173,9 +173,9 @@ input[type="email"]::placeholder {
   box-sizing: border-box;
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid #90caf9;
+  border: 1px solid var(--info-border);
   border-radius: 10px;
-  background-color: #e3f2fd;
+  background-color: var(--info-soft);
   text-align: left;
 }
 
@@ -188,7 +188,7 @@ input[type="email"]::placeholder {
   margin: 0;
   font-size: 14px;
   font-weight: bold;
-  color: #0d47a1;
+  color: var(--info);
 }
 
 .login-notice.is-high .login-notice-title {
