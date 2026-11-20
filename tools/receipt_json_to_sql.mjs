@@ -19,7 +19,7 @@
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { resolveItems, findProduct } from '../supabase/functions/parse-receipt/catalog.js';
+import { resolveItems, findProduct, applyPrintNameDictionary } from '../supabase/functions/parse-receipt/catalog.js';
 import { normalizeStoreName } from '../src/utils/storeNameNormalizer.js';
 import { CATEGORY_TREE } from '../src/constants/categoryData.js';
 
@@ -138,7 +138,11 @@ for (const dir of dirs) {
       }
       // 番号は、指示文の番号で名前に戻す（アプリと同じ resolveItems は、今の表の番号なので、番号がずれる）。番号が使えないものだけ、resolveItems（名前の一致）に任せる
       const fallback = resolveItems({ items: r.items.map((i) => ({ ...i, product_code: null, mid_code: null, product_name: null })) }).items;
-      const resolved = fallback.map((i, n) => ({ ...i, ...(resolveByPrompt(prompt, r.items[n]) || {}) }));
+      // 印字名の辞書（分類の間違いの記録から作ったもの）に当たれば、アプリと同じく、辞書で直す
+      const resolved = fallback.map((i, n) => {
+        const merged = { ...i, ...(resolveByPrompt(prompt, r.items[n]) || {}) };
+        return { ...merged, ...applyPrintNameDictionary(merged.item_name, merged) };
+      });
       const sum = resolved.reduce((s, i) => s + Number(i.price || 0), 0);
       const storeName = r.store_name ? normalizeStoreName(r.store_name) : '';
       resolved.forEach((i) => {

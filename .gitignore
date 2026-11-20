@@ -54,3 +54,6 @@ tools/receipt_json/*
 tools/categoryTable.backup.xlsx
 tools/proposals/*
 !tools/proposals/.gitkeep
+
+# 分類の間違いの記録（購入日・店名が入っているので、Git に入れない。辞書は、ここから作った printNameDictionary.js を入れる）
+tools/wrongCategory.xlsx
