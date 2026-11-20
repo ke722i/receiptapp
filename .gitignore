@@ -57,3 +57,6 @@ tools/proposals/*
 
 # 分類の間違いの記録（購入日・店名が入っているので、Git に入れない。辞書は、ここから作った printNameDictionary.js を入れる）
 tools/wrongCategory.xlsx
+
+# 読み取り専用の DB 接続（パスワードを含む。Git に入れない。Claude は開かない。tools/db_query.mjs だけが読む）
+.db-readonly.url

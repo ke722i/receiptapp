@@ -19,6 +19,7 @@
   - docs/claude/ = Claude が読む。正確さ優先（条件・コマンド・ファイル名を省かない）。上の一覧は、すべてここ。
   - docs/manual/ = 人間（管理者・開発者）が読む。表・番号つきの手順・短い文で、分かりやすく書く（release-flow／admin／proposal-approval／receipt-import／category-table／icons）。
 - 仕様・手順を変えたら、該当する docs のファイルを短く直す（両方に関係するなら、manual と claude の両方）。この CLAUDE.md には書き足さない。
+- DB は、`node tools/db_query.mjs`（読み取り専用・集計のビューだけ。docs/manual/db-readonly.md）でだけ調べる。`.db-readonly.url` は読まない・表示しない。書き込み・個人の購入履歴の閲覧はしない（SQL はユーザーが実行）。
 - 変えてはいけない基本ルール: .env を読まない／API キーとプロンプトをブラウザに出さない／categoryData.js は生成物（直接編集しない）／他のユーザーのデータは DB の関数経由だけ（RLS を緩めない）／「その他」は Excel に入れない。
 
 # 8. モデルの使い分け
