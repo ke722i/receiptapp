@@ -621,3 +621,39 @@ input:-webkit-autofill:active {
 :root[data-theme='dark'] .product-icon-image {
   filter: invert(1) hue-rotate(180deg);
 }
+
+/* ---------- 画面がずれない（横にはみ出さない）ための基準 ---------- */
+/* 幅・高さに、余白と枠を含める（width: 100% の部品が、余白の分だけ、はみ出さない） */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* iPhone の日付・時刻の入力欄は、自分の最小の幅を持っていて、枠からはみ出す。縮められるようにする */
+input[type='date'],
+input[type='datetime-local'],
+input[type='time'],
+input[type='month'],
+input[type='week'] {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  line-height: normal;
+}
+
+input[type='date']::-webkit-date-and-time-value,
+input[type='datetime-local']::-webkit-date-and-time-value {
+  text-align: left;
+  min-height: 1.4em;
+}
+
+/* 何かがはみ出しても、画面が横にずれない（縦のスクロールには影響しない） */
+html,
+body,
+#root {
+  max-width: 100%;
+  overflow-x: clip;
+}
