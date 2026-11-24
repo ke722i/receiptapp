@@ -84,13 +84,26 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
     );
   };
 
-  // 全選択・全解除トグル
+  // 表に出ている商品の id（「その商品だけ表示」のときは、要確認の商品だけ）
+  const filterOn = needsOnly && items.some((item) => needsCheckReason(item));
+  const visibleIds = items.filter((item) => !filterOn || needsCheckReason(item)).map((item) => item.id);
+  const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => selectedIds.includes(id));
+
+  // 全選択・全解除トグル（表に出ている商品だけ。出ていない商品は、選ばない）
   const handleToggleSelectAll = () => {
-    if (selectedIds.length === items.length) {
-      setSelectedIds([]);
+    if (allVisibleSelected) {
+      setSelectedIds((prev) => prev.filter((id) => !visibleIds.includes(id)));
     } else {
-      setSelectedIds(items.map((item) => item.id));
+      setSelectedIds((prev) => [...new Set([...prev, ...visibleIds])]);
     }
+  };
+
+  // 「その商品だけ表示」を切り替える。出なくなる商品は、選択から外す（見えない商品を、まとめて編集・削除しない）
+  const handleToggleNeedsOnly = () => {
+    if (!needsOnly && items.some((item) => needsCheckReason(item))) {
+      setSelectedIds((prev) => prev.filter((id) => items.some((item) => item.id === id && needsCheckReason(item))));
+    }
+    setNeedsOnly((v) => !v);
   };
 
   // 編集ボタン押下時の処理
@@ -361,7 +374,7 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
                 type="button"
                 className={`needs-check-toggle ${needsOnly ? 'is-on' : ''}`}
                 aria-pressed={needsOnly}
-                onClick={() => setNeedsOnly((v) => !v)}
+                onClick={handleToggleNeedsOnly}
               >
                 {needsOnly ? 'すべて表示' : 'その商品だけ表示'}
               </button>
@@ -382,7 +395,7 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
                 <th style={{ width: '40px', textAlign: 'center' }}>
                   <input
                     type="checkbox"
-                    checked={items.length > 0 && selectedIds.length === items.length}
+                    checked={allVisibleSelected}
                     onChange={handleToggleSelectAll}
                   />
                 </th>
