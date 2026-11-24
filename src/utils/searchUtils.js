@@ -1,5 +1,6 @@
 import { CATEGORY_TREE, CUSTOM_READING_MAP, CATEGORY_READING_MAP } from '../constants/categoryData';
 import { normalizeForSearch, matchesItemSearch } from './itemNameGroup';
+import { findProductPaths } from './categoryUtils';
 
 // カテゴリツリーから全アイテム名を抽出
 export const getAllCategoryItems = () => {
@@ -203,5 +204,23 @@ export const filterItemNameSuggestions = (index, searchQuery, max = 20) => {
         b.count - a.count ||
         String(b.latestDate).localeCompare(String(a.latestDate))
     )
+    .slice(0, max);
+};
+
+// ---------- 商品名から、大・中・小分類を探す（商品の編集画面） ----------
+
+let productReadingMap = null;
+
+/**
+ * 商品名（ひらがなでも探せる）で、表の商品を探し、その場所（パス）を返す。同じ名前が別の場所にあれば、場所ごとに別の候補
+ * @param {string} searchQuery
+ * @param {number} max 返す最大の件数
+ * @returns {{ main, category, sub, product }[]}
+ */
+export const searchProductPaths = (searchQuery, max = 8) => {
+  if (!String(searchQuery || '').trim()) return [];
+  if (!productReadingMap) productReadingMap = buildItemReadingMap();
+  return filterSearchSuggestions(searchQuery, productReadingMap)
+    .flatMap((name) => findProductPaths(name))
     .slice(0, max);
 };
