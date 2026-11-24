@@ -13,6 +13,7 @@
 | `npm run import-json` | JSON を直して、SQL にして、UID も入れる | Gemini の JSON を取り込むとき |
 | `npm run import-json:done` | 取り込み済みの JSON と SQL を、`misc/` に移す | SQL の実行が終わったあと |
 | `npm run fix-stores` | 店舗名の表記ゆれを直す SQL を、DB から作る | 店舗名が分かれているとき |
+| `npm run fix-products` | 中分類までの明細を、印字名の一致で、商品まで決める SQL を、DB から作る | カテゴリ表に商品を足したあと、昔の明細も直したいとき |
 | `npm run db -- zero` | 登録が 0 件のカテゴリ | 調べたいとき |
 | `npm run db -- categories` | 中分類ごとの件数 | 同上 |
 | `npm run db -- unclassified` | 未選択・その他・商品名なしの件数 | 同上 |
