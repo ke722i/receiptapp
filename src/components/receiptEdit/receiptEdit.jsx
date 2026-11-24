@@ -51,14 +51,18 @@ export const NAME_INPUT_ID = (index) => `edit-name-${index}`;
  */
 export default function ReceiptEdit({ isOpen, selectedItems, onClose, onSave, focusVolume = false, isAdding = false }) {
   const [editItems, setEditItems] = useState(() => (selectedItems || []).map(toEditItem));
-  const [prevSelectedItems, setPrevSelectedItems] = useState(selectedItems);
+  // 入力を捨てるのは、画面を開いたとき・開いたまま別の商品に変わったときだけ。親の画面が描き直されて、
+  //  同じ商品の配列が新しく作られただけのときは、入力中の内容をそのまま残す（カテゴリが「選択してください」に戻る不具合の対策）
+  const openKeyOf = (open, items) => (open ? `${isAdding ? 'add' : 'edit'}:${(items || []).map((item) => item.id ?? '').join(',')}` : null);
+  const [prevOpenKey, setPrevOpenKey] = useState(() => openKeyOf(isOpen, selectedItems));
   const [volumeErrors, setVolumeErrors] = useState({}); // index → エラー文
   const [proposalIndex, setProposalIndex] = useState(null); // カテゴリの提案を開いている商品（index）
   const [proposedTitles, setProposedTitles] = useState({}); // index → 提案した内容（案内に出す）
 
   // レンダリング時の props 変更検出（useEffect 不要パターン）
-  if (selectedItems !== prevSelectedItems) {
-    setPrevSelectedItems(selectedItems);
+  const openKey = openKeyOf(isOpen, selectedItems);
+  if (openKey !== prevOpenKey) {
+    setPrevOpenKey(openKey);
     setEditItems((selectedItems || []).map(toEditItem));
     setVolumeErrors({});
     setProposalIndex(null);
