@@ -416,7 +416,7 @@ export default function Home({
                 id={SEARCH_INPUT_ID}
                 type="search"
                 className="search-input"
-                placeholder="商品名・カテゴリで探す（例: ぎゅうにゅう）"
+                placeholder="商品名・カテゴリで探す"
                 aria-label="商品名・カテゴリ・レシートの印字名で探す"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}

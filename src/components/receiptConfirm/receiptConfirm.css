@@ -233,7 +233,7 @@
 
 /* 値引きありだけが目に入るように、なしは控えめにする */
 .discount-yes {
-  color: #388e3c;
+  color: var(--primary);
   font-weight: bold;
 }
 
@@ -470,7 +470,7 @@
   border-radius: 8px;
   background-color: var(--warn-soft);
   border: 1px solid var(--warn-border);
-  color: #5d4037;
+  color: var(--text);
   font-size: 13px;
   line-height: 1.5;
   text-align: left;

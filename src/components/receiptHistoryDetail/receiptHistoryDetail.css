@@ -253,7 +253,7 @@
 
 /* 値引きありだけが目に入るように、なしは控えめにする */
 .discount-yes {
-  color: #388e3c;
+  color: var(--primary);
   font-weight: bold;
 }
 

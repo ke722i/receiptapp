@@ -166,7 +166,7 @@
   border: 1px solid var(--border);
   border-radius: 10px;
   background-color: var(--surface);
-  color: #475569;
+  color: var(--text-sub);
   font-size: 0.9rem;
   font-weight: 700;
   cursor: pointer;
