@@ -146,9 +146,23 @@ export default function ReceiptHistoryDetail({ receipt, onBack, onDelete, onUpda
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   };
 
+  // 表に出ている商品の id（「その商品だけ表示」のときは、要確認の商品だけ）
+  const filterOn = needsOnly && draftItems.some((item) => needsCheckReason(item));
+  const visibleIds = draftItems.filter((item) => item.id !== null && (!filterOn || needsCheckReason(item))).map((item) => item.id);
+  const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => selectedIds.includes(id));
+
+  // 全選択・全解除（表に出ている商品だけ）
   const handleToggleSelectAll = () => {
-    const ids = draftItems.map((item) => item.id).filter((id) => id !== null);
-    setSelectedIds(selectedIds.length === ids.length ? [] : ids);
+    if (allVisibleSelected) setSelectedIds((prev) => prev.filter((id) => !visibleIds.includes(id)));
+    else setSelectedIds((prev) => [...new Set([...prev, ...visibleIds])]);
+  };
+
+  // 「その商品だけ表示」を切り替える。出なくなる商品は、選択から外す
+  const handleToggleNeedsOnly = () => {
+    if (!needsOnly && draftItems.some((item) => needsCheckReason(item))) {
+      setSelectedIds((prev) => prev.filter((id) => draftItems.some((item) => item.id === id && needsCheckReason(item))));
+    }
+    setNeedsOnly((v) => !v);
   };
 
   // 既存の商品の編集画面から戻った内容を、下書きに反映する
@@ -281,7 +295,6 @@ export default function ReceiptHistoryDetail({ receipt, onBack, onDelete, onUpda
     volumeEditId !== null
       ? draftItems.filter((item) => item.id === volumeEditId)
       : draftItems.filter((item) => selectedIds.includes(item.id));
-  const editableIds = draftItems.map((item) => item.id).filter((id) => id !== null);
 
   return (
     <div className="receipt-detail-container">
@@ -409,7 +422,7 @@ export default function ReceiptHistoryDetail({ receipt, onBack, onDelete, onUpda
               type="button"
               className={`needs-check-toggle ${needsOnly ? 'is-on' : ''}`}
               aria-pressed={needsOnly}
-              onClick={() => setNeedsOnly((v) => !v)}
+              onClick={handleToggleNeedsOnly}
             >
               {needsOnly ? 'すべて表示' : 'その商品だけ表示'}
             </button>
@@ -426,7 +439,7 @@ export default function ReceiptHistoryDetail({ receipt, onBack, onDelete, onUpda
                     <input
                       type="checkbox"
                       aria-label="すべて選択"
-                      checked={editableIds.length > 0 && selectedIds.length === editableIds.length}
+                      checked={allVisibleSelected}
                       onChange={handleToggleSelectAll}
                     />
                   </th>
