@@ -1,5 +1,6 @@
-// お気に入りの商品（端末に保存。DB は使わない）。商品は名前ではなく経路 { main, category, sub, product } で区別する
+// お気に入りの商品（DB のアカウントごとの設定に覚え、端末に控えを置く。utils/userPrefs.js）。商品は名前ではなく経路 { main, category, sub, product } で区別する
 import { productKey, isOtherPath } from './categoryUtils';
+import { pushPref } from './userPrefs';
 
 export const MAX_FAVORITES = 30;
 const storageKey = (userId) => `receipt_app_favorites_${userId}`;
@@ -25,6 +26,7 @@ export const saveFavorites = (userId, list) => {
   } catch {
     // 保存できなくても、この画面では使える
   }
+  pushPref(userId, 'favorites', list);
 };
 
 export const isFavorite = (list, path) => !!path && list.some((item) => productKey(item) === productKey(path));

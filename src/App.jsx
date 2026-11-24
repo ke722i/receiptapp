@@ -49,6 +49,8 @@ import { restoreSession, signOutHere, rememberRegistered } from './utils/authSes
 import { clearScreenState } from './utils/screenState';
 import { forgetLocalUserData } from './utils/accountDb';
 import { supabase } from './services/supabaseClient';
+import { syncNoticeStates, pushNoticeStates } from './utils/noticeSync';
+import { syncUserPrefs } from './utils/userPrefs';
 
 // 下のタブを出す画面と、そのタブ（ほかの画面は、戻るボタンで戻る）
 const TAB_OF_SCREEN = {
@@ -155,6 +157,7 @@ function App() {
   const closeAnnouncement = (a) => {
     saveClosedAnnouncements(userId, [...closedAnnouncements, announcementKey(a)]);
     setClosedVersion((v) => v + 1);
+    pushNoticeStates('closed', [announcementKey(a)], true);
   };
   // 高: 「OK」を押していない、いちばん新しいものを、ポップアップで出す
   const [confirmedVersion, setConfirmedVersion] = useState(0);
@@ -165,10 +168,12 @@ function App() {
   const confirmAnnouncement = (a) => {
     saveConfirmedAnnouncements(userId, [...confirmedAnnouncements, announcementKey(a)]);
     setConfirmedVersion((v) => v + 1);
+    pushNoticeStates('confirmed', [announcementKey(a)], true);
   };
 
   // 通知の画面（結果が出たカテゴリの提案 + お知らせの小・中）。ホームを開くたびに、自分の提案を 1 回読む（軽い問い合わせ）。
-  //  「読んだ」は端末に覚える。通知の画面を開いただけでは、既読にならない（通知ごとの「既読にする」か、「すべて既読にする」）
+  //  「読んだ」は DB（アカウントごと）に覚え、端末に控えを置く（utils/noticeSync.js）。別の端末でも、既読のまま。
+  //  通知の画面を開いただけでは、既読にならない（通知ごとの「既読にする」か、「すべて既読にする」）
   //  中のお知らせは、ホームに出るので、未読に数えない（通知の画面では、履歴として出す）
   const [notices, setNotices] = useState({ status: 'loading', list: [] });
   const [readVersion, setReadVersion] = useState(0);
@@ -178,25 +183,61 @@ function App() {
   const reassignRuns = useMemo(() => loadRuns(userId), [userId, runsVersion]); // eslint-disable-line react-hooks/exhaustive-deps
   const noticeItems = buildNoticeItems(notices.list, announcements, reassignRuns);
   const unreadList = unreadIds(noticeItems, readIds);
-  // 通知を、読んだことにする（端末に覚える）。keys は、既読にする通知の key
+  // 通知を、読んだことにする（端末の控えと、DB）。keys は、既読にする通知の key
   const markNoticesRead = (keys) => {
-    saveReadIds(userId, [...new Set([...loadReadIds(userId), ...keys])]);
+    saveReadIds(userId, [...new Set([...loadReadIds(userId).map(String), ...keys.map(String)])]);
     setReadVersion((v) => v + 1);
+    pushNoticeStates('read', keys, true);
   };
   // 通知を、未読に戻す
   const markNoticesUnread = (keys) => {
-    saveReadIds(userId, loadReadIds(userId).filter((key) => !keys.includes(key)));
+    const remove = keys.map(String);
+    saveReadIds(userId, loadReadIds(userId).filter((key) => !remove.includes(String(key))));
     setReadVersion((v) => v + 1);
+    pushNoticeStates('read', keys, false);
   };
+  // DB の既読・閉じた・OK を、端末にそろえる（ログインしたとき、ホーム・通知の画面を開いたとき、アプリに戻ったとき）
+  //  お気に入り・検索履歴・「その他」の自動移動の記録なども、同じように DB とそろえる（utils/userPrefs.js）
+  const [prefsVersion, setPrefsVersion] = useState(0);
+  const syncStates = useCallback(() => {
+    const notices = syncNoticeStates(userId).then((changed) => {
+      if (!changed) return;
+      setReadVersion((v) => v + 1);
+      setClosedVersion((v) => v + 1);
+      setConfirmedVersion((v) => v + 1);
+    });
+    const prefs = syncUserPrefs(userId).then((changed) => {
+      if (!changed) return;
+      setPrefsVersion((v) => v + 1);
+      setFavVersion((v) => v + 1);
+      setRunsVersion((v) => v + 1);
+    });
+    return Promise.all([notices, prefs]);
+  }, [userId]);
+  useEffect(() => {
+    if (loggedIn && (currentScreen === 'home' || currentScreen === 'notices')) syncStates();
+  }, [loggedIn, currentScreen, syncStates]);
+  useEffect(() => {
+    if (!loggedIn) return undefined;
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') syncStates();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [loggedIn, syncStates]);
   // ホームを開いたとき、カテゴリ表の商品が増えていれば、「その他」の商品を、確実なものだけ自動で移す（1 つの端末で、変わった直後の 1 回）
   const reassignChecked = useRef('');
   useEffect(() => {
     if (currentScreen !== 'home' || !userId || reassignChecked.current === userId) return;
     reassignChecked.current = userId;
-    runAutoReassign(userId).then((result) => {
-      if (result.moved > 0) setRunsVersion((v) => v + 1);
-    });
-  }, [currentScreen, userId]);
+    // 先に、DB の記録（印・移さない明細）を端末にそろえてから、動かす（別の端末で、もう移した分を、重ねて移さない）
+    syncStates()
+      .catch(() => {})
+      .then(() => runAutoReassign(userId))
+      .then((result) => {
+        if (result.moved > 0) setRunsVersion((v) => v + 1);
+      });
+  }, [currentScreen, userId, syncStates]);
   const handleUndoReassign = async (run) => {
     const result = await undoAutoReassign(userId, run);
     setRunsVersion((v) => v + 1);
@@ -362,6 +403,7 @@ function App() {
       {currentScreen === 'home' && (
         <Home
           userId={userId}
+          prefsVersion={prefsVersion}
           favorites={favorites}
           announcements={homeAnnouncements}
           onCloseAnnouncement={closeAnnouncement}

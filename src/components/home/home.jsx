@@ -27,6 +27,7 @@ import {
   otherSubPath,
   otherProductPath,
 } from '../../utils/categoryUtils';
+import { pushPref } from '../../utils/userPrefs';
 import { navKeyOf, rememberHomeCategory, peekHomeCategory, scrollToReturnedCategoryRow } from '../../utils/homeCategoryState';
 
 const SEARCH_INPUT_ID = 'home-search-input';
@@ -48,6 +49,7 @@ const toProductPath = (entry) => {
 
 // ホーム。画面の移動（レシート・撮影・店舗・設定）は、下のタブ（components/tabBar）で行う
 export default function Home({
+  prefsVersion = 0,
   onNavigateToCategory,
   onOpenCategoryProposal,
   onOpenNotices,
@@ -91,6 +93,7 @@ export default function Home({
     } catch {
       // 保存できなくても、この画面では閉じる
     }
+    pushPref(userId, 'proposal_tip', true);
   };
 
   const noticeSlideCount = announcements.length + (showProposalTip && onOpenCategoryProposal ? 1 : 0);
@@ -105,6 +108,19 @@ export default function Home({
       return [];
     }
   });
+
+  // 別の端末で変えた内容が、DB からそろったとき（prefsVersion が増えたとき）、端末の控えから読み直す
+  const [seenPrefsVersion, setSeenPrefsVersion] = useState(prefsVersion);
+  if (seenPrefsVersion !== prefsVersion) {
+    setSeenPrefsVersion(prefsVersion);
+    try {
+      const saved = localStorage.getItem(historyKeyOf(userId));
+      setSearchHistory((saved ? JSON.parse(saved) : []).map(toProductPath).filter(Boolean));
+      setShowProposalTip(localStorage.getItem(proposalTipKeyOf(userId)) !== '1');
+    } catch {
+      // 読めなければ、今のまま
+    }
+  }
 
   // よみマップの事前生成
   const itemReadingMap = useMemo(() => buildItemReadingMap(), []);
@@ -283,6 +299,7 @@ export default function Home({
     } catch (err) {
       console.error('Failed to save search history:', err);
     }
+    pushPref(userId, 'search_history', list);
   };
 
   // 検索を閉じる（カテゴリを選んだとき・Esc キー）

@@ -46,9 +46,10 @@ function ExistingList({ title, names }) {
  *  ・提案できるのは、新しい中分類／今ある中分類に新しい小分類／今ある小分類に新しい商品名
  *  ・管理者が確認して、承認したものは、次の表の更新で、全員の画面と AI の解析に追加される
  *  ・自分の提案の状況（承認待ち／承認／見送り）を見られる。承認待ちは取り下げられる
+ *  ・embedded: 商品の編集画面から開くとき（重ねて出す。自分の提案の一覧は出さない。送れたら onSubmitted(説明) を呼ぶ。initialNote は、メモの初期値）
  */
-export default function CategoryProposal({ onBack }) {
-  const [form, setForm] = useState(EMPTY_FORM);
+export default function CategoryProposal({ onBack, embedded = false, initialNote = '', onSubmitted }) {
+  const [form, setForm] = useState({ ...EMPTY_FORM, note: initialNote });
   const [touched, setTouched] = useState(false); // 送るボタンを押したか（押す前は、エラーを出さない）
   const [sending, setSending] = useState(false);
   const [message, setMessage] = useState(null); // { type: 'success' | 'error', text }
@@ -132,6 +133,10 @@ export default function CategoryProposal({ onBack }) {
       sub_category: check.value.sub,
       product_name: check.value.product,
     });
+    if (embedded) {
+      onSubmitted?.(title);
+      return;
+    }
     setMessage({ type: 'success', text: `${title}を提案しました。管理者が確認します。` });
     // 種類と大分類は残し、続けて提案しやすくする
     //  商品名の提案は、中分類・小分類も残す（同じ小分類に、続けて足しやすい）
@@ -154,7 +159,7 @@ export default function CategoryProposal({ onBack }) {
   const errorOf = (field) => (touched ? check.errors[field] : '');
 
   return (
-    <div className="proposal-container">
+    <div className={`proposal-container ${embedded ? 'is-embedded' : ''}`}>
       <header className="proposal-header">
         <button type="button" className="back-button" onClick={onBack} aria-label="戻る">
           ‹
@@ -165,8 +170,9 @@ export default function CategoryProposal({ onBack }) {
 
       <main className="proposal-main">
         <p className="proposal-intro">
-          ぴったりの分類や商品名が無くて「その他」になる商品があるときに、新しい中分類・小分類・商品名を提案してください。
-          管理者が確認して、承認したものは、次の更新で、すべてのユーザーの表に追加します（すぐには追加されません）。
+          {embedded
+            ? '提案すると、この商品は、いったん「その他」で登録できます。管理者が確認して、承認したものは、次の更新で、すべてのユーザーの表に追加します（すぐには追加されません）。'
+            : 'ぴったりの分類や商品名が無くて「その他」になる商品があるときに、新しい中分類・小分類・商品名を提案してください。管理者が確認して、承認したものは、次の更新で、すべてのユーザーの表に追加します（すぐには追加されません）。'}
         </p>
 
         {/* 提案の入力 */}
@@ -375,6 +381,7 @@ export default function CategoryProposal({ onBack }) {
         </form>
 
         {/* 自分の提案 */}
+        {!embedded && (
         <section className="proposal-history">
           <h2 className="proposal-section-title">自分の提案</h2>
           {listLoading && <p className="proposal-message">読み込み中...</p>}
@@ -407,6 +414,7 @@ export default function CategoryProposal({ onBack }) {
             </ul>
           )}
         </section>
+        )}
       </main>
 
       {withdrawTarget && (
