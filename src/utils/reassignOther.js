@@ -1,4 +1,5 @@
 import { PRODUCT_PATHS, OTHER, productKey, formatPath } from './categoryUtils';
+import { pushPref } from './userPrefs';
 import { normalizeText, hiraganaToKatakana } from './searchUtils';
 
 /*
@@ -127,7 +128,7 @@ export const categoryTableFingerprint = () => {
   return `${PRODUCT_PATHS.length}:${hash}`;
 };
 
-// ---------- 端末に覚えること（ユーザーごと） ----------
+// ---------- 覚えること（ユーザーごと。DB のアカウントごとの設定に覚え、端末に控えを置く。utils/userPrefs.js） ----------
 const key = (name, userId) => `receipt_app_reassign_${name}_${userId}`;
 const readJson = (k, fallback) => {
   try {
@@ -137,23 +138,24 @@ const readJson = (k, fallback) => {
     return fallback;
   }
 };
-const writeJson = (k, value) => {
+const writeJson = (k, value, userId, name) => {
   try {
     localStorage.setItem(k, JSON.stringify(value));
   } catch {
     // 保存できなくても、この画面では動く
   }
+  pushPref(userId, name, value);
 };
 
 export const loadFingerprint = (userId) => readJson(key('fp', userId), '');
-export const saveFingerprint = (userId, fp) => writeJson(key('fp', userId), fp);
+export const saveFingerprint = (userId, fp) => writeJson(key('fp', userId), fp, userId, 'reassign_fp');
 
 /** 移さない・見直さないと決めた明細の id（元に戻したもの・「このままにする」を押したもの） */
 export const loadSkipIds = (userId) => {
   const list = readJson(key('skip', userId), []);
   return Array.isArray(list) ? list : [];
 };
-export const addSkipIds = (userId, ids) => writeJson(key('skip', userId), [...new Set([...loadSkipIds(userId), ...ids])].slice(-2000));
+export const addSkipIds = (userId, ids) => writeJson(key('skip', userId), [...new Set([...loadSkipIds(userId), ...ids])].slice(-2000), userId, 'reassign_skip');
 
 /**
  * 自動で移した記録（通知に出す。新しい順。20 回分まで）
@@ -163,7 +165,7 @@ export const loadRuns = (userId) => {
   const list = readJson(key('runs', userId), []);
   return Array.isArray(list) ? list : [];
 };
-export const saveRuns = (userId, runs) => writeJson(key('runs', userId), runs.slice(0, 20));
+export const saveRuns = (userId, runs) => writeJson(key('runs', userId), runs.slice(0, 20), userId, 'reassign_runs');
 export const addRun = (userId, run) => saveRuns(userId, [run, ...loadRuns(userId)]);
 export const markRunUndone = (userId, runId) =>
   saveRuns(

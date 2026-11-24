@@ -1,5 +1,5 @@
-// アプリ内の通知（結果が出たカテゴリの提案: 承認・見送り）。DB は変えず、自分の提案（status = approved / rejected）を読み、
-// 「読んだ」は、端末に覚える
+// アプリ内の通知（結果が出たカテゴリの提案: 承認・見送り）。自分の提案（status = approved / rejected）を読む。
+// 「読んだ」は、DB（アカウントごと）に覚え、端末にも控えを置く（そろえるのは utils/noticeSync.js）
 
 const storageKey = (userId) => `receipt_app_read_notices_${userId}`;
 
@@ -52,4 +52,8 @@ export const buildNoticeItems = (proposals, announcements, reassignRuns = []) =>
 };
 
 /** まだ読んでいない通知（key の配列。中のお知らせは数えない） */
-export const unreadIds = (items, readIds) => items.filter((n) => !n.noRead && !readIds.includes(n.key)).map((n) => n.key);
+//  key は、提案の id（数）と文字が混ざる。DB からそろえた記録は文字なので、文字にして比べる
+export const unreadIds = (items, readIds) => {
+  const read = new Set((readIds || []).map(String));
+  return items.filter((n) => !n.noRead && !read.has(String(n.key))).map((n) => n.key);
+};

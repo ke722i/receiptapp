@@ -10,6 +10,7 @@ import {
 } from '../../utils/categoryUtils';
 import { parseVolume, composeVolume, isValidAmount, unitsForItem, defaultUnitForItem, unitPriceText } from '../../utils/volume';
 import Icon from '../icon/icon';
+import CategoryProposal from '../categoryProposal/categoryProposal';
 
 // 容量は、「数の欄＋単位のプルダウン」で入力する。保存されている容量（"300g" など）を、数と単位に分けて持つ
 //  ・分けられない容量（「6枚切」など）は volRaw にそのまま残す。数を入れると、新しい容量に置き換わる
@@ -41,12 +42,16 @@ export default function ReceiptEdit({ isOpen, selectedItems, onClose, onSave, fo
   const [editItems, setEditItems] = useState(() => (selectedItems || []).map(toEditItem));
   const [prevSelectedItems, setPrevSelectedItems] = useState(selectedItems);
   const [volumeErrors, setVolumeErrors] = useState({}); // index → エラー文
+  const [proposalIndex, setProposalIndex] = useState(null); // カテゴリの提案を開いている商品（index）
+  const [proposedTitles, setProposedTitles] = useState({}); // index → 提案した内容（案内に出す）
 
   // レンダリング時の props 変更検出（useEffect 不要パターン）
   if (selectedItems !== prevSelectedItems) {
     setPrevSelectedItems(selectedItems);
     setEditItems((selectedItems || []).map(toEditItem));
     setVolumeErrors({});
+    setProposalIndex(null);
+    setProposedTitles({});
   }
 
   // 「＋容量」から開いたときは、容量の欄にカーソルを入れる
@@ -68,6 +73,16 @@ export default function ReceiptEdit({ isOpen, selectedItems, onClose, onSave, fo
   const handleCategoryChange = (index, level, value) => {
     setEditItems((prev) =>
       prev.map((item, idx) => (idx === index ? applyCategoryChange(item, level, value) : item))
+    );
+  };
+
+  // 提案を送れたら、この商品は「その他」にして、登録へ進める（すでに分類を選んでいるときは、そのまま）
+  const handleProposed = (title) => {
+    const index = proposalIndex;
+    setProposalIndex(null);
+    setProposedTitles((prev) => ({ ...prev, [index]: title }));
+    setEditItems((prev) =>
+      prev.map((item, idx) => (idx === index && !getMainCategories().includes(item.mainCategory) ? applyCategoryChange(item, 'main', OTHER) : item))
     );
   };
 
@@ -258,10 +273,17 @@ export default function ReceiptEdit({ isOpen, selectedItems, onClose, onSave, fo
                   </select>
                 </div>
 
-                {/* 「その他」を選んだときの案内（カテゴリの提案ができること） */}
-                {[item.mainCategory, item.category, item.subCategory, item.productName].includes(OTHER) && (
+                {/* ぴったりの分類が無いとき: ここから提案できる（提案すると、この商品は「その他」になり、そのまま登録できる） */}
+                {proposedTitles[index] ? (
+                  <p className="edit-proposal-done">
+                    <Icon name="bulb" size={15} /> {proposedTitles[index]}を提案しました。管理者が確認します。この商品は「その他」で登録できます。
+                  </p>
+                ) : (
                   <p className="edit-proposal-hint">
-                    <Icon name="bulb" size={15} /> ぴったりの分類が無いときは、設定の「カテゴリを提案する」から、新しい中分類・小分類・商品名を提案できます。
+                    <Icon name="bulb" size={15} /> ぴったりの分類が無いときは、新しい中分類・小分類・商品名を提案できます。
+                    <button type="button" className="edit-proposal-button" onClick={() => setProposalIndex(index)}>
+                      カテゴリを提案する
+                    </button>
                   </p>
                 )}
               </div>
@@ -279,6 +301,16 @@ export default function ReceiptEdit({ isOpen, selectedItems, onClose, onSave, fo
           </button>
         </footer>
       </div>
+      {proposalIndex !== null && (
+        <div className="receipt-edit-proposal-overlay">
+          <CategoryProposal
+            embedded
+            initialNote={editItems[proposalIndex]?.printName ? `レシート印字名: ${String(editItems[proposalIndex].printName).slice(0, 150)}` : ''}
+            onBack={() => setProposalIndex(null)}
+            onSubmitted={handleProposed}
+          />
+        </div>
+      )}
     </div>
   );
 }

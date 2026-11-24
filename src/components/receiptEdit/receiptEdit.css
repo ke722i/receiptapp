@@ -212,6 +212,40 @@
   text-align: left;
 }
 
+.edit-proposal-hint .edit-proposal-button {
+  display: block;
+  margin-top: 6px;
+  padding: 8px 14px;
+  border: 1px solid var(--warn-border);
+  border-radius: 8px;
+  background-color: var(--surface);
+  color: var(--warn);
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.edit-proposal-done {
+  margin: 0;
+  padding: 8px 10px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--primary-dark);
+  background-color: var(--primary-soft);
+  border: 1px solid var(--primary);
+  border-radius: 8px;
+  text-align: left;
+}
+
+/* 商品の編集画面から開く、カテゴリの提案（編集画面の上に重ねる） */
+.receipt-edit-proposal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  overflow-y: auto;
+  background-color: var(--bg);
+}
+
 /* 容量: 数の欄＋単位のプルダウン */
 .edit-volume-row {
   display: flex;
