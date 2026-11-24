@@ -16,6 +16,10 @@
 
     <!-- タブのロゴ（ログイン画面と同じ画像。ビルド時に Vite が同じファイルとしてまとめる） -->
     <link rel="icon" type="image/svg+xml" href="/src/assets/logo.svg" />
+    <!-- iPhone の「ホーム画面に追加」のアイコンと名前（SVG は使えないので、PNG。tools/make_icons.mjs で作る） -->
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+    <meta name="apple-mobile-web-app-title" content="レシート即メモ" />
   </head>
   <body>
     <div id="root"></div>
