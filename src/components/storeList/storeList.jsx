@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import './storeList.css';
 import { useReceiptHistory } from '../../utils/receiptCache';
 import { getChainName } from '../../utils/storeNameNormalizer';
+import { normalizeForSearch } from '../../utils/itemNameGroup';
 import { formatPurchaseDate } from '../../utils/purchaseDate';
 import Icon from '../icon/icon';
 import { SkeletonList, EmptyState } from '../common/common';
@@ -10,6 +11,35 @@ import { rememberScreenState, peekScreenState, clearScreenState } from '../../ut
 const STATE_KEY = 'storeList'; // 店舗詳細から戻ったとき、開いた店舗の行まで戻す（utils/screenState.js）
 
 const UNREGISTERED = '店舗名未登録';
+
+// 並び替え（チェーンの並びも、チェーンの中の店舗の並びも、同じ選択肢）。既定はレシートの多い順。選んだものは端末に覚える
+const SORT_OPTIONS = [
+  { value: 'count', label: 'レシートの多い順' },
+  { value: 'latest', label: '最新の購入日順' },
+  { value: 'name', label: '店舗名（あいうえお順）' },
+];
+const SORT_STORAGE_KEY = 'receipt_app_store_list_sort';
+const loadSort = () => {
+  try {
+    const value = localStorage.getItem(SORT_STORAGE_KEY);
+    if (SORT_OPTIONS.some((option) => option.value === value)) return value;
+  } catch {
+    // 使えないときは、既定の並び替え
+  }
+  return 'count';
+};
+
+// a・b は { name, count, latest }。同じ順位のときは、もう一方の条件で並べる
+const compareStores = (sortKey) => {
+  const byCount = (a, b) => b.count - a.count || b.latest.localeCompare(a.latest);
+  const byLatest = (a, b) => b.latest.localeCompare(a.latest) || b.count - a.count;
+  const byName = (a, b) => {
+    if (a.name === UNREGISTERED && b.name !== UNREGISTERED) return 1; // 店舗名未登録は最後
+    if (b.name === UNREGISTERED && a.name !== UNREGISTERED) return -1;
+    return a.name.localeCompare(b.name, 'ja') || byCount(a, b);
+  };
+  return { count: byCount, latest: byLatest, name: byName }[sortKey] || byCount;
+};
 
 /**
  * 店舗別の一覧
@@ -23,11 +53,22 @@ export default function StoreList({ onBack, onSelectStore, openChain = null, onO
   const { receipts, loading, errorMessage } = useReceiptHistory(); // 覚えた一覧を使う（画像は読まない。utils/receiptCache.js）
   const [localOpen, setLocalOpen] = useState(null); // 親が開いたチェーンを持たないときの控え
   const [returned] = useState(() => peekScreenState(STATE_KEY)); // 店舗詳細から戻ってきたか
+  const [sortKey, setSortKey] = useState(loadSort);
+  const [searchText, setSearchText] = useState(''); // 店舗名の検索（チェーン名・支店名。空白・大文字小文字・全角半角は区別しない）
   const scrolledRef = useRef(false);
   const openName = onOpenChainChange ? openChain : localOpen;
   const setOpenName = onOpenChainChange || setLocalOpen;
 
-  // チェーンごとにまとめる（レシートの多い順 → 新しい順）
+  const changeSort = (value) => {
+    setSortKey(value);
+    try {
+      localStorage.setItem(SORT_STORAGE_KEY, value);
+    } catch {
+      // 覚えられなくても、この画面では使える
+    }
+  };
+
+  // チェーンごとにまとめる（並びは、選んだ並び替え）
   const chains = useMemo(() => {
     const map = new Map();
     receipts.forEach((receipt) => {
@@ -41,7 +82,7 @@ export default function StoreList({ onBack, onSelectStore, openChain = null, onO
 
     return Array.from(map.values())
       .map((group) => {
-        // 同じチェーンの中の店舗（支店名つきの店舗名ごと。レシートの多い順 → 新しい順）
+        // 同じチェーンの中の店舗（支店名つきの店舗名ごと）
         const byStore = new Map();
         group.receipts.forEach((r) => {
           const storeName = r.store_name || UNREGISTERED;
@@ -50,11 +91,24 @@ export default function StoreList({ onBack, onSelectStore, openChain = null, onO
           store.count += 1;
           if ((r.purchase_date || '') > store.latest) store.latest = r.purchase_date || '';
         });
-        const stores = Array.from(byStore.values()).sort((a, b) => b.count - a.count || b.latest.localeCompare(a.latest));
-        return { ...group, stores, storeCount: stores.length };
+        const stores = Array.from(byStore.values()).sort(compareStores(sortKey));
+        return { ...group, count: group.receipts.length, stores, storeCount: stores.length };
       })
-      .sort((a, b) => b.receipts.length - a.receipts.length || b.latest.localeCompare(a.latest));
-  }, [receipts]);
+      .sort(compareStores(sortKey));
+  }, [receipts, sortKey]);
+
+  // 検索: チェーン名に当たれば、そのチェーンの店舗は全部。支店名だけに当たれば、当たった店舗だけ（そのチェーンは開いて見せる）
+  const query = normalizeForSearch(searchText);
+  const visibleChains = useMemo(() => {
+    if (!query) return chains.map((chain) => ({ ...chain, shown: chain.stores, forceOpen: false }));
+    return chains
+      .map((chain) => {
+        if (normalizeForSearch(chain.name).includes(query)) return { ...chain, shown: chain.stores, forceOpen: false };
+        const shown = chain.stores.filter((store) => normalizeForSearch(store.name).includes(query));
+        return { ...chain, shown, forceOpen: true };
+      })
+      .filter((chain) => chain.shown.length > 0);
+  }, [chains, query]);
 
   // 戻ってきたら、開いた店舗の行が見える位置まで動かす（一覧が並んだあとに、1 回だけ）
   useEffect(() => {
@@ -111,9 +165,41 @@ export default function StoreList({ onBack, onSelectStore, openChain = null, onO
         )}
 
         {!loading && chains.length > 0 && (
+          <div className="store-toolbar">
+            <div className="store-search-field">
+              <Icon name="search" size={18} className="store-search-icon" />
+              <input
+                type="search"
+                className="store-search-input"
+                placeholder="店舗名で探す"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                aria-label="店舗名で探す"
+                enterKeyHint="search"
+              />
+            </div>
+            <label className="store-sort-chip">
+              <span className="visually-hidden">並び替え</span>
+              <select value={sortKey} onChange={(e) => changeSort(e.target.value)} aria-label="並び替え">
+                {SORT_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <Icon name="chevronDown" size={14} />
+            </label>
+          </div>
+        )}
+
+        {!loading && chains.length > 0 && visibleChains.length === 0 && (
+          <div className="no-stores-message">「{searchText.trim()}」に合う店舗はありません</div>
+        )}
+
+        {!loading && visibleChains.length > 0 && (
           <div className="store-chain-list">
-            {chains.map((chain) => {
-              const isOpen = openName === chain.name;
+            {visibleChains.map((chain) => {
+              const isOpen = chain.forceOpen || openName === chain.name;
               return (
                 <section key={chain.name} className="store-chain-card">
                   <button
@@ -135,7 +221,7 @@ export default function StoreList({ onBack, onSelectStore, openChain = null, onO
 
                   {isOpen && (
                     <ul className="store-receipt-list">
-                      {chain.stores.map((store) => (
+                      {chain.shown.map((store) => (
                         <li key={store.name}>
                           <button
                             type="button"

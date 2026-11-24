@@ -249,3 +249,72 @@
   color: var(--primary);
   display: inline-flex;
 }
+
+/* 並び替え（レシート一覧と同じ見た目のチップ） */
+.store-toolbar {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.store-search-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.store-search-icon {
+  position: absolute;
+  left: 14px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.store-search-input {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px 0 40px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background-color: var(--surface);
+  box-shadow: var(--shadow-card);
+  font-size: 16px; /* 16px 未満だと、iPhone で入力欄を押したとき、画面が拡大される */
+  color: var(--text);
+  box-sizing: border-box;
+  outline: none;
+}
+
+.store-search-input:focus {
+  border-color: var(--primary);
+}
+
+.store-sort-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 10px 0 0;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-sub);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.store-sort-chip select {
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  background: transparent !important;
+  padding: 7px 4px 7px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: inherit !important;
+  -webkit-text-fill-color: currentColor !important;
+  outline: none;
+  cursor: pointer;
+}
