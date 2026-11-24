@@ -14,6 +14,7 @@
     "import-json": "node tools/import_json.mjs",
     "import-json:done": "node tools/import_json.mjs --done",
     "fix-stores": "node tools/fix_store_names.mjs --from-db",
+    "fix-products": "node tools/fix_midonly_items.mjs",
     "db": "node tools/db_query.mjs",
     "manual": "python tools/export_manual.py",
     "preview": "vite preview"
