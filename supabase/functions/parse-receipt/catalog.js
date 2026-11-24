@@ -183,7 +183,8 @@ export const resolveItems = (parsedData, rules = null) => {
     ...parsedData,
     items: parsedData.items.map((item) => ({
       item_name: item.item_name,
-      price: item.price,
+      // 値段は、いつも 0 以上（「ー」をマイナスと読んだ答えを直す）
+      price: Number.isFinite(item.price) ? Math.abs(item.price) : item.price,
       is_discount: item.is_discount,
       volume: normalizeVolume(item.volume),
       ...applyPrintNameDictionary(item.item_name, resolveCategory(item), rules),
@@ -202,6 +203,8 @@ export const PROMPT_TEXT = `レシート画像から情報を抽出してくだ�
   和暦（令和など）や2桁の年は西暦に直す。時刻は含めない。読み取れなければ null
 - item_name: 「単100」等の単価表記を除いた純粋な商品名
 - price: 複数購入（例: @100、3点 300）の場合、合計額ではなく必ず「1点あたりの単品価格」を数値で取得
+  price は必ず 0 以上の整数（マイナスにしない）。商品名の中の「ー」「−」「-」（長音・区切りの記号。例: コストコのレシート）は、
+  値段のマイナスではない。値引きの行も、金額は正の数で書き、値引きかどうかは is_discount で表す。
 - is_discount: 対象商品が値引き・割引されているか(boolean)
 - volume: レシートの印字名に容量・数量が書かれていれば、その表記を単位つきで（例: "900ml" "1L" "300g" "10個" "6枚切"）。
   印字名に書かれていなければ必ず null。商品から推測しない。
