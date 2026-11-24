@@ -46,10 +46,10 @@ function ExistingList({ title, names }) {
  *  ・提案できるのは、新しい中分類／今ある中分類に新しい小分類／今ある小分類に新しい商品名
  *  ・管理者が確認して、承認したものは、次の表の更新で、全員の画面と AI の解析に追加される
  *  ・自分の提案の状況（承認待ち／承認／見送り）を見られる。承認待ちは取り下げられる
- *  ・embedded: 商品の編集画面から開くとき（重ねて出す。自分の提案の一覧は出さない。送れたら onSubmitted(説明) を呼ぶ。initialNote は、メモの初期値）
+ *  ・embedded: 商品の編集画面から開くとき（重ねて出す。自分の提案の一覧は出さない。送れたら onSubmitted(説明) を呼ぶ。initialNote は、メモの初期値。initialForm は、種類・分類の初期値）
  */
-export default function CategoryProposal({ onBack, embedded = false, initialNote = '', onSubmitted }) {
-  const [form, setForm] = useState({ ...EMPTY_FORM, note: initialNote });
+export default function CategoryProposal({ onBack, embedded = false, initialNote = '', initialForm = null, onSubmitted }) {
+  const [form, setForm] = useState({ ...EMPTY_FORM, ...(initialForm || {}), note: initialNote });
   const [touched, setTouched] = useState(false); // 送るボタンを押したか（押す前は、エラーを出さない）
   const [sending, setSending] = useState(false);
   const [message, setMessage] = useState(null); // { type: 'success' | 'error', text }

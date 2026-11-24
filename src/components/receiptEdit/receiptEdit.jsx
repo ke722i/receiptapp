@@ -11,6 +11,7 @@ import {
 import { parseVolume, composeVolume, isValidAmount, unitsForItem, defaultUnitForItem, unitPriceText } from '../../utils/volume';
 import Icon from '../icon/icon';
 import CategoryProposal from '../categoryProposal/categoryProposal';
+import { getProposalMains, getProposalMids, getProposalSubs } from '../../utils/categoryProposal';
 
 // 容量は、「数の欄＋単位のプルダウン」で入力する。保存されている容量（"300g" など）を、数と単位に分けて持つ
 //  ・分けられない容量（「6枚切」など）は volRaw にそのまま残す。数を入れると、新しい容量に置き換わる
@@ -28,6 +29,16 @@ const toEditItem = (item) => {
 const fromEditItem = (item) => {
   const { volAmount, volUnit, volRaw, ...rest } = item;
   return { ...rest, volume: composeVolume(volAmount, volUnit) || volRaw || '' };
+};
+
+// 提案の画面に引き継ぐ、今選んでいる分類（選んである階層までを入れ、その下に、新しいものを提案する）
+//  大分類だけ → 新しい中分類 ／ 大分類・中分類 → 新しい小分類 ／ 大・中・小 → 新しい商品名
+const proposalFormOf = (item) => {
+  if (!getProposalMains().includes(item.mainCategory)) return null;
+  const main = item.mainCategory;
+  if (!getProposalMids(main).includes(item.category)) return { kind: 'category', main };
+  if (!getProposalSubs(main, item.category).includes(item.subCategory)) return { kind: 'sub', main, category: item.category };
+  return { kind: 'product', main, category: item.category, sub: item.subCategory };
 };
 
 export const VOLUME_INPUT_ID = (index) => `edit-volume-${index}`;
@@ -305,6 +316,7 @@ export default function ReceiptEdit({ isOpen, selectedItems, onClose, onSave, fo
         <div className="receipt-edit-proposal-overlay">
           <CategoryProposal
             embedded
+            initialForm={proposalFormOf(editItems[proposalIndex] || {})}
             initialNote={editItems[proposalIndex]?.printName ? `レシート印字名: ${String(editItems[proposalIndex].printName).slice(0, 150)}` : ''}
             onBack={() => setProposalIndex(null)}
             onSubmitted={handleProposed}
