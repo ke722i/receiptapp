@@ -90,6 +90,7 @@ export default function ReceiptHistoryList({ onBack, onSelectReceiptDetail, onOp
               <Icon name="search" size={18} className="receipt-search-icon" />
               <input
                 type="search"
+                autoComplete="off"
                 className="receipt-filter-input"
                 placeholder="店名・商品名で探す"
                 value={searchText}

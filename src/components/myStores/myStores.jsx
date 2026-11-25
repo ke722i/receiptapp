@@ -147,6 +147,7 @@ export default function MyStores({ onBack }) {
               <h2 className="my-stores-section-title">店舗を追加</h2>
               <input
                 type="search"
+                autoComplete="off"
                 className="my-stores-search"
                 placeholder="店舗名で検索（例: ディオ、和泉）"
                 value={query}
