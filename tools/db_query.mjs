@@ -12,6 +12,8 @@
 //  node tools/db_query.mjs unclassified      … 未選択・その他・商品名なしの件数（中分類ごと）
 //  node tools/db_query.mjs unclassified-names … 未選択・その他・商品名なしの印字名（多い順）
 //  node tools/db_query.mjs stores            … 店舗名ごとの件数と、表記ゆれの候補
+//  node tools/db_query.mjs proposals         … カテゴリの提案: 承認したものが、今のカテゴリ表に入っているか・承認待ち・見送り
+//                                              （ビュー analytics.category_proposal_places。supabase/migrations/20261125000000_analytics_proposals.sql）
 //  node tools/db_query.mjs sql "select …"    … analytics のビューに、自由に問い合わせる（読み取りだけ）
 //  node tools/db_query.mjs check             … 接続の設定を確かめる（パスワードは表示しない）
 //  末尾に --test を付けると、テスト用アカウントだけ。--general で、テスト用以外だけ（既定は全部）
@@ -55,6 +57,26 @@ if (command === 'check') {
 }
 
 const client = new pg.Client({ connectionString, ssl: { rejectUnauthorized: false }, statement_timeout: 15000 });
+
+// 名前を比べる形（src/utils/categoryProposal.js の foldCategoryName と同じ）
+const fold = (text) =>
+  String(text || '')
+    .normalize('NFKC')
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]/gu, '')
+    .replace(/[ァ-ヶ]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0x60));
+const same = (a, b) => fold(a) === fold(b);
+/** 提案の場所が、今のカテゴリ表に入っているか（src/utils/categoryProposal.js の isProposalAdded と同じ考え） */
+const inCategoryTable = (p) => {
+  const top = CATEGORY_TREE.find((t) => t.name === p.main_category);
+  const mid = top && top.categories.find((m) => same(m.name, p.category));
+  if (!mid) return false;
+  if (!p.sub_category) return p.kind !== 'product';
+  const sub = (mid.subCategories || []).find((x) => same(x.name, p.sub_category));
+  if (!sub) return false;
+  if (p.kind === 'product') return (sub.items || []).some((x) => same(x, p.product_name));
+  return true;
+};
 
 const table = (rows, cols) => {
   if (!rows.length) {
@@ -144,6 +166,29 @@ const run = async () => {
       if (fix.length) console.log('  → 直すときは、tools/fix_store_names.mjs で SQL を作る');
       break;
     }
+    case 'proposals': {
+      const rows = await q(`select kind, status, main_category, category, sub_category, product_name,
+          sum(proposals)::int as n, sum(users)::int as users, min(first_proposed)::text as first_proposed, max(last_reviewed)::text as last_reviewed
+        from analytics.category_proposal_places ${scopeWhere} group by 1, 2, 3, 4, 5, 6 order by 10 desc nulls last, 9 desc`);
+      const place = (r) => [r.main_category, r.category, r.sub_category, r.product_name].filter(Boolean).join(' > ');
+      const kindLabel = { category: '中分類', sub: '小分類', product: '商品名' };
+      const view = (r) => ({ 種類: kindLabel[r.kind] || r.kind, 場所: place(r), 件数: r.n, 人数: r.users, 提案日: r.first_proposed, 確認日: r.last_reviewed ?? '' });
+      const approved = rows.filter((r) => r.status === 'approved');
+      const missing = approved.filter((r) => !inCategoryTable(r));
+      console.log(`承認: ${approved.length} 件（表に入っている ${approved.length - missing.length}・まだ入っていない ${missing.length}）`);
+      console.log(`承認待ち: ${rows.filter((r) => r.status === 'pending').length} 件・見送り: ${rows.filter((r) => r.status === 'rejected').length} 件\n`);
+      console.log('■ 承認したが、カテゴリ表にまだ入っていないもの（名前を変えて入れたものも、ここに出る。目で確かめる）');
+      table(missing.map(view));
+      console.log('\n■ 承認待ち');
+      table(rows.filter((r) => r.status === 'pending').map(view));
+      if (args.includes('--all')) {
+        console.log('\n■ 承認して、表に入っているもの');
+        table(approved.filter((r) => inCategoryTable(r)).map(view));
+        console.log('\n■ 見送り');
+        table(rows.filter((r) => r.status === 'rejected').map(view));
+      }
+      break;
+    }
     case 'sql': {
       const sql = params.join(' ');
       if (!/^\s*(select|with)\b/i.test(sql)) throw new Error('select（または with）で始まる問い合わせだけ使えます。');
@@ -153,7 +198,7 @@ const run = async () => {
       break;
     }
     default:
-      console.log('使い方: node tools/db_query.mjs categories | zero | unclassified | unclassified-names | stores | sql "select …"  [--test | --general]');
+      console.log('使い方: node tools/db_query.mjs categories | zero | unclassified | unclassified-names | stores | proposals [--all] | sql "select …"  [--test | --general]');
   }
 };
 
