@@ -13,6 +13,7 @@ Claude が見られるのは、集計（件数・人数）だけです。ユー�
 4. 文字列の `postgres.xxxx` の部分を `claude_readonly.xxxx` に、`[YOUR-PASSWORD]` を 2 のパスワードに置き換える
 5. プロジェクトの直下に、`.db-readonly.url` というファイルを作り、4 の文字列を 1 行で保存する
 6. ターミナルで `node tools/db_query.mjs zero` を実行して、結果が出れば完了
+7. 提案も調べるときは、SQL Editor で `supabase/migrations/20261125000000_analytics_proposals.sql` の中身を、全部貼って実行する（提案の場所・状態・件数だけ。だれが出したか・メモは見えない）
 
 ## 使い方
 
@@ -23,6 +24,7 @@ Claude に「DB を調べて」と頼むと、Claude が、次のコマンドで
 - `node tools/db_query.mjs unclassified` → 未選択・その他・商品名なしの件数
 - `node tools/db_query.mjs unclassified-names` → 未選択などの印字名（多い順）
 - `node tools/db_query.mjs stores` → 店舗名の件数と、表記ゆれの候補
+- `node tools/db_query.mjs proposals` → カテゴリの提案。承認したものが、カテゴリ表に入っているか・承認待ち（`--all` で、入っているもの・見送りも）
 - 末尾に `--test` で、テスト用アカウントだけ
 
 ## 注意
