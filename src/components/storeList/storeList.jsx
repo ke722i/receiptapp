@@ -170,6 +170,7 @@ export default function StoreList({ onBack, onSelectStore, openChain = null, onO
               <Icon name="search" size={18} className="store-search-icon" />
               <input
                 type="search"
+                autoComplete="off"
                 className="store-search-input"
                 placeholder="店舗名で探す"
                 value={searchText}

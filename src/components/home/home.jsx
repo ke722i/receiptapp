@@ -432,6 +432,7 @@ export default function Home({
               <input
                 id={SEARCH_INPUT_ID}
                 type="search"
+                autoComplete="off"
                 className="search-input"
                 placeholder="商品名・カテゴリで探す"
                 aria-label="商品名・カテゴリ・レシートの印字名で探す"

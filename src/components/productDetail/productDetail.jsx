@@ -205,6 +205,7 @@ export default function ProductDetail({
           <div className="item-search">
             <input
               type="search"
+              autoComplete="off"
               className="item-search-input"
               placeholder="レシートの印字名で検索"
               value={searchText}

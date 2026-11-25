@@ -116,6 +116,7 @@ export default function AdminUsers({ currentLoginId, onBack }) {
         <div className="admin-users-tools">
           <input
             type="search"
+            autoComplete="off"
             className="proposal-input"
             placeholder="ログイン ID で探す"
             value={query}
