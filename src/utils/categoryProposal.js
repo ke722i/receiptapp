@@ -31,6 +31,24 @@ export const PROPOSAL_STATUS_LABELS = {
   rejected: '見送り',
 };
 
+/** 承認された提案が、今のカテゴリ表に、もう入っているか（入っていれば「追加済み」と出す） */
+export const isProposalAdded = (p) => {
+  if (!p || p.status !== 'approved') return false;
+  const same = (a, b) => foldCategoryName(a) === foldCategoryName(b);
+  const top = CATEGORY_TREE.find((t) => t.name === p.main_category);
+  const mid = top && top.categories.find((m) => same(m.name, p.category));
+  if (!mid) return false;
+  if (p.kind === 'category' && !p.sub_category) return true;
+  const sub = p.sub_category ? (mid.subCategories || []).find((s) => same(s.name, p.sub_category)) : null;
+  if (p.sub_category && !sub) return false;
+  if (p.kind === 'product') {
+    return PRODUCT_PATHS.some(
+      (x) => x.main === p.main_category && same(x.category, p.category) && same(x.sub, p.sub_category) && same(x.product, p.product_name)
+    );
+  }
+  return true;
+};
+
 const uniq = (list) => Array.from(new Set(list));
 const RESERVED = [OTHER, '未選択'];
 
