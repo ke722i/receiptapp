@@ -12,6 +12,8 @@
   ・シート「候補」: G 列「採用」が ○ なら、D 列の候補の分類を使う。○ 以外の文字（例: 肉>豚肉>…>豚こま切れ）なら、その分類を使う。× や空は、使わない
   ・シート「候補なし」: E 列「正しい分類」に書いた分類を使う（空は使わない）
   ・同じ印字名で、wrongCategory.xlsx と食い違ったら、「食い違い」として入れない
+  ・辞書に反映した行は、候補の Excel から消してよい。消す前に、tools/dictionary_adopted.tsv（印字名<TAB>正しい分類）に写す
+    （辞書は、毎回、これらの入力から作り直すため。TSV に無いと、Excel から消した分が、辞書から消える）
 
 記録の読み方（シート「ミス」。1 件 = 2 行。結合セル）
   ・J 列 = 商品名（レシートの印字名）
@@ -36,6 +38,7 @@ import openpyxl
 ROOT = Path(__file__).resolve().parent.parent
 XLSX = ROOT / 'tools' / 'wrongCategory.xlsx'
 CANDIDATES = ROOT / 'tools' / 'dictionary_candidates.xlsx'
+ADOPTED = ROOT / 'tools' / 'dictionary_adopted.tsv'
 OUT = ROOT / 'supabase' / 'functions' / 'parse-receipt' / 'printNameDictionary.js'
 SHEET = 'ミス'
 COL_ITEM = 'J'
@@ -128,10 +131,24 @@ def read_candidate_records():
     return records
 
 
+def read_adopted_records():
+    """dictionary_adopted.tsv: 候補の Excel で採用して、辞書に反映したもの（Excel から消したあとも、辞書に残すため）"""
+    if not ADOPTED.exists():
+        return []
+    records = []
+    for i, line in enumerate(ADOPTED.read_text(encoding='utf-8').splitlines(), 1):
+        if not line.strip() or line.startswith('# '):  # コメントは「# 」（# のあとに空白）。「#582_…」のような印字名もあるため
+            continue
+        parts = line.split('	')
+        if len(parts) >= 2 and parts[0].strip():
+            records.append({'row': i, 'item': parts[0].strip(), 'wrong': '採用済み', 'right': parts[1].strip()})
+    return records
+
+
 def main():
     check_only = '--check' in sys.argv
     index = build_index(load_tree())
-    records = read_records() + read_candidate_records()
+    records = read_records() + read_candidate_records() + read_adopted_records()
 
     by_key = {}  # 畳んだ印字名 -> {'item', 'paths': {path_json: count}, 'wrong': set()}
     skipped = []
