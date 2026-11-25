@@ -6,6 +6,7 @@ import {
   PROPOSAL_NOTE_MAX,
   PROPOSAL_KINDS,
   PROPOSAL_STATUS_LABELS,
+  isProposalAdded,
   getProposalMains,
   getProposalMids,
   getProposalSubs,
@@ -397,7 +398,7 @@ export default function CategoryProposal({ onBack, embedded = false, initialNote
                   <li key={p.id} className="proposal-item">
                     <div className="proposal-item-main">
                       <span className="proposal-item-name">{title}</span>
-                      <span className={`proposal-status is-${p.status}`}>{PROPOSAL_STATUS_LABELS[p.status] || p.status}</span>
+                      <span className={`proposal-status is-${p.status}`}>{isProposalAdded(p) ? '承認（追加済み）' : PROPOSAL_STATUS_LABELS[p.status] || p.status}</span>
                     </div>
                     <span className="proposal-item-path">{place}</span>
                     {p.note && <span className="proposal-item-path">商品の例: {p.note}</span>}
