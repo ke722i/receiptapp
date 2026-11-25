@@ -34,7 +34,6 @@ const SEARCH_INPUT_ID = 'home-search-input';
 // 検索履歴・お知らせを閉じた印は、ユーザーごとに覚える（別のアカウントに、前のアカウントの履歴が出ないように）
 const STORAGE_KEY_SEARCH_HISTORY = 'receipt_app_search_history';
 const historyKeyOf = (userId) => `${STORAGE_KEY_SEARCH_HISTORY}_${userId}`;
-const proposalTipKeyOf = (userId) => `receipt_app_proposal_tip_dismissed_${userId}`; // カテゴリの提案のお知らせを閉じたか
 
 // 検索は 1 つ（カテゴリ・商品名・レシートの印字名を、まとめて探す）。種類ごとに出す最大の件数
 const LIMITS = { category: 3, product: 5, item: 5 };
@@ -79,22 +78,8 @@ export default function Home({
     const el = e.currentTarget;
     setSlideIndex(Math.round(el.scrollLeft / (el.clientWidth || 1)));
   };
-  const [showProposalTip, setShowProposalTip] = useState(() => {
-    try {
-      return localStorage.getItem(proposalTipKeyOf(userId)) !== '1';
-    } catch {
-      return true;
-    }
-  });
-  const dismissProposalTip = () => {
-    setShowProposalTip(false);
-    try {
-      localStorage.setItem(proposalTipKeyOf(userId), '1');
-    } catch {
-      // 保存できなくても、この画面では閉じる
-    }
-    pushPref(userId, 'proposal_tip', true);
-  };
+  // カテゴリの提案のお知らせは、閉じられない（常に表示）
+  const showProposalTip = true;
 
   const noticeSlideCount = announcements.length + (showProposalTip && onOpenCategoryProposal ? 1 : 0);
 
@@ -116,7 +101,6 @@ export default function Home({
     try {
       const saved = localStorage.getItem(historyKeyOf(userId));
       setSearchHistory((saved ? JSON.parse(saved) : []).map(toProductPath).filter(Boolean));
-      setShowProposalTip(localStorage.getItem(proposalTipKeyOf(userId)) !== '1');
     } catch {
       // 読めなければ、今のまま
     }
@@ -630,9 +614,6 @@ export default function Home({
                     提案する ›
                   </button>
                 </div>
-                <button type="button" className="proposal-tip-close" onClick={dismissProposalTip} aria-label="お知らせを閉じる">
-                  <Icon name="close" size={16} />
-                </button>
               </aside>
             )}
             </div>
