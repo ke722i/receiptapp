@@ -475,3 +475,102 @@
   line-height: 1.5;
   text-align: left;
 }
+
+/* 前の分類（自分が前に登録した同じ商品と、分類が違う）。分類は、押したときだけ変える */
+.past-category-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--primary-soft);
+  border: 1px solid var(--primary-border);
+  color: var(--primary-dark);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.past-category-summary > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.past-category-apply-all,
+.past-category-apply {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--on-primary);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.past-category-keep {
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-sub);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* 行の「!」（店名の「!」と同じ形。色は緑） */
+.past-category-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin: 3px 0 0 4px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background-color: var(--primary);
+  color: var(--on-primary);
+  font-size: 13px;
+  font-weight: bold;
+  line-height: 1;
+  vertical-align: middle;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.past-category-button.is-open,
+.past-category-button:active {
+  background-color: var(--primary-dark);
+}
+
+.past-category-row td {
+  padding: 0 8px 10px !important;
+  border-top: none !important;
+}
+
+.past-category-bubble {
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--primary-soft);
+  border: 1px solid var(--primary-border);
+}
+
+.past-category-text {
+  margin: 0 0 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text);
+  white-space: normal;
+}
+
+.past-category-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

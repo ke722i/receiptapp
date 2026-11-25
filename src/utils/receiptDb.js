@@ -7,8 +7,10 @@ import { notifyReceiptsChanged } from './receiptChanges';
 // ---------- 自分の明細の印字名（ホームの検索で使う。読み込んだら覚えておく） ----------
 // レシートの保存・編集・削除のときは、覚えた内容を捨てて、次に使うときに読み直す
 let myItemNamesCache = null; // { userId, promise }
+let myItemsForFixCache = null; // { userId, promise }（同じ商品の分類をそろえる。utils/sameItemFix.js）
 const forgetMyItemNames = () => {
   myItemNamesCache = null;
+  myItemsForFixCache = null;
 };
 
 const ITEM_NAMES_PAGE = 1000; // Supabase が 1 回に返す行の上限に合わせる
@@ -64,6 +66,65 @@ export const fetchMyItemNames = async () => {
     return promise;
   } catch (error) {
     return { success: false, error: error.message || '印字名を読み込めませんでした。' };
+  }
+};
+
+// ---------- 同じ商品の分類をそろえる（utils/sameItemFix.js） ----------
+
+/**
+ * 自分のレシートの、すべての明細（分類が未選択・その他のものも含む）。印字名・分類・レシートの店と購入日。
+ *  読み込んだら覚え、保存・編集・削除・分類の変更のときに捨てる（forgetMyItemNames）
+ * @returns {Promise<{ success: boolean, data?: { id, receiptId, itemName, path, purchaseDate, storeName }[], error?: string }>}
+ */
+export const fetchMyItemsForFix = async () => {
+  try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData?.session?.user?.id;
+    if (!userId) throw new Error('ログインし直してください。');
+    if (myItemsForFixCache && myItemsForFixCache.userId === userId) return myItemsForFixCache.promise;
+
+    const load = async () => {
+      const rows = [];
+      for (let from = 0; from < ITEM_NAMES_MAX; from += ITEM_NAMES_PAGE) {
+        const { data, error } = await supabase
+          .from('receipt_items')
+          .select('id, receipt_id, item_name, main_category, category, sub_category, product_name, receipts!inner ( purchase_date, store_name, user_id )')
+          .eq('receipts.user_id', userId)
+          .order('id', { ascending: false })
+          .range(from, from + ITEM_NAMES_PAGE - 1);
+        if (error) throw error;
+        rows.push(...(data || []));
+        if (!data || data.length < ITEM_NAMES_PAGE) break;
+      }
+      return {
+        success: true,
+        data: rows
+          .filter((row) => row.item_name)
+          .map((row) => ({
+            id: row.id,
+            receiptId: row.receipt_id,
+            itemName: row.item_name,
+            path: {
+              main: row.main_category || '',
+              category: row.category || '未選択',
+              sub: row.sub_category || null,
+              product: row.product_name || null,
+            },
+            purchaseDate: row.receipts?.purchase_date || '',
+            storeName: row.receipts?.store_name || '',
+          })),
+      };
+    };
+
+    const promise = load().catch((error) => {
+      myItemsForFixCache = null; // 失敗したら、次は読み直す
+      console.error('Fetch items for fix failed:', error);
+      return { success: false, error: '商品を読み込めませんでした。' };
+    });
+    myItemsForFixCache = { userId, promise };
+    return promise;
+  } catch (error) {
+    return { success: false, error: error.message || '商品を読み込めませんでした。' };
   }
 };
 

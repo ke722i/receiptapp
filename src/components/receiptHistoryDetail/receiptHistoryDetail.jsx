@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './receiptHistoryDetail.css';
 import { deleteReceiptFromDatabase, updateReceiptInDatabase } from '../../utils/receiptDb';
 import { OTHER } from '../../utils/categoryUtils';
@@ -16,6 +16,8 @@ import VolumeButton from '../volumeButton/volumeButton';
 import ConfirmDialog from '../confirmDialog/confirmDialog';
 import StoreNameFields from '../storeNameFields/storeNameFields';
 import { useKnownStores } from '../storeNameFields/useKnownStores';
+import SameItemFix from '../sameItemFix/sameItemFix';
+import { prepareSameItemFix, countSameItems } from '../../utils/sameItemFix';
 
 // DB の明細（や古い形式の明細）を、編集画面と同じ形（camelCase）にそろえる
 const toViewItem = (item) => ({
@@ -80,6 +82,37 @@ export default function ReceiptHistoryDetail({ receipt, onBack, onDelete, onUpda
 
   // 一覧から開いたときは、画像を持っていないので、ここで読む（読んだ画像は覚えておく。フックは、下の return より前に呼ぶ）
   const imageSrc = useReceiptImage(receipt);
+
+  // ---------- 同じ商品の分類をそろえる（components/sameItemFix・utils/sameItemFix.js） ----------
+  //  ・入口: このレシートの商品と「同じ」商品が、ほかのレシートで違う分類なら、上に「直す」を出す（似ているだけのものは、入口を出さない）
+  //  ・保存したあと: 分類を直した商品について、同じ・似た商品があれば、すぐ聞く
+  const [fixGroups, setFixGroups] = useState(null); // 開いているお知らせ（null = 閉じている）
+  const [entryGroups, setEntryGroups] = useState([]);
+  const [fixVersion, setFixVersion] = useState(0); // 直したあと、入口を数え直す
+  const fixReceipt = receipt ? (savedReceipt && savedReceipt.id === receipt.id ? savedReceipt : receipt) : null;
+  const fixSourcesKey = fixReceipt
+    ? JSON.stringify([
+        fixReceipt.id,
+        (fixReceipt.receipt_items || fixReceipt.items || []).map((i) => [
+          i.item_name || i.printName || '', i.main_category || '', i.category || '', i.sub_category || '', i.product_name || '',
+        ]),
+      ])
+    : '';
+  useEffect(() => {
+    if (!fixSourcesKey) return undefined;
+    let cancelled = false;
+    const [receiptId, rows] = JSON.parse(fixSourcesKey);
+    const sources = rows.map(([printName, main, category, sub, product]) => ({
+      printName,
+      path: { main, category: category || '未選択', sub: sub || null, product: product || null },
+    }));
+    prepareSameItemFix(sources, { excludeReceiptId: receiptId }).then((groups) => {
+      if (!cancelled) setEntryGroups(groups);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [fixSourcesKey, fixVersion]);
 
   if (!receipt) return null;
 
@@ -251,6 +284,21 @@ export default function ReceiptHistoryDetail({ receipt, onBack, onDelete, onUpda
         return old ? { itemName: old.printName, from: pathOf(old), to: pathOf(item) } : null;
       })
       .filter(Boolean);
+    // 分類を直した商品と、同じ・似た商品が、ほかのレシートで違う分類なら、すぐ聞く（待たずに、画面は保存した内容にする）
+    const fixSources = changedItems
+      .filter((item) => {
+        const old = beforeById.get(item.id);
+        return old && JSON.stringify(pathOf(old)) !== JSON.stringify(pathOf(item));
+      })
+      .map((item) => ({
+        printName: item.printName,
+        path: { main: item.mainCategory || '', category: item.category || '未選択', sub: item.subCategory || null, product: item.productName || null },
+      }));
+    if (fixSources.length > 0) {
+      prepareSameItemFix(fixSources, { excludeReceiptId: current.id }).then((groups) => {
+        if (groups.length > 0) setFixGroups(groups);
+      });
+    }
     showUndoToast({
       message: '保存しました',
       onCommit: () => recordCategoryCorrections(corrections, 'detail'),
@@ -429,6 +477,18 @@ export default function ReceiptHistoryDetail({ receipt, onBack, onDelete, onUpda
           </div>
         ) : null}
 
+        {/* 同じ商品が、ほかのレシートで違う分類（「同じ」があるときだけ。編集中は出さない） */}
+        {!isEditing && countSameItems(entryGroups) > 0 && (
+          <div className="same-fix-entry">
+            <span>
+              <Icon name="alert" size={15} strokeWidth={2.2} /> 同じ商品が、ほかのレシートで違う分類になっています（{countSameItems(entryGroups)} 件）
+            </span>
+            <button type="button" onClick={() => setFixGroups(entryGroups)}>
+              直しますか？
+            </button>
+          </div>
+        )}
+
         {/* 3. 商品リスト表 */}
         <section className="table-wrapper">
           <table className="receipt-table">
@@ -523,6 +583,16 @@ export default function ReceiptHistoryDetail({ receipt, onBack, onDelete, onUpda
         onSave={handleSaveEditedItems}
         focusVolume={volumeEditId !== null}
       />
+
+      {/* 同じ商品の分類をそろえる */}
+      {fixGroups && (
+        <SameItemFix
+          groups={fixGroups}
+          title="ほかのレシートの同じ商品も直しますか？"
+          onClose={() => setFixGroups(null)}
+          onFixed={() => setFixVersion((v) => v + 1)}
+        />
+      )}
 
       {/* 保存していない変更があるまま、取り消し・戻るをするとき */}
       {pendingExit && (

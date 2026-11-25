@@ -1,0 +1,219 @@
+/* 同じ商品の分類をそろえる（確認のポップアップと同じ形。一覧は、中だけスクロール） */
+.same-fix-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.same-fix-card {
+  width: 100%;
+  max-width: 420px;
+  max-height: 86vh;
+  max-height: 86dvh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--surface);
+  border-radius: 16px;
+  padding: 18px 16px 16px;
+  box-sizing: border-box;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.same-fix-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--text);
+  margin: 0 0 8px;
+  text-align: center;
+}
+
+.same-fix-lead {
+  font-size: 13px;
+  color: var(--text-sub);
+  margin: 0 0 12px;
+  line-height: 1.5;
+}
+
+.same-fix-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.same-fix-target {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--primary-soft);
+  border: 1px solid var(--primary-border);
+}
+
+.same-fix-target-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--primary-dark);
+}
+
+.same-fix-target-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.same-fix-target-path,
+.same-fix-target-from {
+  font-size: 12px;
+  color: var(--text-sub);
+}
+
+.same-fix-target-from {
+  flex-basis: 100%;
+}
+
+.same-fix-list {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+}
+
+.same-fix-list li + li {
+  border-top: 1px solid var(--border);
+}
+
+.same-fix-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 4px;
+  cursor: pointer;
+}
+
+.same-fix-row input {
+  margin-top: 3px;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.same-fix-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.same-fix-row-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  word-break: break-word;
+}
+
+.same-fix-row-meta,
+.same-fix-row-now {
+  font-size: 12px;
+  color: var(--text-sub);
+}
+
+.same-fix-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-sub);
+  font-size: 11px;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+.same-fix-badge.is-same {
+  border-color: var(--primary-border);
+  background: var(--primary-soft);
+  color: var(--primary-dark);
+}
+
+.same-fix-error {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--danger-dark);
+}
+
+.same-fix-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.same-fix-button {
+  flex: 1;
+  padding: 12px 0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+}
+
+.same-fix-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.same-fix-later {
+  background: var(--surface-2);
+  color: var(--text-sub);
+}
+
+.same-fix-ok {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+/* レシート詳細の入口（常に出す。同じ商品が、ほかのレシートで違う分類のとき） */
+.same-fix-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--primary-soft);
+  border: 1px solid var(--primary-border);
+  color: var(--primary-dark);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.same-fix-entry > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.same-fix-entry button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--on-primary);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}

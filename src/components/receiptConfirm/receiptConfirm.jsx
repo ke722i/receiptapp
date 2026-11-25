@@ -1,8 +1,11 @@
-import { useState, useMemo, useRef } from 'react';
+import { Fragment, useState, useMemo, useRef, useEffect } from 'react';
 import './receiptConfirm.css';
-import { saveReceiptToDatabase, hasDuplicateReceipt } from '../../utils/receiptDb';
+import { saveReceiptToDatabase, hasDuplicateReceipt, fetchMyItemNames } from '../../utils/receiptDb';
+import { buildPastCategoryIndex, pastCategoryOf, applyPastCategory } from '../../utils/pastCategory';
+import { prepareSameItemFix, itemPath } from '../../utils/sameItemFix';
+import SameItemFix from '../sameItemFix/sameItemFix';
 import { formatPurchaseDate } from '../../utils/purchaseDate';
-import { OTHER } from '../../utils/categoryUtils';
+import { OTHER, formatPath } from '../../utils/categoryUtils';
 import { splitStoreName, joinStoreName } from '../../utils/storeNameNormalizer';
 import ReceiptEdit from "../receiptEdit/receiptEdit";
 import ReceiptImagePreview from "../receiptImagePreview/receiptImagePreview";
@@ -68,6 +71,8 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
   const isManual = !!parsedData?._manual;
 
   const [isSaving, setIsSaving] = useState(false);
+  // 登録したあと: 直した商品と同じ・似た商品が、前のレシートで違う分類なら、そろえるか聞く（components/sameItemFix）
+  const [fixGroups, setFixGroups] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
   // 未保存のまま戻ろうとしたときの確認ポップアップ
   const [showLeaveModal, setShowLeaveModal] = useState(false);
@@ -157,6 +162,38 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
 
   const needsCount = items.filter((item) => needsCheckReason(item)).length;
 
+  // ---------- 前の分類（自分が前に登録した同じ商品と、分類が違うとき、知らせる。utils/pastCategory.js） ----------
+  //  分類は自動では変えない。行の「!」→ 吹き出しの「この分類にする」か、上の「すべて前の分類にする」を押したときだけ変える
+  const [pastIndex, setPastIndex] = useState(null); // 印字名（そろえた形）→ 前の分類。読み終わるまで null
+  const [dismissedPast, setDismissedPast] = useState(() => new Set()); // 「このままにする」を押した商品（id）
+  const [openPastId, setOpenPastId] = useState(null); // 吹き出しを開いている商品（id）
+  useEffect(() => {
+    let cancelled = false;
+    fetchMyItemNames().then((result) => {
+      if (!cancelled && result.success) setPastIndex(buildPastCategoryIndex(result.data));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  const pastById = new Map();
+  items.forEach((item) => {
+    if (dismissedPast.has(item.id)) return;
+    const path = pastCategoryOf(pastIndex, item);
+    if (path) pastById.set(item.id, path);
+  });
+
+  const handleApplyPast = (ids) => {
+    const targets = new Map(ids.filter((id) => pastById.has(id)).map((id) => [id, pastById.get(id)]));
+    if (targets.size === 0) return;
+    setItems((prev) => prev.map((item) => (targets.has(item.id) ? applyPastCategory(item, targets.get(item.id)) : item)));
+    setOpenPastId(null);
+  };
+  const handleDismissPast = (id) => {
+    setDismissedPast((prev) => new Set([...prev, id]));
+    setOpenPastId(null);
+  };
+
   // 編集画面からの保存結果を反映
   const handleSaveEditedItems = (updatedSelectedItems) => {
     if (draftItem) {
@@ -239,8 +276,8 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
     }));
 
     const result = await saveReceiptToDatabase(receiptData, itemsData);
-    setIsSaving(false);
 
+    if (!result.success) setIsSaving(false);
     if (result.success) {
       closeToast(); // 登録したあとは、商品の削除を「元に戻す」できない（お知らせを閉じる）
       // AI の分類を直した行を、記録する（待たない。記録できなくても、登録は終わっている）
@@ -254,6 +291,19 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
             }),
           'confirm'
         );
+      }
+      // 分類を直した商品（AI の分類と違う・手で足した商品）と、同じ・似た商品が、前のレシートで違う分類なら、聞く
+      const sources = items
+        .filter((item) => {
+          const original = aiOriginals.current.get(item.id);
+          return !original || JSON.stringify(original.path) !== JSON.stringify(pathOf(item));
+        })
+        .map((item) => ({ printName: item.printName, path: itemPath(item) }));
+      const groups = await prepareSameItemFix(sources, { excludeReceiptId: result.receiptId });
+      setIsSaving(false);
+      if (groups.length > 0) {
+        setFixGroups(groups); // 閉じたら、完了の画面へ
+        return;
       }
       if (onSaveComplete) onSaveComplete();
     } else {
@@ -363,6 +413,18 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
           </div>
         </div>
 
+        {/* 前の分類と違う商品（自分が前に登録した同じ商品）。押したときだけ、前の分類にする */}
+        {pastById.size > 0 && (
+          <div className="past-category-summary">
+            <span>
+              <Icon name="alert" size={15} strokeWidth={2.2} /> 前に登録した分類と違う商品が {pastById.size} 件あります（「!」を押すと、前の分類が見られます）
+            </span>
+            <button type="button" className="past-category-apply-all" onClick={() => handleApplyPast([...pastById.keys()])}>
+              すべて前の分類にする
+            </button>
+          </div>
+        )}
+
         {/* 直してほしい商品（未選択・その他）。登録の前に、ここを直すと、価格を比べやすくなる */}
         {items.length > 0 && (
           needsCount > 0 ? (
@@ -416,8 +478,11 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
                 items.map((item) => {
                   const reason = needsCheckReason(item);
                   if (needsOnly && needsCount > 0 && !reason) return null;
+                  const past = pastById.get(item.id);
+                  const pastOpen = past && openPastId === item.id;
                   return (
-                  <tr key={item.id} className={reason && reason !== 'その他' ? 'needs-check' : ''}>
+                  <Fragment key={item.id}>
+                  <tr className={reason && reason !== 'その他' ? 'needs-check' : ''}>
                     <td style={{ textAlign: 'center' }}>
                       <input
                         type="checkbox"
@@ -445,11 +510,43 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
                         <div className="product-label">{item.productName}</div>
                       )}
                       {reason && <span className={`needs-check-badge ${reason === 'その他' ? 'is-other' : ''}`}>{reason}</span>}
+                      {/* 前の分類と違う: 「!」。押すと、下に吹き出し */}
+                      {past && (
+                        <button
+                          type="button"
+                          className={`past-category-button ${pastOpen ? 'is-open' : ''}`}
+                          aria-label="前に登録した分類と違います。押すと、前の分類が出ます"
+                          aria-expanded={pastOpen}
+                          onClick={() => setOpenPastId(pastOpen ? null : item.id)}
+                        >
+                          !
+                        </button>
+                      )}
                     </td>
                     <td className="discount-cell">
                       {item.isDiscount ? <span className="discount-yes">あり</span> : <span className="discount-none">－</span>}
                     </td>
                   </tr>
+                  {pastOpen && (
+                    <tr className="past-category-row">
+                      <td colSpan="5">
+                        <div className="past-category-bubble" role="note">
+                          <p className="past-category-text">
+                            前に「<b>{past.product}</b>」（{formatPath(past)}）で登録した商品です。
+                          </p>
+                          <div className="past-category-actions">
+                            <button type="button" className="past-category-keep" onClick={() => handleDismissPast(item.id)}>
+                              このままにする
+                            </button>
+                            <button type="button" className="past-category-apply" onClick={() => handleApplyPast([item.id])}>
+                              この分類にする
+                            </button>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  </Fragment>
                   );
                 })
               )}
@@ -524,6 +621,17 @@ export default function ReceiptConfirm({ imageSrc, parsedData, onBack, onSaveCom
             </div>
           </div>
         </div>
+      )}
+      {/* 登録したあと: 前のレシートの、同じ・似た商品の分類をそろえるか */}
+      {fixGroups && (
+        <SameItemFix
+          groups={fixGroups}
+          title="前に登録した同じ商品も直しますか？"
+          onClose={() => {
+            setFixGroups(null);
+            if (onSaveComplete) onSaveComplete();
+          }}
+        />
       )}
     </div>
   );
