@@ -54,7 +54,7 @@ export const isFixTarget = (path) => !!path && !!path.product && !isOtherPath(pa
  * @param {{ id, receiptId, itemName, path, purchaseDate, storeName }[]} pastRows 自分の明細（fetchMyItemsForFix）
  * @param {{ excludeReceiptId?: any, excludeItemIds?: any[] }} [options] 今のレシート・今の明細は除く
  * @returns {{ source: { printName, path }, items: { id, receiptId, itemName, path, purchaseDate, storeName, match: 'same'|'similar' }[] }[]}
- *   直す先ごと（同じ印字名・同じ分類の sources は 1 つにまとめる）。明細は、同じ → 似ている、購入日の新しい順。1 つの明細は 1 か所にだけ入る（同じが優先）
+ *   直す先ごと（同じ印字名・同じ分類の sources は 1 つにまとめる）。直す先は、「同じ」がある先が上・「似ている」だけの先が下。明細は、同じ → 似ている、購入日の新しい順。1 つの明細は 1 か所にだけ入る（同じが優先）
  */
 export const findSameItemFixes = (sources, pastRows, { excludeReceiptId = null, excludeItemIds = [] } = {}) => {
   const groups = [];
@@ -89,6 +89,8 @@ export const findSameItemFixes = (sources, pastRows, { excludeReceiptId = null, 
     best.group.items.push({ ...row, match: best.match });
   });
 
+  // 「同じ商品」がある直す先を上に、「似ている」だけの直す先を下に（同じ順位の中は、直した順のまま）
+  const hasSame = (g) => g.items.some((i) => i.match === 'same');
   return groups
     .filter((group) => group.items.length > 0)
     .map(({ source, items }) => ({
@@ -98,7 +100,8 @@ export const findSameItemFixes = (sources, pastRows, { excludeReceiptId = null, 
           (a.match === 'same' ? 0 : 1) - (b.match === 'same' ? 0 : 1) ||
           String(b.purchaseDate).localeCompare(String(a.purchaseDate))
       ),
-    }));
+    }))
+    .sort((a, b) => (hasSame(a) ? 0 : 1) - (hasSame(b) ? 0 : 1));
 };
 
 /** 「同じ」の明細の数（似ているものは数えない） */
