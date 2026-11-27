@@ -43,7 +43,7 @@ import { fetchReceiptById } from './utils/receiptDb';
 import { isOpenablePath } from './utils/categoryUtils';
 import { createManualReceiptData } from './utils/manualReceipt';
 import { loadFavorites, saveFavorites, toggleFavorite, isFavorite } from './utils/favorites';
-import { decidedNotices, buildNoticeItems, loadReadIds, saveReadIds, unreadIds } from './utils/notices';
+import { decidedNotices, buildNoticeItems, loadReadIds, saveReadIds, unreadIds, sortUnreadFirst } from './utils/notices';
 import { fetchMyProposals } from './utils/categoryProposalDb';
 import TabBar from './components/tabBar/tabBar';
 import UndoToast from './components/undoToast/undoToast';
@@ -186,6 +186,7 @@ function App() {
   const reassignRuns = useMemo(() => loadRuns(userId), [userId, runsVersion]); // eslint-disable-line react-hooks/exhaustive-deps
   const noticeItems = buildNoticeItems(notices.list, announcements, reassignRuns);
   const unreadList = unreadIds(noticeItems, readIds);
+  const sortedNoticeItems = sortUnreadFirst(noticeItems, readIds); // 通知の画面: 未読が上、既読は日付順
   // 通知を、読んだことにする（端末の控えと、DB）。keys は、既読にする通知の key
   const markNoticesRead = (keys) => {
     saveReadIds(userId, [...new Set([...loadReadIds(userId).map(String), ...keys.map(String)])]);
@@ -483,7 +484,7 @@ function App() {
       {currentScreen === 'adminUsers' && <AdminUsers currentLoginId={userId} onBack={() => setCurrentScreen('adminHome')} />}
       {currentScreen === 'notices' && (
         <Notices
-          notices={noticeItems}
+          notices={sortedNoticeItems}
           unreadIds={unreadList}
           onMarkRead={(ids) => markNoticesRead(ids)}
           onMarkUnread={(ids) => markNoticesUnread(ids)}

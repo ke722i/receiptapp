@@ -8,6 +8,8 @@ import {
   loadSkipIds,
   addSkipIds,
   addRun,
+  loadRuns,
+  saveRuns,
   markRunUndone,
 } from './reassignOther';
 import { prepareRecategorize } from './recategorize';
@@ -55,6 +57,8 @@ export const runAutoReassign = async (userId) => {
       recatCount,
       undone: false,
     };
+    // 前の「見直す商品があります」だけの通知（移した商品が 0 件のもの）は、新しい 1 件にまとめる（表が変わるたびに、増えないように）
+    if (moves.length === 0) saveRuns(userId, loadRuns(userId).filter((r) => (r.moves || []).length > 0));
     addRun(userId, run);
   }
   if (!failed) saveFingerprint(userId, fingerprint);
