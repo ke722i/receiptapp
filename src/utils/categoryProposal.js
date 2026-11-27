@@ -80,6 +80,17 @@ export const cleanProposalText = (text) =>
     .replace(/\s+/g, ' ')
     .trim();
 
+/**
+ * かっこは全角（ ）にそろえる（カテゴリ表の決まり。11/27 に表の半角のかっこを、すべて全角にした）
+ *  NFKC で全角のかっこも半角になるので、cleanProposalText のあとに、全角へ戻す
+ */
+export const toFullWidthParens = (text) => String(text || '').replace(/\(/g, '（').replace(/\)/g, '）');
+/** 新しい名前（中分類・小分類・商品名）の入力をそろえる。かっこは全角 */
+export const cleanProposalName = (text) => toFullWidthParens(cleanProposalText(text));
+/** 半角のかっこが入っているか（全角にそろえる注意を出す） */
+export const hasHalfWidthParens = (text) => /[()]/.test(String(text || ''));
+export const HALF_PARENS_WARNING = 'かっこは全角（ ）で入力してください。半角の ( ) は、全角にそろえて送ります。';
+
 /** 名前を比べるための形（空白・記号・ひらがな/カタカナ・大文字/小文字の違いを無くす）。表示には使わない */
 export const foldCategoryName = (text) =>
   cleanProposalText(text)
@@ -156,13 +167,16 @@ export const validateProposal = (input) => {
   const value = {
     kind,
     main: picked(input.main),
-    category: kind === 'category' ? cleanProposalText(input.category) : picked(input.category),
-    sub: (kind === 'product' ? picked(input.sub) : cleanProposalText(input.sub)) || null,
-    product: kind === 'product' ? cleanProposalText(input.product) || null : null,
+    category: kind === 'category' ? cleanProposalName(input.category) : picked(input.category),
+    sub: (kind === 'product' ? picked(input.sub) : cleanProposalName(input.sub)) || null,
+    product: kind === 'product' ? cleanProposalName(input.product) || null : null,
     note: cleanProposalText(input.note) || null,
   };
   const errors = {};
   const warnings = [];
+  // 入力した名前（選んだ名前ではないもの）に、半角のかっこがあれば、注意を出す（送るときは全角にそろえる）
+  const typed = kind === 'category' ? [input.category, input.sub] : kind === 'sub' ? [input.sub] : [input.product];
+  if (typed.some(hasHalfWidthParens)) warnings.push(HALF_PARENS_WARNING);
 
   if (!KIND_VALUES.includes(input.kind)) errors.kind = '追加するものを選んでください。';
 
