@@ -24,6 +24,14 @@ const EXCLUDE_NAMES = new Set([
   'キムチ鍋＆もつ鍋', // 「キムチ」鍋であって、漬物のキムチではない
   'ハウス柚子こしょう', // 「こしょう」（胡椒）ではなく、柚子こしょう
   'カーシャンプー 1000ml', // 車用で、ヘアケアのシャンプーではない
+  'Bサーモンサラダ巻', // 巻き寿司（刺身のサーモンではない）
+  'Bねぎとろ巻', // 巻き寿司
+  'クッキー＆クリームフ', // クッキー味の別の菓子
+  'ミニカップクッキー＆ク', // クッキー＆クリーム味
+  'のり弁金賞唐揚げ', // 弁当（唐揚げ単品ではない）
+  '十六茶麦茶', // 麦茶
+  '赤いきつねうどん', // カップ麺（乾麺のうどんではない）
+  '天然水特製ﾚﾓﾝｽｶｯｼｭ', // レモンスカッシュ（天然水ではない）
 ].map((n) => n.normalize('NFKC')));
 const urlFile = fileURLToPath(new URL('../.db-readonly.url', import.meta.url));
 const connectionString = process.env.DB_READONLY_URL || (existsSync(urlFile) ? readFileSync(urlFile, 'utf8').trim() : '');
