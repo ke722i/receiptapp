@@ -22,6 +22,7 @@ export default function Settings({
   onDeleteAccount,
   onOpenCategoryProposal,
   onOpenReassign,
+  onOpenRecategorize,
   isAdmin = false,
 }) {
   const [userInfo, setUserInfo] = useState({ displayName: '読み込み中...' });
@@ -309,10 +310,16 @@ export default function Settings({
                 「その他」の商品を見直す ›
               </button>
             )}
+            {onOpenRecategorize && (
+              <button type="button" className="action-button proposal-open-button" onClick={onOpenRecategorize}>
+                ほかの分類で登録した商品を見直す ›
+              </button>
+            )}
             <div className="settings-note settings-note-last">
               <p>
                 ぴったりの分類が無いときに、新しい中分類・小分類・商品名を提案できます。管理者が確認して、承認したものは、次の更新で、すべてのユーザーの表に追加されます。
                 新しい商品名が増えたとき、「その他」で登録した商品のうち、レシートの印字名で決められるものは、自動で移します。決められないものは、「見直す」で選べます。
+                「その他」以外の分類（例: 緑茶）で登録した商品のうち、印字名に、新しい商品名（例: ほうじ茶）が入っているものは、自動では移さず、通知と「ほかの分類で登録した商品を見直す」で、移すかを聞きます。
               </p>
             </div>
           </div>

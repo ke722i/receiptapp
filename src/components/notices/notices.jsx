@@ -13,7 +13,7 @@ const toJstDate = (value) => {
 const ACTION_WIDTH = 84; // スワイプで出るボタンの幅（px）
 
 // 1 件の通知。左にスワイプすると、右にボタンが出る。縦のスクロールは、そのまま通す
-function NoticeRow({ notice: n, isUnread, isOpen, onOpen, onMarkRead, onMarkUnread, onUndoReassign, onOpenReassign }) {
+function NoticeRow({ notice: n, isUnread, isOpen, onOpen, onMarkRead, onMarkUnread, onUndoReassign, onOpenReassign, onOpenRecategorize }) {
   const [drag, setDrag] = useState(null); // 指で動かしている間の位置（px。0〜-ACTION_WIDTH）
   const start = useRef(null); // { x, y, base, axis }
   const isApproved = n.status === 'approved';
@@ -86,36 +86,51 @@ function NoticeRow({ notice: n, isUnread, isOpen, onOpen, onMarkRead, onMarkUnre
         onTouchCancel={onTouchEnd}
         onClick={() => isOpen && onOpen(null)}
       >
-        <span className="notice-mail" aria-hidden="true"><Icon name={isReassign ? 'undo' : isAnnouncement ? 'megaphone' : isUnread ? 'mail' : 'check'} size={20} /></span>
+        <span className="notice-mail" aria-hidden="true"><Icon name={isReassign ? (n.moves.length > 0 ? 'undo' : 'bulb') : isAnnouncement ? 'megaphone' : isUnread ? 'mail' : 'check'} size={20} /></span>
         <div className="notice-body">
           {isReassign ? (
             <>
-              <p className="notice-title">
-                {isUnread && <span className="notice-new">未読</span>}
-                <span className="notice-result is-announcement">自動で移動</span>
-                「その他」の商品 {n.moves.length} 件を、新しいカテゴリに移しました
-              </p>
-              <ul className="notice-moves">
-                {n.moves.slice(0, 5).map((m) => (
-                  <li key={m.id}>
-                    {m.name} → {m.to.product}（{[m.to.category, m.to.sub].filter(Boolean).join(' > ')}）
-                  </li>
-                ))}
-                {n.moves.length > 5 && <li>ほか {n.moves.length - 5} 件</li>}
-              </ul>
-              {n.undone ? (
-                <p className="notice-note">元に戻しました（この商品は、もう自動では移しません）。</p>
+              {n.moves.length > 0 ? (
+                <>
+                  <p className="notice-title">
+                    {isUnread && <span className="notice-new">未読</span>}
+                    <span className="notice-result is-announcement">自動で移動</span>
+                    「その他」の商品 {n.moves.length} 件を、新しいカテゴリに移しました
+                  </p>
+                  <ul className="notice-moves">
+                    {n.moves.slice(0, 5).map((m) => (
+                      <li key={m.id}>
+                        {m.name} → {m.to.product}（{[m.to.category, m.to.sub].filter(Boolean).join(' > ')}）
+                      </li>
+                    ))}
+                    {n.moves.length > 5 && <li>ほか {n.moves.length - 5} 件</li>}
+                  </ul>
+                  {n.undone ? (
+                    <p className="notice-note">元に戻しました（この商品は、もう自動では移しません）。</p>
+                  ) : (
+                    <div className="notice-reassign-actions">
+                      <button type="button" className="notice-undo-button" disabled={undoing} onClick={handleUndo}>
+                        {undoing ? '戻しています...' : '元に戻す'}
+                      </button>
+                    </div>
+                  )}
+                  {undoError && <p className="notice-note notice-error">{undoError}</p>}
+                </>
               ) : (
-                <div className="notice-reassign-actions">
-                  <button type="button" className="notice-undo-button" disabled={undoing} onClick={handleUndo}>
-                    {undoing ? '戻しています...' : '元に戻す'}
-                  </button>
-                </div>
+                <p className="notice-title">
+                  {isUnread && <span className="notice-new">未読</span>}
+                  <span className="notice-result is-announcement">カテゴリ</span>
+                  新しいカテゴリに合いそうな商品が {n.recatCount} 件あります
+                </p>
               )}
-              {undoError && <p className="notice-note notice-error">{undoError}</p>}
               {n.reviewCount > 0 && (
                 <button type="button" className="notice-review-link" onClick={onOpenReassign}>
                   決められなかった商品 {n.reviewCount} 件を、見直す ›
+                </button>
+              )}
+              {n.recatCount > 0 && onOpenRecategorize && (
+                <button type="button" className="notice-review-link" onClick={onOpenRecategorize}>
+                  ほかの分類で登録した商品 {n.recatCount} 件を、見直す ›
                 </button>
               )}
             </>
@@ -168,7 +183,7 @@ function NoticeRow({ notice: n, isUnread, isOpen, onOpen, onMarkRead, onMarkUnre
  * ・通知を左にスワイプすると、「既読」（既読の通知は「未読に戻す」）のボタンが出る（LINE のように）
  * @param {'loading'|'error'|'ready'} status
  */
-export default function Notices({ notices = [], unreadIds = [], status = 'ready', onMarkRead, onMarkUnread, onUndoReassign, onOpenReassign, onBack }) {
+export default function Notices({ notices = [], unreadIds = [], status = 'ready', onMarkRead, onMarkUnread, onUndoReassign, onOpenReassign, onOpenRecategorize, onBack }) {
   const [openId, setOpenId] = useState(null); // 左にスワイプして、ボタンを出している通知
   return (
     <div className="notices-container">
@@ -209,6 +224,7 @@ export default function Notices({ notices = [], unreadIds = [], status = 'ready'
                 onMarkUnread={onMarkUnread}
                 onUndoReassign={onUndoReassign}
                 onOpenReassign={onOpenReassign}
+                onOpenRecategorize={onOpenRecategorize}
               />
             ))}
           </ul>
