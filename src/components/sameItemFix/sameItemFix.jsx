@@ -14,8 +14,21 @@ import { countAllItems } from '../../utils/sameItemFix';
  * @param {() => void} onClose 閉じたとき（直した・あとで、どちらも）
  * @param {(count: number) => void} [onFixed] 直したとき（件数）
  * @param {string} [title]
+ * @param {string} [lead] 上の説明（無ければ、同じ商品をそろえるときの文）
+ * @param {boolean} [showSource] 直す先の下に「「印字名」で選んだ分類」を出すか
+ * @param {{ same: string, similar: string }} [badges] 印の文字
+ * @param {(ids: any[]) => void} [onKeep] 直したとき、チェックを外していた明細の id（もう出さないために覚える）
  */
-export default function SameItemFix({ groups, onClose, onFixed, title = '同じ商品の分類をそろえますか？' }) {
+export default function SameItemFix({
+  groups,
+  onClose,
+  onFixed,
+  title = '同じ商品の分類をそろえますか？',
+  lead,
+  showSource = true,
+  badges = { same: '同じ商品', similar: '似ている' },
+  onKeep,
+}) {
   const [checked, setChecked] = useState(
     () => new Set(groups.flatMap((g) => g.items.filter((i) => i.match === 'same').map((i) => i.id)))
   );
@@ -60,6 +73,7 @@ export default function SameItemFix({ groups, onClose, onFixed, title = '同じ�
         showUndoToast({ message: undo.success ? '元に戻しました' : '一部を元に戻せませんでした' });
       },
     });
+    if (onKeep) onKeep(groups.flatMap((g) => g.items.filter((i) => !checked.has(i.id)).map((i) => i.id)));
     if (onFixed) onFixed(result.doneIds.length);
     onClose();
   };
@@ -71,7 +85,7 @@ export default function SameItemFix({ groups, onClose, onFixed, title = '同じ�
       <div className="same-fix-card" role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}>
         <h2 className="same-fix-title">{title}</h2>
         <p className="same-fix-lead">
-          前に登録したレシートで、同じ・似た商品が {total} 件、違う分類になっています。直すものにチェックを付けてください。
+          {lead || `前に登録したレシートで、同じ・似た商品が ${total} 件、違う分類になっています。直すものにチェックを付けてください。`}
         </p>
 
         <div className="same-fix-body">
@@ -81,7 +95,7 @@ export default function SameItemFix({ groups, onClose, onFixed, title = '同じ�
                 <span className="same-fix-target-label">直す先</span>
                 <span className="same-fix-target-name">{g.source.path.product}</span>
                 <span className="same-fix-target-path">{formatPath(g.source.path)}</span>
-                <span className="same-fix-target-from">「{g.source.printName}」で選んだ分類</span>
+                {showSource && <span className="same-fix-target-from">「{g.source.printName}」で選んだ分類</span>}
               </div>
               <ul className="same-fix-list">
                 {g.items.map((item) => (
@@ -92,7 +106,7 @@ export default function SameItemFix({ groups, onClose, onFixed, title = '同じ�
                         <span className="same-fix-row-name">
                           {item.itemName}
                           <span className={`same-fix-badge ${item.match === 'same' ? 'is-same' : ''}`}>
-                            {item.match === 'same' ? '同じ商品' : '似ている'}
+                            {item.match === 'same' ? badges.same : badges.similar}
                           </span>
                         </span>
                         <span className="same-fix-row-meta">

@@ -33,7 +33,10 @@ import {
 import AnnouncementPopup from './components/announcementPopup/announcementPopup';
 import ReassignOther from './components/reassignOther/reassignOther';
 import { runAutoReassign, undoAutoReassign } from './utils/reassignRun';
-import { loadRuns } from './utils/reassignOther';
+import { loadRuns, addSkipIds } from './utils/reassignOther';
+import { prepareRecategorize } from './utils/recategorize';
+import SameItemFix from './components/sameItemFix/sameItemFix';
+import { showUndoToast } from './utils/undoToast';
 import { clearReceiptCache } from './utils/receiptCache';
 import { checkIsAdmin } from './utils/adminDb';
 import { fetchReceiptById } from './utils/receiptDb';
@@ -235,7 +238,7 @@ function App() {
       .catch(() => {})
       .then(() => runAutoReassign(userId))
       .then((result) => {
-        if (result.moved > 0) setRunsVersion((v) => v + 1);
+        if (result.run) setRunsVersion((v) => v + 1);
       });
   }, [currentScreen, userId, syncStates]);
   const handleUndoReassign = async (run) => {
@@ -244,6 +247,18 @@ function App() {
     return result;
   };
   const [reassignBackScreen, setReassignBackScreen] = useState('settings');
+  // 「その他」以外で、新しいカテゴリに移せそうな商品を見直す（utils/recategorize.js。通知・設定から開く。選んだものだけ直す）
+  const [recatGroups, setRecatGroups] = useState(null);
+  const [recatLoading, setRecatLoading] = useState(false);
+  const openRecategorize = async () => {
+    if (recatLoading) return;
+    setRecatLoading(true);
+    const groups = await prepareRecategorize(userId);
+    setRecatLoading(false);
+    if (!groups) showUndoToast({ message: '商品を読み込めませんでした。通信の状態を確かめてください' });
+    else if (groups.length === 0) showUndoToast({ message: '見直す商品はありません' });
+    else setRecatGroups(groups);
+  };
   const noticeRequest = useRef(0);
   useEffect(() => {
     if (currentScreen !== 'home') return;
@@ -446,6 +461,7 @@ function App() {
             setReassignBackScreen('settings');
             setCurrentScreen('reassignOther');
           }}
+          onOpenRecategorize={openRecategorize}
           isAdmin={isAdmin}
         />
       )}
@@ -476,8 +492,20 @@ function App() {
             setReassignBackScreen('notices');
             setCurrentScreen('reassignOther');
           }}
+          onOpenRecategorize={openRecategorize}
           status={noticeItems.length > 0 ? 'ready' : notices.status}
           onBack={() => setCurrentScreen('home')}
+        />
+      )}
+      {recatGroups && (
+        <SameItemFix
+          groups={recatGroups}
+          title="新しいカテゴリに移しますか？"
+          lead="印字名に、同じ中分類の別の商品名が入っている商品です。移すものにチェックを付けてください。チェックしなかった商品は、「選んだ件数を直す」を押すと、もう出しません（「あとで」なら、また出ます）。"
+          showSource={false}
+          badges={{ same: '同じ名前', similar: 'ほかの言葉あり' }}
+          onKeep={(ids) => addSkipIds(userId, ids)}
+          onClose={() => setRecatGroups(null)}
         />
       )}
       {currentScreen === 'reassignOther' && <ReassignOther userId={userId} onBack={() => setCurrentScreen(reassignBackScreen)} />}
