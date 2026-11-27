@@ -57,3 +57,13 @@ export const unreadIds = (items, readIds) => {
   const read = new Set((readIds || []).map(String));
   return items.filter((n) => !n.noRead && !read.has(String(n.key))).map((n) => n.key);
 };
+
+/**
+ * 通知の並び: 未読が上（新しい順）、そのあとに既読（新しい順）。既読にすると、日付の順の位置へ移る
+ *  items は buildNoticeItems の結果（新しい順）。同じ並びの中の順番は、そのまま
+ */
+export const sortUnreadFirst = (items, readIds) => {
+  const unread = new Set(unreadIds(items, readIds).map(String));
+  const isUnread = (n) => unread.has(String(n.key));
+  return [...items.filter(isUnread), ...items.filter((n) => !isUnread(n))];
+};
