@@ -34,7 +34,8 @@ BACKUP = os.path.join(ROOT, 'tools', 'categoryTable.backup.xlsx')
 
 
 def clean(v):
-    return re.sub(r'\s+', ' ', str(v).replace('　', ' ')).strip()
+    # かっこは全角（ ）にそろえる（カテゴリ表の決まり。11/27〜）
+    return re.sub(r'\s+', ' ', str(v).replace('　', ' ')).strip().replace('(', '（').replace(')', '）')
 
 
 def fold(v):

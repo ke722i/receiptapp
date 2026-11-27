@@ -2,7 +2,13 @@ import openpyxl, json, re, sys
 p = sys.argv[1]
 wb = openpyxl.load_workbook(p)
 def clean(v):
-    return re.sub(r'\s+', ' ', str(v).replace('　',' ')).strip()
+    text = re.sub(r'\s+', ' ', str(v).replace('　',' ')).strip()
+    # かっこは全角（ ）にそろえる（カテゴリ表の決まり。11/27〜）。半角があれば、全角にして、注意を出す
+    if '(' in text or ')' in text:
+        fixed = text.replace('(', '（').replace(')', '）')
+        print(f'★半角のかっこを全角にそろえました（Excel も全角に直してください）: {text} → {fixed}')
+        return fixed
+    return text
 tree = []
 warnings = []
 for ws in wb.worksheets:
